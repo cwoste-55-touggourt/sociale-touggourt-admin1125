@@ -45,7 +45,7 @@
           const d = data.data;
 
          Swal.fire({
-  title: "✅ أنت مسجل مسبقًا في الرحلات",
+          title: "⚠️ التسجيل موجود مسبقًا",
   html: `
     <b>تاريخ التسجيل:</b> ${d.date || "غير متوفر"}<br>
     <b>رقم الهاتف:</b> ${d.phone}<br>
@@ -55,7 +55,7 @@
     <b>بلدية الإقامة:</b> ${d.baladiya}<br>
     <b>الرحلة:</b> ${d.trip}
   `,
-  icon: "info",
+  icon: "warning",
   showCancelButton: true,
   confirmButtonText: "تحميل الوصل",
   cancelButtonText: "إغلاق"
@@ -409,6 +409,7 @@ button {
   </div>
 </body>
 </html>
+
 
 
 
