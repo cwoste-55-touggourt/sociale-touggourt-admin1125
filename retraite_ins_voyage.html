@@ -44,27 +44,30 @@
         if (data.result === "exists") {
           const d = data.data;
 
-          Swal.fire({
-            icon: "info",
-            title: "✅ أنت مسجل مسبقًا في الرحلات",
-            html: `
-               <hr>
-              <b>تاريخ التسجيل:</b> ${d.date || "غير متوفر"}<br>
-              <b>رقم الهاتف:</b> ${d.phone}<br>
-              <b>الاسم الكامل:</b> ${d.name}<br>
-              <b>الصفة:</b> ${d.status}<br>
-              <b>دائرة الإقامة:</b> ${d.daaira}<br>
-              <b>بلدية الإقامة:</b> ${d.baladiya}<br>
-              <b>الرحلة:</b> ${d.trip}<br><br>
-              <a href="${receiptURL}?phone=${d.phone}" target="_blank"
-                 class="swal2-confirm swal2-styled"
-                 style="background:linear-gradient(45deg,#6a11cb,#2575fc);padding:10px 20px;
-                        border-radius:8px;color:white;text-decoration:none;">
-                 🧾 تحميل الوصل
-              </a>
-            `,
-            confirmButtonText: "إغلاق"
-          });
+         Swal.fire({
+  title: "✅ أنت مسجل مسبقًا في الرحلات",
+  html: `
+    <b>تاريخ التسجيل:</b> ${d.date || "غير متوفر"}<br>
+    <b>رقم الهاتف:</b> ${d.phone}<br>
+    <b>الاسم الكامل:</b> ${d.name}<br>
+    <b>الصفة:</b> ${d.status}<br>
+    <b>دائرة الإقامة:</b> ${d.daaira}<br>
+    <b>بلدية الإقامة:</b> ${d.baladiya}<br>
+    <b>الرحلة:</b> ${d.trip}
+  `,
+  icon: "info",
+  showCancelButton: true,
+  confirmButtonText: "تحميل الوصل",
+  cancelButtonText: "إغلاق"
+}).then((result) => {
+  if (result.isConfirmed) {
+    const receiptURL = `retraite_reç_voyage.html?phone=${d.phone}`;
+    window.location.href = receiptURL;
+  } else {
+    location.reload();
+  }
+});
+
 
         } else if (data.result === "not_found") {
           Swal.fire({
@@ -406,5 +409,6 @@ button {
   </div>
 </body>
 </html>
+
 
 
