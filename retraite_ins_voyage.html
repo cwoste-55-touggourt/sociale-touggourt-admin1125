@@ -74,7 +74,7 @@
             icon: "question",
             title: "مرحبًا بك 👋",
             html: "أنت غير مسجل بعد.<br>يمكنك التسجيل الآن في الرحلات.",
-            confirmButtonText: "التالي",
+            confirmButtonText: "متابعة التسجيل",
             confirmButtonColor: "#2575fc"
           }).then(() => {
             showForm(phone);
@@ -90,7 +90,7 @@
     window.showForm = function(phone) {
       const container = document.getElementById("mainContainer");
       container.innerHTML = `
-        <h2>استمارة تسجيل المتقاعدين والأرامل</h2>
+        <h2>استمارة تسجيل المتقاعدين والأرامل في الرحلات</h2>
         <input type="text" id="phoneField" value="${phone}" readonly>
 
         <div style="display: flex; gap: 10px; margin-bottom: 18px;">
@@ -197,9 +197,9 @@
             icon: "success",
             title: "✅ تم التسجيل بنجاح",
             html: `
-              تم تسجيلك بنجاح في الرحلة.<br>
-              يمكنك الآن تحميل الوصل الخاص بك.<br><br>
-              <a href="${receiptURL}?phone=${phone}" target="_blank"
+              تم تسجيلك بنجاح في الرحلات.<br>
+              .<br><br>
+              <a href="${receiptURL}?phone=${phone}">
                  class="swal2-confirm swal2-styled"
                  style="background:linear-gradient(45deg,#6a11cb,#2575fc);padding:10px 20px;
                         border-radius:8px;color:white;text-decoration:none;">
@@ -212,8 +212,8 @@
         else if (data.result === "exists") {
           const d = data.data || {};
           Swal.fire({
-            icon: "info",
-            title: "هذا الرقم مسجل مسبقًا",
+            icon: "warning",
+           title: "⚠️ التسجيل موجود مسبقًا",
             html: `
               <b>تاريخ التسجيل:</b> ${d.date || "غير متوفر"}<br>
               <b>رقم الهاتف:</b> ${d.phone || ""}<br>
@@ -222,7 +222,7 @@
               <b>دائرة الإقامة:</b> ${d.daaira || ""}<br>
               <b>بلدية الإقامة:</b> ${d.baladiya || ""}<br>
               <b>الرحلة:</b> ${d.trip || ""}<br><br>
-              <a href="${receiptURL}?phone=${d.phone}" target="_blank"
+              <a href="${receiptURL}?phone=${d.phone}">
                  class="swal2-confirm swal2-styled"
                  style="background:linear-gradient(45deg,#6a11cb,#2575fc);padding:10px 20px;
                         border-radius:8px;color:white;text-decoration:none;">
@@ -409,6 +409,7 @@ button {
   </div>
 </body>
 </html>
+
 
 
 
