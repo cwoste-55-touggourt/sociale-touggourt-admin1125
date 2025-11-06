@@ -170,7 +170,7 @@ async function checkEmployee() {
 function showForm(empId, data) {
   const container = document.getElementById("mainContainer");
   container.innerHTML = `
-    <h2>استمارة التسجيل في الرحلات 2025</h2>
+    <h2>استمارة تسجيل الموظفين في الرحلات 2025</h2>
     <input type="text" id="empIdField" value="${empId}" readonly>
     <input type="text" id="nameField" value="${data.name}" readonly>
     <input type="text" id="gradeField" value="${data.grade}" readonly>
@@ -278,7 +278,6 @@ async function submitForm() {
     if (data.result === "success") {
       Swal.fire({
         title: "✅ تم التسجيل بنجاح",
-        text: "تم تسجيل بياناتك بنجاح",
         icon: "success",
         showCancelButton: true,
         confirmButtonText: "تحميل الوصل",
@@ -327,5 +326,6 @@ async function submitForm() {
 </script>
 </body>
 </html>
+
 
 
