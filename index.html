@@ -234,6 +234,33 @@
       background: #fb8c00;
       color: white;
     }
+
+     /* 🔴 شارة "جديد" */
+  .new-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: red;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    animation: blinkNew 1.5s infinite;
+  }
+
+  /* ✨ حركة ظهور واختفاء ناعمة */
+  @keyframes blinkNew {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.1); }
+  }
+
+  /* لجعل الأيقونة تحتوي على الشارة */
+  .service {
+    position: relative;
+  }
+    
   </style>
 </head>
 <body>
@@ -296,6 +323,23 @@
     "السلف الإجتماعية": false,
     "الضوابط العامة": true
   };
+
+   // الخدمات التي تظهر عليها الشارة "جديد"
+  const newBadgeServices = ["الرحلات"];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.service').forEach(service => {
+      const title = service.querySelector('h3').textContent.trim();
+
+      // ✅ يظهر الوسم فقط إن كانت الخدمة مفتوحة ومحددة في القائمة
+      if (registrationStatus[title] && newBadgeServices.includes(title)) {
+        const badge = document.createElement("div");
+        badge.classList.add("new-badge");
+        badge.textContent = "جديد";
+        service.appendChild(badge);
+      }
+    });
+  });
 
   function openOptions(serviceType) {
     if (!registrationStatus[serviceType]) {
@@ -369,6 +413,7 @@
 
 </body>
 </html>
+
 
 
 
