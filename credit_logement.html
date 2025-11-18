@@ -202,6 +202,61 @@ button {
   margin-bottom: 10px;
 }
 
+.deposit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px dashed #c7d2ff;
+  border-radius: 14px;
+  background: #f5f7ff;
+}
+
+.deposit-tag {
+  background: linear-gradient(135deg, #ffffff, #f1f4ff);
+  color: #1f2c6d;
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #8da2ff;
+  box-shadow: 0 3px 8px rgba(92, 110, 200, 0.18);
+  cursor: default;
+}
+
+.deposit-tag .tag-remove {
+  color: #e71d36;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deposit-year-block {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed #d2d7ff;
+  border-radius: 10px;
+}
+
+.deposit-year-block label {
+  text-align: center;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.selected-years-label {
+  margin-top: 10px;
+}
+
 .col {
   flex: 1;
 }
@@ -237,7 +292,7 @@ button {
         اللجنة الولائية للخدمات الإجتماعية لعمال التربية لولاية توقرت
       </div>
  <img src="https://lh3.googleusercontent.com/d/1AOSzlvuRb-fAO0bqvo412HcHTfpRAX15" alt="شعار اللجنة" class="header-logo">
-      <h2 class="gradient-title">بوابة تسجيل الموظفين في سلفة السكن</h2>
+      <h2 class="gradient-title">بوابة تسجيل الموظفين في السلفة السكن</h2>
       <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
       <button onclick="checkEmployee()">تسجيل الدخول</button>
     </div>
@@ -315,7 +370,7 @@ button {
         <input type="email" id="email" name="email" required>
       </div>
       <div class="col">
-        <label for="managerPhone">رقم هاتف المدير</label>
+        <label for="managerPhone">رقم هاتف الموظف</label>
         <input type="tel" id="managerPhone" name="managerPhone" required>
       </div>
     </div>
@@ -352,7 +407,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbze52cYGHBDiavzyd6UmvE6qbq81qyi00NA3NhOInZcJttKlt-7Hc1QwTsq3GktyZ2K/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbwQnrEsuplLFT0itLdgj17GjMw5SNuoeSRf99bEXGn0VoKLvv0qDDdK73-egZzkB3fP/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -403,6 +458,7 @@ async function checkEmployee() {
     const params = new URLSearchParams();
     params.append("action", "check_existing");
     params.append("empId", empId);
+    params.append("loanType", "housing"); // ✅ نوع السلفة: سكن
 
     try {
       const res = await fetch(scriptURL, {
@@ -428,6 +484,9 @@ async function checkEmployee() {
         const fileYearLine = (d.fileSeniority === "نعم" && d.fileDepositYear)
           ? `<b>سنة إيداع الملف:</b> ${d.fileDepositYear}<br>`
           : "";
+        const depositCountLine = (d.fileSeniority === "نعم" && d.depositCount)
+          ? `<b>عدد مرات الإيداع:</b> ${d.depositCount}<br>`
+          : "";
         const dualSectorLine = isFamilyStatusRequiringChildren
           ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
           : "";
@@ -450,6 +509,7 @@ async function checkEmployee() {
               ${dualSectorLine}
               ${spouseBlock}
               <b>أقدمية الملف:</b> ${d.fileSeniority || ''}<br>
+              ${depositCountLine}
               ${fileYearLine}
               <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
             </div>
@@ -852,18 +912,26 @@ function buildLoanFormTemplate({ title, personData, buttonText }) {
           <option value="نعم">نعم</option>
         </select>
       </div>
-      <div class="col" id="depositYearWrapper" style="display:none;">
-        <label for="depositYearField">سنة إيداع الملف</label>
-        <select id="depositYearField">
-          <option value="">اختر السنة</option>
-          <option value="2020">2020</option>
-          <option value="2021">2021</option>
-          <option value="2022">2022</option>
-          <option value="2023">2023</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-        </select>
+      <div class="col" id="depositCountWrapper" style="display:none;">
+        <label for="depositCountField">عدد مرات الإيداع</label>
+        <input type="number" id="depositCountField" min="1" placeholder="أدخل العدد">
       </div>
+    </div>
+    <div id="depositYearWrapper" class="deposit-year-block" style="display:none;">
+      <label for="depositYearSelect">سنة جديدة لإضافتها</label>
+      <select id="depositYearSelect">
+        <option value="">اختر السنة</option>
+        <option value="2020">2020</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+      </select>
+      <div id="depositYearTags" class="deposit-tags"></div>
+      <label for="depositYearField" class="selected-years-label">السنوات المختارة</label>
+      <input type="text" id="depositYearField" readonly placeholder="لم يتم اختيار سنة بعد">
+      <div class="small-note" style="margin-top:6px;">اضغط على السنة لحذفها أو أضف سنة جديدة من القائمة</div>
     </div>
 
     <div class="small-note">تأكد من صحة البيانات قبل الإرسال</div>
@@ -879,7 +947,7 @@ function showForm(empId, data) {
   currentModificationDate = null;
   const container = document.getElementById("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
-    title: "استمارة التسجيل في سلفة السكن",
+    title: "استمارة التسجيل في السلفة السكن",
     personData: {
       empId,
       name: data.name || '',
@@ -926,6 +994,8 @@ function initializeForm() {
   toggleChildrenField();
   toggleDualSector();
   toggleFileSeniority();
+  setupDepositYearSelector();
+  resetDepositYearSelection();
 }
 
 // دالة لعرض الاستمارة في وضع التعديل
@@ -936,7 +1006,7 @@ function showEditForm(empId, firebaseData, existingData) {
   originalModificationDate = existingData.modificationDate || null;
   const container = document.getElementById("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
-    title: "تعديل بيانات التسجيل في سلفة السكن",
+    title: "تعديل بيانات التسجيل في السلفة السكن",
     personData: {
       empId,
       name: firebaseData.name || '',
@@ -1014,10 +1084,13 @@ function showEditForm(empId, firebaseData, existingData) {
     }
 
     if (existingData.fileDepositYear) {
-      const depositYearField = document.getElementById("depositYearField");
-      if (depositYearField) {
-        depositYearField.value = existingData.fileDepositYear;
-      }
+      const storedYears = parseDepositYears(existingData.fileDepositYear);
+      setDepositYears(storedYears);
+    }
+
+    const depositCountField = document.getElementById("depositCountField");
+    if (depositCountField && existingData.depositCount !== undefined) {
+      depositCountField.value = existingData.depositCount;
     }
   }, 100);
 }
@@ -1135,16 +1208,109 @@ function toggleDualSector() {
 
 function toggleFileSeniority() {
   const fileField = document.getElementById("fileSeniorityField");
-  const wrapper = document.getElementById("depositYearWrapper");
+  const yearWrapper = document.getElementById("depositYearWrapper");
+  const yearSelect = document.getElementById("depositYearSelect");
   const yearField = document.getElementById("depositYearField");
-  if (!fileField || !wrapper || !yearField) return;
+  const countWrapper = document.getElementById("depositCountWrapper");
+  const countField = document.getElementById("depositCountField");
+  if (!fileField || !yearWrapper || !yearField) return;
 
-  if (fileField.value === "نعم") {
-    wrapper.style.display = "block";
-  } else {
-    wrapper.style.display = "none";
-    yearField.value = "";
+  const shouldShow = fileField.value === "نعم";
+  yearWrapper.style.display = shouldShow ? "block" : "none";
+  if (yearSelect) yearSelect.disabled = !shouldShow;
+  if (countWrapper) countWrapper.style.display = shouldShow ? "block" : "none";
+
+  if (!shouldShow) {
+    resetDepositYearSelection();
+    if (countField) countField.value = "";
   }
+}
+
+function setupDepositYearSelector() {
+  const select = document.getElementById("depositYearSelect");
+  const tagsContainer = document.getElementById("depositYearTags");
+  if (select) {
+    select.addEventListener("change", () => {
+      const value = select.value;
+      if (!value) return;
+      addDepositYear(value);
+      select.value = "";
+    });
+  }
+  if (tagsContainer) {
+    tagsContainer.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-year]");
+      if (!target || !target.classList.contains("tag-remove")) return;
+      const year = target.getAttribute("data-year");
+      removeDepositYear(year);
+    });
+  }
+}
+
+function getDepositYearValues() {
+  const field = document.getElementById("depositYearField");
+  if (!field) return [];
+  const data = field.dataset.years;
+  if (!data) return [];
+  try {
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return field.value
+      ? field.value.split(",").map(year => year.trim()).filter(Boolean)
+      : [];
+  }
+}
+
+function parseDepositYears(source) {
+  if (!source && source !== 0) return [];
+  if (Array.isArray(source)) {
+    return source.map(item => String(item).trim()).filter(Boolean);
+  }
+  return String(source)
+    .split(",")
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function setDepositYears(years = []) {
+  const field = document.getElementById("depositYearField");
+  if (!field) return;
+  const normalized = Array.from(new Set(years.map(year => String(year).trim()).filter(Boolean)));
+  field.dataset.years = JSON.stringify(normalized);
+  field.value = normalized.length ? normalized.join(", ") : "";
+  renderDepositYearTags(normalized);
+}
+
+function addDepositYear(year) {
+  const current = getDepositYearValues();
+  if (current.includes(year)) return;
+  current.push(year);
+  setDepositYears(current);
+}
+
+function removeDepositYear(year) {
+  const filtered = getDepositYearValues().filter(item => item !== year);
+  setDepositYears(filtered);
+}
+
+function resetDepositYearSelection() {
+  setDepositYears([]);
+}
+
+function renderDepositYearTags(years = []) {
+  const container = document.getElementById("depositYearTags");
+  if (!container) return;
+  if (!years.length) {
+    container.innerHTML = `<span class="small-note" style="border:none;margin-top:0;">لم يتم اختيار سنة</span>`;
+    return;
+  }
+  container.innerHTML = years.map(year => `
+    <span class="deposit-tag" data-year="${year}">
+      ${year}
+      <span class="tag-remove" data-year="${year}" role="button" aria-label="حذف السنة ${year}">✕</span>
+    </span>
+  `).join("");
 }
 
 async function verifySpouseInFirebase() {
@@ -1362,6 +1528,7 @@ function snapshotFormValues() {
     const el = document.getElementById(id);
     return el ? el.value.trim() : "";
   };
+  const depositYears = getDepositYearValues();
 
   return {
     empId: val("empIdField"),
@@ -1379,7 +1546,8 @@ function snapshotFormValues() {
     spouseEmpId: val("spouseIdField"),
     spouseName: val("spouseNameField"),
     fileSeniority: val("fileSeniorityField"),
-    fileDepositYear: val("depositYearField")
+    fileDepositYear: depositYears.join(", "),
+    depositCount: val("depositCountField")
   };
 }
 
@@ -1387,6 +1555,15 @@ function prepareReceiptData(raw = {}, options = {}) {
   const normalize = (value) => {
     if (value === undefined || value === null) return "";
     return String(value).trim();
+  };
+  const normalizeYears = (value) => {
+    if (Array.isArray(value)) {
+      return value
+        .map(item => normalize(item))
+        .filter(Boolean)
+        .join(", ");
+    }
+    return normalize(value);
   };
 
   const data = {
@@ -1409,7 +1586,8 @@ function prepareReceiptData(raw = {}, options = {}) {
     spouseEmpId: normalize(raw.spouseEmpId),
     spouseName: normalize(raw.spouseName),
     fileSeniority: normalize(raw.fileSeniority),
-    fileDepositYear: normalize(raw.fileDepositYear || raw.depositYear)
+    fileDepositYear: normalizeYears(raw.fileDepositYear || raw.depositYear),
+    depositCount: normalize(raw.depositCount)
   };
 
   data.birthDate = data.birthDate ? formatToDayMonthYear(data.birthDate) : "";
@@ -1462,10 +1640,15 @@ function renderReceiptTemplate(data = {}) {
     `
     : "";
 
-  const fileRows = data.fileSeniority === "نعم"
+  const shouldShowDepositInfo = data.fileSeniority === "نعم";
+  const fileRows = shouldShowDepositInfo
     ? `
       <tr>
-        <td class="label">سنة إيداع الملف</td>
+        <td class="label">عدد مرات الإيداع</td>
+        <td>${safe(data.depositCount || "-")}</td>
+      </tr>
+      <tr>
+        <td class="label">سنوات إيداع الملف</td>
         <td>${safe(data.fileDepositYear || "-")}</td>
       </tr>
     `
@@ -1677,7 +1860,7 @@ function renderReceiptTemplate(data = {}) {
         <p>${receiptBranding.contactLine}</p>
       </div>
     </div>
-    <h3 class="receipt-subtitle">وصل التسجيل في سلفة السكن</h3>
+    <h3 class="receipt-subtitle">وصل التسجيل في السلفة السكن</h3>
     <div class="meta">
       <div class="meta-item">تاريخ التسجيل: ${safe(registrationMoment)}</div>
       ${modificationLine}
@@ -1819,7 +2002,9 @@ async function submitForm() {
   const spouseId = document.getElementById("spouseIdField")?.value.trim() || "";
   const spouseName = document.getElementById("spouseNameField")?.value.trim() || "";
   const fileSeniority = document.getElementById("fileSeniorityField").value.trim();
-  const depositYear = document.getElementById("depositYearField")?.value.trim() || "";
+  const depositYearValues = getDepositYearValues();
+  const depositYear = depositYearValues.join(", ");
+  const depositCount = document.getElementById("depositCountField")?.value.trim() || "";
 
   const requiredFields = [
     { id: "daairaField", value: daaira },
@@ -1839,6 +2024,7 @@ async function submitForm() {
 
   if (fileSeniority === "نعم") {
     requiredFields.push({ id: "depositYearField", value: depositYear });
+    requiredFields.push({ id: "depositCountField", value: depositCount });
   }
 
   let missing = false;
@@ -1901,6 +2087,7 @@ async function submitForm() {
   
   params.append("action", isEditMode ? "update" : "register"); // ✅ استخدام update في وضع التعديل
   params.append("empId", empId);
+  params.append("loanType", "housing"); // ✅ نوع السلفة: سكن
   params.append("name", name);
   params.append("birthDate", birthDate);
   params.append("grade", grade);
@@ -1916,6 +2103,7 @@ async function submitForm() {
   params.append("spouseName", spouseName);
   params.append("fileSeniority", fileSeniority);
   params.append("fileDepositYear", depositYear);
+  params.append("depositCount", depositCount);
   
   // ✅ إضافة تاريخ التعديل فقط في وضع التعديل
   if (isEditMode) {
@@ -1964,7 +2152,7 @@ if (data.result === "success") {
     title: isEditMode ? "✅ تم حفظ التعديلات بنجاح" : "✅ تم التسجيل بنجاح",
     html: `
       <p style="margin-bottom:12px;">
-        ${isEditMode ? "تم تحديث بياناتك في قائمة تسجيلات سلفة السكن بنجاح" : "تم تسجيل بياناتك في قائمة تسجيلات سلفة السكن بنجاح"}
+        ${isEditMode ? "تم تحديث بياناتك في قائمة تسجيلات السلفة السكن بنجاح" : "تم تسجيل بياناتك في قائمة تسجيلات السلفة السكن بنجاح"}
       </p>
       <button type="button" class="receipt-download-btn" id="${receiptButtonId}">تحميل وصل التسجيل</button>
     `,
@@ -1992,6 +2180,9 @@ if (data.result === "success") {
   const fileYearLine = (d.fileSeniority === "نعم" && d.fileDepositYear)
     ? `<b>سنة إيداع الملف:</b> ${d.fileDepositYear}<br>`
     : "";
+  const depositCountLine = (d.fileSeniority === "نعم" && d.depositCount)
+    ? `<b>عدد مرات الإيداع:</b> ${d.depositCount}<br>`
+    : "";
   const dualSectorLine = isFamilyStatusRequiringChildren
     ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
     : "";
@@ -2014,6 +2205,7 @@ if (data.result === "success") {
         ${dualSectorLine}
         ${spouseBlock}
         <b>أقدمية الملف:</b> ${d.fileSeniority || ''}<br>
+        ${depositCountLine}
         ${fileYearLine}
         <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
       </div>
@@ -2047,8 +2239,8 @@ if (data.result === "success") {
 } else if (data.result === "phone_exists") {
   Swal.fire({
     icon: "warning",
-    title: "⚠️ رقم هاتف المدير مستعمل",
-    text: "رقم هاتف المدير مسجل مسبقًا. يرجى التحقق من الرقم.",
+    title: "⚠️ رقم هاتف الموظف مستعمل",
+    text: "رقم هاتف الموظف مسجل مسبقًا. يرجى التحقق من الرقم.",
     confirmButtonText: "حسنًا"
   });
 
@@ -2115,6 +2307,7 @@ async function deleteRegistration(empId) {
     const params = new URLSearchParams();
     params.append("action", "delete");
     params.append("empId", empId);
+    params.append("loanType", "housing"); // ✅ نوع السلفة: سكن
 
     const res = await fetch(scriptURL, {
       method: "POST",
@@ -2126,7 +2319,7 @@ async function deleteRegistration(empId) {
     if (data.result === "success") {
       Swal.fire({
         title: "✅ تم الحذف بنجاح",
-        text: "تم حذف تسجيلك من قائمة تسجيلات سلفة السكن بنجاح",
+        text: "تم حذف تسجيلك من قائمة تسجيلات السلفة السكن بنجاح",
         icon: "success",
         confirmButtonText: "حسنًا"
       }).then(() => {
