@@ -589,10 +589,9 @@ async function checkEmployee() {
         title: "✅ تم التحقق بنجاح",
         html: `
           <b>الاسم واللقب:</b> ${escapeHtml(data.name)}<br>
-          <b>تاريخ الميلاد:</b> ${escapeHtml(formatToDayMonthYear(data.diz || ''))}<br>
           <b>الرتبة:</b> ${escapeHtml(data.grade)}<br>
           <b>مكان العمل:</b> ${escapeHtml(data.place)}<br>
-          <b>تاريخ التوظيف:</b> ${escapeHtml(formatToDayMonthYear(data.dtw || ''))}
+         
         `,
         icon: "success",
         confirmButtonText: "متابعة التسجيل"
@@ -948,7 +947,7 @@ function buildLoanFormTemplate({ title, personData, buttonText }) {
 
     <div class="row">
       <div class="col">
-        <label for="fileSeniorityField">أقدمية الملف (لغير المستفيدين)</label>
+        <label for="fileSeniorityField">أقدمية الملف</label>
         <select id="fileSeniorityField">
           <option value="">اختر نعم أو لا</option>
           <option value="لا">لا</option>
@@ -963,7 +962,7 @@ function buildLoanFormTemplate({ title, personData, buttonText }) {
     <div id="depositYearWrapper" class="deposit-year-block" style="display:none;">
       <label for="depositYearSelect">سنة الإيداع (يمكنك اختيار أكثر من سنة)</label>
       <select id="depositYearSelect">
-        <option value="">حدد سنة جديدة لإضافتها</option>
+        <option value="">حدد السنة لإضافتها</option>
         <option value="2020">2020</option>
         <option value="2021">2021</option>
         <option value="2022">2022</option>
@@ -2429,6 +2428,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
