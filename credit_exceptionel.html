@@ -448,43 +448,49 @@ async function checkEmployee() {
 
     if (!docSnap.exists) {
       Swal.close();
-  Swal.fire({
+ Swal.fire({
   icon: "error",
   title: "❌ خطأ",
   html: `
     رقم الموظف غير موجود في قاعدة البيانات.<br><br>
 
     <style>
-      @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.03); }
-        100% { transform: scale(1); }
+      /* وميض بسيط */
+      @keyframes softBlink {
+        0% { opacity: 1; }
+        50% { opacity: 0.65; }
+        100% { opacity: 1; }
       }
-      .note-animated {
-        animation: pulse 1.5s infinite ease-in-out;
+
+      .note-blink {
+        animation: softBlink 1.6s infinite ease-in-out;
       }
     </style>
 
-    <span class="note-animated" style="
-      display: inline-block;
-      padding: 12px;
-      background: #ffe6e6;
+    <div class="note-blink" style="
+      padding: 15px;
+      background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
       color: #d00000;
-      border-left: 5px solid #d00000;
-      border-radius: 6px;
+      border: 2px solid #d00000;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(208, 0, 0, 0.2);
       font-weight: bold;
-      font-size: 14px;">
-      
-      ⚠️ <span style="color:#d00000;">ملاحظة مهمة:</span><br>
+      font-size: 15px;
+      text-align: right;
+      line-height: 1.6;
+    ">
+      ⚠️ <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span><br>
       إذا كان رقم تعريف الموظف صحيحًا وظهرت هذه الرسالة، وكان رقم الموظف ينتهي بالرقم 
       <strong style="color:#b00000;">1</strong>،<br>
       يجب استبدال الرقم 
       <strong style="color:#b00000;">1</strong> 
       بالرقم 
-      <strong style="color:#b00000;">0</strong> فقط وستنجح العملية.
-    </span>
+      <strong style="color:#b00000;">0</strong>
+      فقط وستنجح العملية.
+    </div>
   `
 });
+
 
 
       return;
@@ -2424,6 +2430,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
