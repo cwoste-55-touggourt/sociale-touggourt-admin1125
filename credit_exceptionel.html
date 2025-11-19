@@ -455,36 +455,40 @@ Swal.fire({
     رقم الموظف غير موجود في قاعدة البيانات.<br><br>
 
     <style>
-      /* حركة الوميض القوي FLASH */
-      @keyframes flashEffect {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.2; }
+      /* وميض بسيط */
+      @keyframes softBlink {
+        0% { opacity: 1; }
+        50% { opacity: 0.65; }
+        100% { opacity: 1; }
       }
 
-      .note-flash {
-        animation: flashEffect 1.4s infinite ease-in-out;
+      .note-blink {
+        animation: softBlink 1.6s infinite ease-in-out;
       }
     </style>
 
-    <div class="note-flash" style="
+    <div class="note-blink" style="
       padding: 15px;
       background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
       color: #d00000;
       border: 2px solid #d00000;
       border-radius: 10px;
-      box-shadow: 0 0 12px rgba(208, 0, 0, 0.25);
+      box-shadow: 0 0 10px rgba(208, 0, 0, 0.2);
       font-weight: bold;
       font-size: 15px;
-      text-align: right;
-      line-height: 1.6;
+      text-align: center; /* ← وضع النص في الوسط */
+      line-height: 1.7;
     ">
-      ⚠️ <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span><br>
+      <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span>
+      <br><br>
+
       إذا كان رقم تعريف الموظف صحيحًا وظهرت هذه الرسالة، وكان رقم الموظف ينتهي بالرقم 
       <strong style="color:#b00000;">1</strong>،<br>
       يجب استبدال الرقم 
       <strong style="color:#b00000;">1</strong> 
       بالرقم 
-      <strong style="color:#b00000;">0</strong> فقط وستنجح العملية.
+      <strong style="color:#b00000;">0</strong>
+      فقط وستنجح العملية.
     </div>
   `
 });
@@ -2428,6 +2432,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
