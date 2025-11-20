@@ -292,7 +292,7 @@ button {
         اللجنة الولائية للخدمات الإجتماعية لعمال التربية لولاية توقرت
       </div>
  <img src="https://lh3.googleusercontent.com/d/1AOSzlvuRb-fAO0bqvo412HcHTfpRAX15" alt="شعار اللجنة" class="header-logo">
-      <h2 class="gradient-title">بوابة تسجيل الموظفين في السلفة السكن</h2>
+      <h2 class="gradient-title">بوابة تسجيل الموظفين في سلفة السكن</h2>
       <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
       <button onclick="checkEmployee()">تسجيل الدخول</button>
     </div>
@@ -988,7 +988,7 @@ function showForm(empId, data) {
   currentModificationDate = null;
   const container = document.getElementById("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
-    title: "استمارة التسجيل في السلفة السكن",
+    title: "استمارة التسجيل في سلفة السكن",
     personData: {
       empId,
       name: data.name || '',
@@ -1047,7 +1047,7 @@ function showEditForm(empId, firebaseData, existingData) {
   originalModificationDate = existingData.modificationDate || null;
   const container = document.getElementById("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
-    title: "تعديل بيانات التسجيل في السلفة السكن",
+    title: "تعديل بيانات التسجيل في سلفة السكن",
     personData: {
       empId,
       name: firebaseData.name || '',
@@ -1901,7 +1901,7 @@ function renderReceiptTemplate(data = {}) {
         <p>${receiptBranding.contactLine}</p>
       </div>
     </div>
-    <h3 class="receipt-subtitle">وصل التسجيل في السلفة السكن</h3>
+    <h3 class="receipt-subtitle">وصل التسجيل في سلفة السكن</h3>
     <div class="meta">
       <div class="meta-item">تاريخ التسجيل: ${safe(registrationMoment)}</div>
       ${modificationLine}
@@ -2193,7 +2193,7 @@ if (data.result === "success") {
     title: isEditMode ? "✅ تم حفظ التعديلات بنجاح" : "✅ تم التسجيل بنجاح",
     html: `
       <p style="margin-bottom:12px;">
-        ${isEditMode ? "تم تحديث بياناتك في قائمة تسجيلات سلفة السكن بنجاح" : "تم تسجيل بياناتك في قائمة تسجيلات السلفة السكن بنجاح"}
+        ${isEditMode ? "تم تحديث بياناتك في قائمة تسجيلات سلفة السكن بنجاح" : "تم تسجيل بياناتك في قائمة تسجيلات سلفة السكن بنجاح"}
       </p>
       <button type="button" class="receipt-download-btn" id="${receiptButtonId}">تحميل وصل التسجيل الجديد</button>
     `,
@@ -2360,7 +2360,7 @@ async function deleteRegistration(empId) {
     if (data.result === "success") {
       Swal.fire({
         title: "✅ تم الحذف بنجاح",
-        text: "تم حذف تسجيلك من قائمة تسجيلات السلفة السكن بنجاح",
+        text: "تم حذف تسجيلك من قائمة تسجيلات سلفة السكن بنجاح",
         icon: "success",
         confirmButtonText: "حسنًا"
       }).then(() => {
@@ -2428,6 +2428,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
