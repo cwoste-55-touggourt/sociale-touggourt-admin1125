@@ -157,7 +157,51 @@ async function checkEmployee() {
         confirmButtonText: "متابعة التسجيل"
       }).then(() => showForm(empId, data));
     } else {
-      Swal.fire("❌ خطأ", "رقم الموظف غير موجود في قاعدة البيانات", "error");
+      
+Swal.fire({
+  icon: "error",
+  title: "❌ خطأ",
+  html: `
+    رقم الموظف غير موجود في قاعدة البيانات.<br><br>
+
+    <style>
+      /* وميض بسيط */
+      @keyframes softBlink {
+        0% { opacity: 1; }
+        50% { opacity: 0.65; }
+        100% { opacity: 1; }
+      }
+
+      .note-blink {
+        animation: softBlink 1.6s infinite ease-in-out;
+      }
+    </style>
+
+    <div class="note-blink" style="
+      padding: 15px;
+      background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
+      color: #d00000;
+      border: 2px solid #d00000;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(208, 0, 0, 0.2);
+      font-weight: bold;
+      font-size: 15px;
+      text-align: center; /* ← وضع النص في الوسط */
+      line-height: 1.7;
+    ">
+      <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span>
+      <br>
+      إذا كان رقم تعريف الموظف صحيحًا وظهرت هذه الرسالة، وكان رقم الموظف ينتهي بالرقم 
+      <strong style="color:#b00000;">1</strong>،<br>
+      يجب استبدال الرقم 
+      <strong style="color:#b00000;">1</strong> 
+      بالرقم 
+      <strong style="color:#b00000;">0</strong>
+      فقط وستنجح العملية.
+    </div>
+  `
+});
+ 
     }
   } catch (err) {
     Swal.close();
@@ -359,6 +403,7 @@ async function submitForm() {
 </script>
 </body>
 </html>
+
 
 
 
