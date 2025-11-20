@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل المتقاعدين والأرامل في الرحلات 2025</title>
+  <title>تسجيل المتقاعدين في الرحلات 2025</title>
 
   <!-- ✅ خط Cairo -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -90,7 +90,7 @@
     window.showForm = function(phone) {
       const container = document.getElementById("mainContainer");
       container.innerHTML = `
-        <h2>استمارة تسجيل المتقاعدين والأرامل في الرحلات</h2>
+        <h2>استمارة تسجيل المتقاعدين في الرحلات</h2>
         <input type="text" id="phoneField" value="${phone}" readonly>
 
         <div style="display: flex; gap: 10px; margin-bottom: 18px;">
@@ -440,12 +440,13 @@ button {
       </div>
     </div>
 
-    <h2 class="gradient-title">بوابة تسجيل المتقاعدين و الأرامل في الرحلات</h2>
+    <h2 class="gradient-title">بوابة تسجيل المتقاعدين في الرحلات</h2>
     <input type="text" id="phone" oninput="validatePhone(this)" maxlength="10" placeholder="أدخل رقم الهاتف">
     <button onclick="checkPhone()">تسجيل الدخول</button>
   </div>
 </body>
 </html>
+
 
 
 
