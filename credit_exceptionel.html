@@ -418,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbzxv4Bh2xchw3sMaZTLig0X5_ensaBaKpxp3MPOtCHOTkvZP5MR6gHYz499TRr6KYOS/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbzYNrJOreK0ggjbdtsU_nFh_zjUJvmAohz-qbCS-Q5eYIP4GJToWRzew0cfZ3hAkImx/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -439,7 +439,7 @@ const receiptBranding = {
 
 
 function validateNumber(input) {
-  input.value = input.value.replace(/\D/g, '');
+  input.value = input.value.replace(REGEX_PATTERNS.nonDigit, '');
   if (input.value.length > 16) input.value = input.value.slice(0, 16);
 }
 
@@ -660,7 +660,10 @@ Swal.fire({
 }
 
 
-function escapeHtml(str){ return String(str || '').replace(/[&<>"'`=\/]/g, function(s){ return '&#' + s.charCodeAt(0) + ';'; }); }
+function escapeHtml(str){ 
+  const s = String(str || '');
+  return s.replace(REGEX_PATTERNS.htmlEscape, s => '&#' + s.charCodeAt(0) + ';'); 
+}
 
 // دالة لتحويل التاريخ من صيغة ISO إلى صيغة "HH:mm:ss ll YYYY-MM-DD"
 function formatDateFromISO(dateStr) {
@@ -718,8 +721,8 @@ function formatToDayMonthYear(dateStr) {
 
   const trimmed = String(dateStr).trim();
   if (!trimmed) return '';
-  if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) return trimmed;
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (REGEX_PATTERNS.dateDDMMYYYY.test(trimmed)) return trimmed;
+  const isoMatch = trimmed.match(REGEX_PATTERNS.dateISO);
   if (isoMatch) {
     const [, year, month, day] = isoMatch;
     return `${day}-${month}-${year}`;
@@ -890,6 +893,25 @@ let originalModificationDate = null; // تاريخ التعديل الأصلي (
 let currentModificationDate = null; // تاريخ التعديل الحالي (الذي يتم إنشاؤه عند التعديل)
 let spouseLookupTimeout = null;
 
+// ✅ تحسين الأداء: تخزين مؤقت للعناصر DOM
+const domCache = {};
+const getEl = (id) => {
+  if (!domCache[id]) domCache[id] = document.getElementById(id);
+  return domCache[id];
+};
+const clearCache = () => Object.keys(domCache).forEach(k => delete domCache[k]);
+
+// ✅ تحسين الأداء: regex patterns محفوظة مسبقاً
+const REGEX_PATTERNS = {
+  nonDigit: /\D/g,
+  phoneDigits: /[^\d\s]/g,
+  spaces: /\s/g,
+  leadingQuote: /^'/,
+  dateISO: /^(\d{4})-(\d{2})-(\d{2})/,
+  dateDDMMYYYY: /^\d{2}-\d{2}-\d{4}$/,
+  htmlEscape: /[&<>"'`=\/]/g
+};
+
 function buildLoanFormTemplate({ title, personData, buttonText }) {
   const formattedBirthDate = formatToDayMonthYear(personData.birthDate || '');
   const formattedHireDate = formatToDayMonthYear(personData.hireDate || '');
@@ -1035,7 +1057,8 @@ function showForm(empId, data) {
   originalRegistrationDate = null;
   originalModificationDate = null;
   currentModificationDate = null;
-  const container = document.getElementById("mainContainer");
+  clearCache(); // مسح الكاش عند إنشاء نموذج جديد
+  const container = getEl("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
     title: "استمارة التسجيل في السلفة الإستثنائية",
     personData: {
@@ -1055,27 +1078,28 @@ function showForm(empId, data) {
 
 // دالة لتهيئة الاستمارة
 function initializeForm() {
-  const daairaField = document.getElementById("daairaField");
+  clearCache(); // مسح الكاش عند إعادة التهيئة
+  const daairaField = getEl("daairaField");
   if (daairaField) {
     daairaField.addEventListener("change", () => updateBaladiya());
   }
 
-  const maritalField = document.getElementById("maritalStatusField");
+  const maritalField = getEl("maritalStatusField");
   if (maritalField) {
     maritalField.addEventListener("change", toggleChildrenField);
   }
 
-  const dualField = document.getElementById("dualSectorField");
+  const dualField = getEl("dualSectorField");
   if (dualField) {
     dualField.addEventListener("change", toggleDualSector);
   }
 
-  const fileSeniorityField = document.getElementById("fileSeniorityField");
+  const fileSeniorityField = getEl("fileSeniorityField");
   if (fileSeniorityField) {
     fileSeniorityField.addEventListener("change", toggleFileSeniority);
   }
 
-  const spouseIdField = document.getElementById("spouseIdField");
+  const spouseIdField = getEl("spouseIdField");
   if (spouseIdField) {
     spouseIdField.addEventListener("blur", verifySpouseInFirebase);
     spouseIdField.addEventListener("input", handleSpouseInput);
@@ -1095,7 +1119,8 @@ function showEditForm(empId, firebaseData, existingData) {
   // حفظ تاريخ التسجيل الأصلي وتاريخ التعديل الأصلي
   originalRegistrationDate = existingData.date || null;
   originalModificationDate = existingData.modificationDate || null;
-  const container = document.getElementById("mainContainer");
+  clearCache(); // مسح الكاش عند إنشاء نموذج تعديل
+  const container = getEl("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
     title: "تعديل بيانات التسجيل في السلفة الإستثنائية",
     personData: {
@@ -1112,25 +1137,26 @@ function showEditForm(empId, firebaseData, existingData) {
 
   initializeForm();
 
-  setTimeout(() => {
-    const daairaField = document.getElementById("daairaField");
+  // ✅ تحسين: استخدام requestAnimationFrame بدلاً من setTimeout
+  requestAnimationFrame(() => {
+    const daairaField = getEl("daairaField");
     if (daairaField) {
       daairaField.value = existingData.daira || "";
       updateBaladiya(existingData.baladiya || "");
-  }
+    }
 
-  const baladiyaField = document.getElementById("baladiyaField");
-  if (baladiyaField) {
+    const baladiyaField = getEl("baladiyaField");
+    if (baladiyaField) {
       baladiyaField.value = existingData.baladiya || "";
-  }
+    }
 
-    const maritalField = document.getElementById("maritalStatusField");
+    const maritalField = getEl("maritalStatusField");
     if (maritalField) {
       maritalField.value = existingData.maritalStatus || "";
       toggleChildrenField();
     }
 
-    const childrenField = document.getElementById("childrenCountField");
+    const childrenField = getEl("childrenCountField");
     if (childrenField) {
       const rawChildrenCount = existingData.childrenCount;
       const normalizedChildrenCount =
@@ -1141,37 +1167,36 @@ function showEditForm(empId, firebaseData, existingData) {
       if (normalizedChildrenCount !== "") {
         childrenField.value = normalizedChildrenCount;
       } else if (["متزوج(ة)", "مطلق(ة)"].includes(existingData.maritalStatus || "")) {
-        // في بعض الحالات يعود الحقل من الجدول كسلسلة فارغة رغم أنه 0
         childrenField.value = "0";
       }
     }
 
-    const dualField = document.getElementById("dualSectorField");
+    const dualField = getEl("dualSectorField");
     if (dualField) {
       dualField.value = existingData.dualSector || "";
       toggleDualSector();
     }
 
     if (existingData.spouseEmpId) {
-      const spouseIdField = document.getElementById("spouseIdField");
+      const spouseIdField = getEl("spouseIdField");
       if (spouseIdField) {
         spouseIdField.value = existingData.spouseEmpId;
       }
     }
 
     if (existingData.spouseName) {
-      const spouseNameField = document.getElementById("spouseNameField");
-      const spouseNameWrapper = document.getElementById("spouseNameWrapper");
+      const spouseNameField = getEl("spouseNameField");
+      const spouseNameWrapper = getEl("spouseNameWrapper");
       if (spouseNameField && spouseNameWrapper) {
         spouseNameField.value = existingData.spouseName;
         spouseNameWrapper.style.display = "block";
       }
     }
 
-    const fileSeniorityField = document.getElementById("fileSeniorityField");
+    const fileSeniorityField = getEl("fileSeniorityField");
     if (fileSeniorityField) {
       fileSeniorityField.value = existingData.fileSeniority || "";
-      toggleFileSeniority(false); // false = لا تعرض الرسالة عند تحميل القيمة المسبقة
+      toggleFileSeniority(false);
     }
 
     if (existingData.fileDepositYear) {
@@ -1179,22 +1204,22 @@ function showEditForm(empId, firebaseData, existingData) {
       setDepositYears(storedYears);
     }
 
-    const depositCountField = document.getElementById("depositCountField");
+    const depositCountField = getEl("depositCountField");
     if (depositCountField && existingData.depositCount !== undefined) {
       depositCountField.value = existingData.depositCount;
     }
-  }, 100);
+  });
 }
 
 /* عند تغيير الطور أو الدائرة - تحديث سلوك اسم المؤسسة والقوائم */
 function handleSpouseInput() {
-  const dualField = document.getElementById("dualSectorField");
+  const dualField = getEl("dualSectorField");
   if (!dualField || dualField.value !== "نعم") return;
 
-  const spouseIdField = document.getElementById("spouseIdField");
-  const statusMessage = document.getElementById("spouseStatusMessage");
-  const spouseNameWrapper = document.getElementById("spouseNameWrapper");
-  const spouseNameField = document.getElementById("spouseNameField");
+  const spouseIdField = getEl("spouseIdField");
+  const statusMessage = getEl("spouseStatusMessage");
+  const spouseNameWrapper = getEl("spouseNameWrapper");
+  const spouseNameField = getEl("spouseNameField");
 
   if (!spouseIdField || !statusMessage) return;
 
@@ -1234,16 +1259,16 @@ function handleSpouseInput() {
 }
 
 function toggleChildrenField() {
-  const maritalField = document.getElementById("maritalStatusField");
-  const wrapper = document.getElementById("childrenCountWrapper");
-  const childrenField = document.getElementById("childrenCountField");
-  const dualSectorWrapper = document.getElementById("dualSectorWrapper");
-  const dualSectorField = document.getElementById("dualSectorField");
-  const spouseIdWrapper = document.getElementById("spouseIdWrapper");
-  const spouseIdField = document.getElementById("spouseIdField");
-  const spouseNameWrapper = document.getElementById("spouseNameWrapper");
-  const spouseNameField = document.getElementById("spouseNameField");
-  const statusMessage = document.getElementById("spouseStatusMessage");
+  const maritalField = getEl("maritalStatusField");
+  const wrapper = getEl("childrenCountWrapper");
+  const childrenField = getEl("childrenCountField");
+  const dualSectorWrapper = getEl("dualSectorWrapper");
+  const dualSectorField = getEl("dualSectorField");
+  const spouseIdWrapper = getEl("spouseIdWrapper");
+  const spouseIdField = getEl("spouseIdField");
+  const spouseNameWrapper = getEl("spouseNameWrapper");
+  const spouseNameField = getEl("spouseNameField");
+  const statusMessage = getEl("spouseStatusMessage");
   if (!maritalField || !wrapper || !childrenField) return;
 
   const needsChildren = ["متزوج(ة)", "مطلق(ة)"].includes(maritalField.value);
@@ -1272,12 +1297,12 @@ function toggleChildrenField() {
 }
 
 function toggleDualSector() {
-  const dualField = document.getElementById("dualSectorField");
-  const wrapper = document.getElementById("spouseIdWrapper");
-  const spouseIdField = document.getElementById("spouseIdField");
-  const spouseNameWrapper = document.getElementById("spouseNameWrapper");
-  const spouseNameField = document.getElementById("spouseNameField");
-  const statusMessage = document.getElementById("spouseStatusMessage");
+  const dualField = getEl("dualSectorField");
+  const wrapper = getEl("spouseIdWrapper");
+  const spouseIdField = getEl("spouseIdField");
+  const spouseNameWrapper = getEl("spouseNameWrapper");
+  const spouseNameField = getEl("spouseNameField");
+  const statusMessage = getEl("spouseStatusMessage");
 
   if (!dualField || !wrapper || !spouseIdField || !spouseNameWrapper || !spouseNameField || !statusMessage) return;
 
@@ -1298,12 +1323,12 @@ function toggleDualSector() {
 }
 
 function toggleFileSeniority(showAlert = true) {
-  const fileField = document.getElementById("fileSeniorityField");
-  const yearWrapper = document.getElementById("depositYearWrapper");
-  const yearSelect = document.getElementById("depositYearSelect");
-  const yearField = document.getElementById("depositYearField");
-  const countWrapper = document.getElementById("depositCountWrapper");
-  const countField = document.getElementById("depositCountField");
+  const fileField = getEl("fileSeniorityField");
+  const yearWrapper = getEl("depositYearWrapper");
+  const yearSelect = getEl("depositYearSelect");
+  const yearField = getEl("depositYearField");
+  const countWrapper = getEl("depositCountWrapper");
+  const countField = getEl("depositCountField");
   if (!fileField || !yearWrapper || !yearField) return;
 
   const shouldShow = fileField.value === "نعم";
@@ -1361,8 +1386,8 @@ function toggleFileSeniority(showAlert = true) {
 }
 
 function setupDepositYearSelector() {
-  const select = document.getElementById("depositYearSelect");
-  const tagsContainer = document.getElementById("depositYearTags");
+  const select = getEl("depositYearSelect");
+  const tagsContainer = getEl("depositYearTags");
   if (select) {
     select.addEventListener("change", () => {
       const value = select.value;
@@ -1385,11 +1410,11 @@ function setupDepositYearSelector() {
 
 // دالة للتحقق من تطابق عدد مرات الإيداع مع عدد السنوات
 function validateDepositCount() {
-  const fileField = document.getElementById("fileSeniorityField");
+  const fileField = getEl("fileSeniorityField");
   if (!fileField || fileField.value !== "نعم") return;
 
   const depositYears = getDepositYearValues();
-  const depositCountField = document.getElementById("depositCountField");
+  const depositCountField = getEl("depositCountField");
   if (!depositCountField) return;
 
   const yearsCount = depositYears.length;
@@ -1418,7 +1443,7 @@ function validateDepositCount() {
 
 // إعداد مستمعات الأحداث للتحقق من التطابق
 function setupDepositValidation() {
-  const depositCountField = document.getElementById("depositCountField");
+  const depositCountField = getEl("depositCountField");
   if (depositCountField) {
     // إضافة مستمعات للتحقق من التطابق
     depositCountField.addEventListener("input", validateDepositCount);
@@ -1428,7 +1453,7 @@ function setupDepositValidation() {
 }
 
 function getDepositYearValues() {
-  const field = document.getElementById("depositYearField");
+  const field = getEl("depositYearField");
   if (!field) return [];
   const data = field.dataset.years;
   if (!data) return [];
@@ -1454,7 +1479,7 @@ function parseDepositYears(source) {
 }
 
 function setDepositYears(years = []) {
-  const field = document.getElementById("depositYearField");
+  const field = getEl("depositYearField");
   if (!field) return;
   const normalized = Array.from(new Set(years.map(year => String(year).trim()).filter(Boolean)));
   field.dataset.years = JSON.stringify(normalized);
@@ -1480,7 +1505,7 @@ function resetDepositYearSelection() {
 }
 
 function renderDepositYearTags(years = []) {
-  const container = document.getElementById("depositYearTags");
+  const container = getEl("depositYearTags");
   if (!container) return;
   if (!years.length) {
     container.innerHTML = `<span class="small-note" style="border:none;margin-top:0;">لم يتم اختيار سنة</span>`;
@@ -1495,13 +1520,13 @@ function renderDepositYearTags(years = []) {
 }
 
 async function verifySpouseInFirebase() {
-  const dualField = document.getElementById("dualSectorField");
+  const dualField = getEl("dualSectorField");
   if (!dualField || dualField.value !== "نعم") return;
 
-  const spouseIdField = document.getElementById("spouseIdField");
-  const statusMessage = document.getElementById("spouseStatusMessage");
-  const spouseNameWrapper = document.getElementById("spouseNameWrapper");
-  const spouseNameField = document.getElementById("spouseNameField");
+  const spouseIdField = getEl("spouseIdField");
+  const statusMessage = getEl("spouseStatusMessage");
+  const spouseNameWrapper = getEl("spouseNameWrapper");
+  const spouseNameField = getEl("spouseNameField");
 
   if (!spouseIdField || !statusMessage || !spouseNameWrapper || !spouseNameField) return;
 
@@ -1555,8 +1580,8 @@ async function verifySpouseInFirebase() {
 }
 
 function updateBaladiya(selectedBaladiya = "") {
-  const daairaField = document.getElementById("daairaField");
-  const baladiyaSelect = document.getElementById("baladiyaField");
+  const daairaField = getEl("daairaField");
+  const baladiyaSelect = getEl("baladiyaField");
 
   if (!daairaField || !baladiyaSelect) return;
 
@@ -1580,21 +1605,18 @@ function updateBaladiya(selectedBaladiya = "") {
 /* تنسيق رقم الهاتف على شكل 00 00 00 00 00 */
 function formatPhoneSimple(input) {
   // إزالة كل شيء ما عدا الأرقام
-  let value = input.value.replace(/\D/g, '');
+  let value = input.value.replace(REGEX_PATTERNS.nonDigit, '');
   
   // تحديد إلى 10 أرقام
   value = value.slice(0, 10);
   
-  // تنسيق على شكل 00 00 00 00 00
+  // ✅ تحسين: تنسيق أسرع باستخدام slice
   if (value.length > 0) {
-    let formatted = '';
-    for (let i = 0; i < value.length; i++) {
-      if (i > 0 && i % 2 === 0) {
-        formatted += ' ';
-      }
-      formatted += value[i];
+    const parts = [];
+    for (let i = 0; i < value.length; i += 2) {
+      parts.push(value.slice(i, i + 2));
     }
-    input.value = formatted;
+    input.value = parts.join(' ');
   } else {
     input.value = '';
   }
@@ -1603,30 +1625,29 @@ function formatPhoneSimple(input) {
 /* تنسيق رقم الهاتف الثابت على شكل 000 00 00 00 (9 أرقام) */
 function formatFixedPhone(input) {
   // إزالة كل شيء ما عدا الأرقام
-  let value = input.value.replace(/\D/g, '');
+  let value = input.value.replace(REGEX_PATTERNS.nonDigit, '');
   
   // تحديد إلى 9 أرقام
   value = value.slice(0, 9);
   
-  // تنسيق على شكل 000 00 00 00
+  // ✅ تحسين: تنسيق أسرع
   if (value.length > 0) {
-    let formatted = '';
-    // أول 3 أرقام
+    const parts = [];
     if (value.length >= 3) {
-      formatted = value.slice(0, 3);
+      parts.push(value.slice(0, 3));
       if (value.length > 3) {
-        formatted += ' ' + value.slice(3, 5);
+        parts.push(value.slice(3, 5));
         if (value.length > 5) {
-          formatted += ' ' + value.slice(5, 7);
+          parts.push(value.slice(5, 7));
           if (value.length > 7) {
-            formatted += ' ' + value.slice(7, 9);
+            parts.push(value.slice(7, 9));
           }
         }
       }
+      input.value = parts.join(' ');
     } else {
-      formatted = value;
+      input.value = value;
     }
-    input.value = formatted;
   } else {
     input.value = '';
   }
@@ -1636,27 +1657,22 @@ function formatFixedPhone(input) {
 function formatPhoneNumber(phone) {
   if (!phone) return '';
   // إزالة علامة الاقتباس في البداية إن وجدت (من Google Sheets)
-  let phoneStr = String(phone).replace(/^'/, '');
+  let phoneStr = String(phone).replace(REGEX_PATTERNS.leadingQuote, '');
   // إزالة كل شيء ما عدا الأرقام والمسافات
-  let value = phoneStr.replace(/[^\d\s]/g, '');
+  let value = phoneStr.replace(REGEX_PATTERNS.phoneDigits, '');
   // إزالة المسافات ثم إعادة التنسيق
-  value = value.replace(/\s/g, '');
+  value = value.replace(REGEX_PATTERNS.spaces, '');
   // تحديد إلى 10 أرقام
   value = value.slice(0, 10);
-  // تنسيق على شكل 00 00 00 00 00
+  // ✅ تحسين: تنسيق أسرع
   if (value.length === 10) {
-    return value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + 
-           value.slice(4, 6) + ' ' + value.slice(6, 8) + ' ' + value.slice(8, 10);
+    return `${value.slice(0, 2)} ${value.slice(2, 4)} ${value.slice(4, 6)} ${value.slice(6, 8)} ${value.slice(8, 10)}`;
   } else if (value.length > 0) {
-    // إذا كان الرقم أقل من 10 أرقام، ننسقه كما هو
-    let formatted = '';
-    for (let i = 0; i < value.length; i++) {
-      if (i > 0 && i % 2 === 0) {
-        formatted += ' ';
-      }
-      formatted += value[i];
+    const parts = [];
+    for (let i = 0; i < value.length; i += 2) {
+      parts.push(value.slice(i, i + 2));
     }
-    return formatted;
+    return parts.join(' ');
   }
   return '';
 }
@@ -1665,48 +1681,46 @@ function formatPhoneNumber(phone) {
 function formatFixedPhoneNumber(phone) {
   if (!phone) return '';
   // إزالة علامة الاقتباس في البداية إن وجدت (من Google Sheets)
-  let phoneStr = String(phone).replace(/^'/, '');
+  let phoneStr = String(phone).replace(REGEX_PATTERNS.leadingQuote, '');
   // إزالة كل شيء ما عدا الأرقام والمسافات
-  let value = phoneStr.replace(/[^\d\s]/g, '');
+  let value = phoneStr.replace(REGEX_PATTERNS.phoneDigits, '');
   // إزالة المسافات ثم إعادة التنسيق
-  value = value.replace(/\s/g, '');
+  value = value.replace(REGEX_PATTERNS.spaces, '');
   // تحديد إلى 9 أرقام
   value = value.slice(0, 9);
-  // تنسيق على شكل 000 00 00 00
+  // ✅ تحسين: تنسيق أسرع
   if (value.length === 9) {
-    return value.slice(0, 3) + ' ' + value.slice(3, 5) + ' ' + 
-           value.slice(5, 7) + ' ' + value.slice(7, 9);
+    return `${value.slice(0, 3)} ${value.slice(3, 5)} ${value.slice(5, 7)} ${value.slice(7, 9)}`;
   } else if (value.length > 0) {
-    // إذا كان الرقم أقل من 9 أرقام، ننسقه تدريجياً
-    let formatted = '';
+    const parts = [];
     if (value.length >= 3) {
-      formatted = value.slice(0, 3) + ' ';
+      parts.push(value.slice(0, 3));
       if (value.length >= 5) {
-        formatted += value.slice(3, 5) + ' ';
+        parts.push(value.slice(3, 5));
         if (value.length >= 7) {
-          formatted += value.slice(5, 7) + ' ';
+          parts.push(value.slice(5, 7));
           if (value.length >= 9) {
-            formatted += value.slice(7, 9);
+            parts.push(value.slice(7, 9));
           } else {
-            formatted += value.slice(7);
+            parts.push(value.slice(7));
           }
         } else {
-          formatted += value.slice(5);
+          parts.push(value.slice(5));
         }
       } else {
-        formatted += value.slice(3);
+        parts.push(value.slice(3));
       }
     } else {
-      formatted = value;
+      return value;
     }
-    return formatted;
+    return parts.join(' ');
   }
   return '';
 }       
 
 function snapshotFormValues() {
   const val = (id) => {
-    const el = document.getElementById(id);
+    const el = getEl(id);
     return el ? el.value.trim() : "";
   };
   const depositYears = getDepositYearValues();
@@ -2127,7 +2141,7 @@ function openReceiptPreview(rawData = {}, options = {}) {
 }
 
 function attachReceiptButton(buttonId, rawData = {}, options = {}) {
-  const btn = document.getElementById(buttonId);
+  const btn = getEl(buttonId);
   if (!btn) return;
 
   btn.addEventListener("click", (event) => {
@@ -2144,12 +2158,14 @@ function validateEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
+// ✅ تحسين: regex محفوظ مسبقاً
+const REGEX_ARABIC = /[\u0600-\u06FF]/g;
 function validateGmail(input) {
   // إزالة المسافات
-  input.value = input.value.replace(/\s/g, '');
+  input.value = input.value.replace(REGEX_PATTERNS.spaces, '');
   
   // منع الحروف العربية
-  input.value = input.value.replace(/[\u0600-\u06FF]/g, '');
+  input.value = input.value.replace(REGEX_ARABIC, '');
   
   // إجبار النص على حروف صغيرة
   input.value = input.value.toLowerCase();
@@ -2164,28 +2180,32 @@ function validateGmail(input) {
 
 
 async function submitForm() {
-  const submitBtn = document.getElementById("submitBtn");
+  const submitBtn = getEl("submitBtn");
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.6;
 
-  const empId = document.getElementById("empIdField").value.trim();
-  const name = document.getElementById("nameField").value.trim();
-  const grade = document.getElementById("gradeField").value.trim();
-  const place = document.getElementById("placeField").value.trim();
-  const birthDate = document.getElementById("birthDateField").value.trim();
-  const hireDate = document.getElementById("hireDateField").value.trim();
-  const personalPhone = document.getElementById("personalPhoneField").value.trim();
-  const daaira = document.getElementById("daairaField").value.trim();
-  const baladiya = document.getElementById("baladiyaField").value.trim();
-  const maritalStatus = document.getElementById("maritalStatusField").value.trim();
-  const childrenCount = document.getElementById("childrenCountField")?.value.trim() ?? "";
-  const dualSector = document.getElementById("dualSectorField").value.trim();
-  const spouseId = document.getElementById("spouseIdField")?.value.trim() || "";
-  const spouseName = document.getElementById("spouseNameField")?.value.trim() || "";
-  const fileSeniority = document.getElementById("fileSeniorityField").value.trim();
+  // ✅ عرض رسالة التحميل فوراً عند الضغط على زر التسجيل
+  Swal.fire({ title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  // ✅ تحسين: جمع جميع القيم دفعة واحدة
+  const empId = getEl("empIdField").value.trim();
+  const name = getEl("nameField").value.trim();
+  const grade = getEl("gradeField").value.trim();
+  const place = getEl("placeField").value.trim();
+  const birthDate = getEl("birthDateField").value.trim();
+  const hireDate = getEl("hireDateField").value.trim();
+  const personalPhone = getEl("personalPhoneField").value.trim();
+  const daaira = getEl("daairaField").value.trim();
+  const baladiya = getEl("baladiyaField").value.trim();
+  const maritalStatus = getEl("maritalStatusField").value.trim();
+  const childrenCount = getEl("childrenCountField")?.value.trim() ?? "";
+  const dualSector = getEl("dualSectorField").value.trim();
+  const spouseId = getEl("spouseIdField")?.value.trim() || "";
+  const spouseName = getEl("spouseNameField")?.value.trim() || "";
+  const fileSeniority = getEl("fileSeniorityField").value.trim();
   const depositYearValues = getDepositYearValues();
   const depositYear = depositYearValues.join(", ");
-  const depositCount = document.getElementById("depositCountField")?.value.trim() || "";
+  const depositCount = getEl("depositCountField")?.value.trim() || "";
 
   const requiredFields = [
     { id: "daairaField", value: daaira },
@@ -2210,7 +2230,7 @@ async function submitForm() {
 
   let missing = false;
   requiredFields.forEach(f => {
-    const el = document.getElementById(f.id);
+    const el = getEl(f.id);
     const isEmpty = f.value === "" || f.value === undefined || f.value === null;
     if (el && isEmpty) {
       el.style.border = "2px solid red";
@@ -2220,6 +2240,7 @@ async function submitForm() {
   });
 
   if (missing) {
+    Swal.close();
     Swal.fire({
       icon: "warning",
       title: "تنبيه",
@@ -2230,8 +2251,9 @@ async function submitForm() {
     return;
   }
 
-  const personalPhoneDigits = personalPhone.replace(/\s/g, '');
+  const personalPhoneDigits = personalPhone.replace(REGEX_PATTERNS.spaces, '');
   if (personalPhoneDigits.length !== 10) {
+    Swal.close();
     Swal.fire("تنبيه", "رقم الهاتف يجب أن يحتوي على 10 أرقام", "warning");
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
@@ -2240,6 +2262,7 @@ async function submitForm() {
 
   if (dualSector === "نعم") {
     if (spouseId.length !== 16) {
+      Swal.close();
       Swal.fire("تنبيه", "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا", "warning");
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
@@ -2247,6 +2270,7 @@ async function submitForm() {
 }
 
     if (spouseId === empId) {
+      Swal.close();
       Swal.fire("تنبيه", "لا يمكن استخدام نفس رقم التعريف الخاص بالموظف كرقم للزوج(ة)", "warning");
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
@@ -2254,6 +2278,7 @@ async function submitForm() {
 }
 
     if (!spouseName) {
+      Swal.close();
       Swal.fire("تنبيه", "يرجى التحقق من رقم تعريف الزوج(ة) قبل المتابعة", "warning");
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
@@ -2267,6 +2292,7 @@ async function submitForm() {
     const depositCountNum = parseInt(depositCount) || 0;
     
     if (yearsCount === 0) {
+      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
@@ -2278,12 +2304,13 @@ async function submitForm() {
     }
     
     if (depositCountNum === 0) {
+      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
         text: "يرجى إدخال عدد مرات إيداع الملف",
       });
-      const depositCountField = document.getElementById("depositCountField");
+      const depositCountField = getEl("depositCountField");
       if (depositCountField) {
         depositCountField.style.border = "2px solid red";
         setTimeout(() => depositCountField.style.border = "", 3000);
@@ -2294,6 +2321,7 @@ async function submitForm() {
     }
     
     if (depositCountNum !== yearsCount) {
+      Swal.close();
       Swal.fire({
         icon: "error",
         title: "خطأ في البيانات",
@@ -2313,7 +2341,7 @@ async function submitForm() {
         `,
         confirmButtonText: "حسنًا"
       });
-      const depositCountField = document.getElementById("depositCountField");
+      const depositCountField = getEl("depositCountField");
       if (depositCountField) {
         depositCountField.style.border = "2px solid red";
         setTimeout(() => depositCountField.style.border = "", 3000);
@@ -2406,8 +2434,6 @@ async function submitForm() {
   } else {
     currentModificationDate = null; // إعادة تعيين عند التسجيل الجديد
   }
-
-  Swal.fire({ title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
   try {
     const res = await fetch(scriptURL, {
@@ -2664,8 +2690,8 @@ async function deleteRegistration(empId) {
 
   window.onload = function() {
     const container = document.querySelector(".container");
-    const empInput = document.getElementById("empId");
-    const checkBtn = container.querySelector("button");
+    const empInput = getEl("empId");
+    const checkBtn = container?.querySelector("button");
 
     if (!registrationOpen) {
       // إخفاء حقل الإدخال وزر التحقق
@@ -2685,7 +2711,7 @@ async function deleteRegistration(empId) {
            margin-bottom: 20px;
           font-size: 20px;
           font-weight: 600;">
-           التسجيل مغلق حاليًا<br>سيتم فتح الموقع قريبا...
+           التسجيل مغلق حاليًا<br>سيتم إعلامكم فور فتحه إن شاء الله...
         </div>`;
       container.appendChild(msg);
     }
