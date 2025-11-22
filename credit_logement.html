@@ -418,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbzYNrJOreK0ggjbdtsU_nFh_zjUJvmAohz-qbCS-Q5eYIP4GJToWRzew0cfZ3hAkImx/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbz1cAJjyrLJxz-l20nrIs9hSioEiZI2Fyq5UINI3-jON4lo2qYddHfg51AiMsc2_5vg/exec";
 
 // ✅ تحسين الأداء: تخزين مؤقت للعناصر DOM
 const domCache = {};
@@ -551,7 +551,7 @@ async function checkEmployee() {
                 ${escapeHtml(data.name || 'الموظف')}
               </p>
               <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-                ${beneficiaryResult.message || 'أنت مستفيد من سلفة السكن السابقة'}
+                ${beneficiaryResult.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
               </p>
               <p style="color:#666;font-size:14px;">
                 لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2209,7 +2209,7 @@ async function submitForm() {
         html: `
           <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
             <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-              ${beneficiaryCheck.message || 'أنت مستفيد من سلفة السكن السابقة'}
+              ${beneficiaryCheck.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
             </p>
             <p style="color:#666;font-size:14px;">
               لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2481,7 +2481,7 @@ if (data.result === "success") {
     html: `
       <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
         <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-          ${data.message || 'أنت مستفيد من سلفة السكن السابقة'}
+          ${data.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
         </p>
         <p style="color:#666;font-size:14px;">
           لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2717,6 +2717,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
