@@ -2373,7 +2373,7 @@ async function submitForm() {
           html: `
             <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
               <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
-                ${beneficiaryResult.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
+                ${beneficiaryResult.message || 'أنت مستفيد(ة) من السلف الإستثنائية السابقة'}
               </p>
               <p style="color:#666;font-size:14px;">
                 لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2484,7 +2484,7 @@ if (data.result === "success") {
     html: `
       <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
         <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
-          ${data.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
+          ${data.message || 'أنت مستفيد(ة) من السلف الإستثنائية السابقة'}
         </p>
         <p style="color:#666;font-size:14px;">
           لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2720,6 +2720,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
