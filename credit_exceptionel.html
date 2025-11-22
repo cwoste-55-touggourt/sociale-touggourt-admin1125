@@ -278,6 +278,17 @@ button {
   direction: ltr;
 }
 
+/* تنسيق مخصص للرسالة المنبثقة */
+.swal2-popup-custom {
+  border-radius: 20px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.swal2-title-custom {
+  padding: 0 !important;
+  margin-bottom: 20px !important;
+}
+
   </style>
 </head>
 
@@ -407,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbyFRhUIKHquSON9PRlJI5YV31xOXZ8NA1-uxT5eKCBcz3sM3mAktHKRseNMHI_XdTi3/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbzxv4Bh2xchw3sMaZTLig0X5_ensaBaKpxp3MPOtCHOTkvZP5MR6gHYz499TRr6KYOS/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -499,13 +510,49 @@ Swal.fire({
 
     const data = docSnap.data();
 
-    // ✅ التحقق من وجود تسجيل سابق قبل عرض الاستمارة
-    const params = new URLSearchParams();
-    params.append("action", "check_existing");
-    params.append("empId", empId);
-    params.append("loanType", "exceptional"); // ✅ نوع السلفة: استثنائية
+    // ✅ أولاً: التحقق من المستفيدين السابقين
+    const beneficiaryParams = new URLSearchParams();
+    beneficiaryParams.append("action", "check_previous_beneficiary");
+    beneficiaryParams.append("empId", empId);
+    beneficiaryParams.append("loanType", "exceptional");
 
     try {
+      const beneficiaryRes = await fetch(scriptURL, {
+        method: "POST",
+        body: beneficiaryParams
+      });
+      const beneficiaryResult = await beneficiaryRes.json();
+
+      if (beneficiaryResult.result === "previous_beneficiary") {
+        Swal.close();
+        Swal.fire({
+          title: "⚠️ لا يمكنك التسجيل",
+          html: `
+            <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+              <p style="color:#2c5aa0;font-weight:700;margin-bottom:10px;font-size:18px;">
+                ${escapeHtml(data.name || 'الموظف')}
+              </p>
+              <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
+                ${beneficiaryResult.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
+              </p>
+              <p style="color:#666;font-size:14px;">
+                لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+              </p>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "حسناً",
+          confirmButtonColor: "#dc3545"
+        });
+        return;
+      }
+
+      // ✅ ثانياً: التحقق من وجود تسجيل سابق في السلفة الإستثنائية الحالية
+      const params = new URLSearchParams();
+      params.append("action", "check_existing");
+      params.append("empId", empId);
+      params.append("loanType", "exceptional"); // ✅ نوع السلفة: استثنائية
+
       const res = await fetch(scriptURL, {
         method: "POST",
         body: params
@@ -1036,9 +1083,10 @@ function initializeForm() {
 
   toggleChildrenField();
   toggleDualSector();
-  toggleFileSeniority();
+  toggleFileSeniority(false); // false = لا تعرض الرسالة عند التهيئة الأولية
   setupDepositYearSelector();
   resetDepositYearSelection();
+  setupDepositValidation();
 }
 
 // دالة لعرض الاستمارة في وضع التعديل
@@ -1123,7 +1171,7 @@ function showEditForm(empId, firebaseData, existingData) {
     const fileSeniorityField = document.getElementById("fileSeniorityField");
     if (fileSeniorityField) {
       fileSeniorityField.value = existingData.fileSeniority || "";
-      toggleFileSeniority();
+      toggleFileSeniority(false); // false = لا تعرض الرسالة عند تحميل القيمة المسبقة
     }
 
     if (existingData.fileDepositYear) {
@@ -1249,7 +1297,7 @@ function toggleDualSector() {
   }
 }
 
-function toggleFileSeniority() {
+function toggleFileSeniority(showAlert = true) {
   const fileField = document.getElementById("fileSeniorityField");
   const yearWrapper = document.getElementById("depositYearWrapper");
   const yearSelect = document.getElementById("depositYearSelect");
@@ -1266,7 +1314,50 @@ function toggleFileSeniority() {
   if (!shouldShow) {
     resetDepositYearSelection();
     if (countField) countField.value = "";
+  } else {
+    // عرض رسالة منبثقة عند اختيار "نعم" فقط إذا كان showAlert = true
+    if (showAlert) {
+      Swal.fire({
+      icon: "info",
+      title: '<div style="font-size: 20px; font-weight: 700; color: #1a237e; margin-bottom: 8px;">🔔 تنبيه هام</div>',
+      html: `
+        <div style="text-align: right; direction: rtl; font-family: 'Cairo', sans-serif; padding: 5px 0;">
+          <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid #2196f3;">
+            <p style="font-size: 14px; line-height: 1.8; margin: 0; color: #1565c0; font-weight: 500;">
+              <span style="font-size: 18px; margin-left: 6px;">📋</span>
+              يرجى التأكيد على إثبات تسجيلك في كل سنة صرّحت فيها بإيداع ملف، وذلك عبر تقديم وصل التسجيل الخاص بتلك السنة.
+            </p>
+          </div>
+          
+          <div style="background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid #f44336;">
+            <p style="font-size: 14px; line-height: 1.8; margin: 0; color: #c62828; font-weight: 600;">
+              <span style="font-size: 18px; margin-left: 6px;">⚠️</span>
+              عدم تقديم الإثبات يؤدي إلى إلغاء نقاط أقدمية الملف.
+            </p>
+          </div>
+          
+          <div style="background: linear-gradient(135deg, #fff3e0 0%, #fff8e1 100%); padding: 15px; border-radius: 10px; border-right: 4px solid #ff9800;">
+            <p style="font-size: 14px; line-height: 1.8; margin: 0; color: #e65100; font-weight: 600;">
+              <span style="font-size: 18px; margin-left: 6px;">✅</span>
+              كما يجب أن يكون عدد مرات إيداع الملف مطابقًا تمامًا لعدد سنوات الإيداع المختارة.
+            </p>
+          </div>
+        </div>
+      `,
+      confirmButtonText: '<span style="font-size: 15px; font-weight: 600;">فهمت</span>',
+      confirmButtonColor: "#2575fc",
+      width: "520px",
+      padding: "1.5rem",
+      customClass: {
+        popup: 'swal2-popup-custom',
+        title: 'swal2-title-custom'
+      }
+      });
+    }
   }
+  
+  // إضافة مستمعات للتحقق من التطابق
+  setupDepositValidation();
 }
 
 function setupDepositYearSelector() {
@@ -1278,6 +1369,7 @@ function setupDepositYearSelector() {
       if (!value) return;
       addDepositYear(value);
       select.value = "";
+      validateDepositCount(); // التحقق من التطابق بعد إضافة سنة
     });
   }
   if (tagsContainer) {
@@ -1286,7 +1378,52 @@ function setupDepositYearSelector() {
       if (!target || !target.classList.contains("tag-remove")) return;
       const year = target.getAttribute("data-year");
       removeDepositYear(year);
+      validateDepositCount(); // التحقق من التطابق بعد حذف سنة
     });
+  }
+}
+
+// دالة للتحقق من تطابق عدد مرات الإيداع مع عدد السنوات
+function validateDepositCount() {
+  const fileField = document.getElementById("fileSeniorityField");
+  if (!fileField || fileField.value !== "نعم") return;
+
+  const depositYears = getDepositYearValues();
+  const depositCountField = document.getElementById("depositCountField");
+  if (!depositCountField) return;
+
+  const yearsCount = depositYears.length;
+  const depositCount = parseInt(depositCountField.value) || 0;
+
+  // إزالة أي رسائل تحذير سابقة
+  depositCountField.style.border = "";
+  
+  // التحقق من التطابق
+  if (yearsCount > 0 && depositCount > 0) {
+    if (depositCount !== yearsCount) {
+      depositCountField.style.border = "2px solid #ff6b6b";
+      depositCountField.setCustomValidity(`عدد مرات الإيداع (${depositCount}) يجب أن يتطابق مع عدد السنوات المختارة (${yearsCount})`);
+    } else {
+      depositCountField.style.border = "2px solid #51cf66";
+      depositCountField.setCustomValidity("");
+    }
+  } else if (yearsCount > 0 && depositCount === 0) {
+    depositCountField.style.border = "2px solid #ffd43b";
+    depositCountField.setCustomValidity("يرجى إدخال عدد مرات الإيداع");
+  } else {
+    depositCountField.style.border = "";
+    depositCountField.setCustomValidity("");
+  }
+}
+
+// إعداد مستمعات الأحداث للتحقق من التطابق
+function setupDepositValidation() {
+  const depositCountField = document.getElementById("depositCountField");
+  if (depositCountField) {
+    // إضافة مستمعات للتحقق من التطابق
+    depositCountField.addEventListener("input", validateDepositCount);
+    depositCountField.addEventListener("blur", validateDepositCount);
+    depositCountField.addEventListener("change", validateDepositCount);
   }
 }
 
@@ -1323,6 +1460,7 @@ function setDepositYears(years = []) {
   field.dataset.years = JSON.stringify(normalized);
   field.value = normalized.length ? normalized.join(", ") : "";
   renderDepositYearTags(normalized);
+  validateDepositCount(); // التحقق من التطابق بعد تحديث السنوات
 }
 
 function addDepositYear(year) {
@@ -2123,6 +2261,111 @@ async function submitForm() {
     }
 }
 
+  // التحقق من تطابق عدد مرات الإيداع مع عدد السنوات المختارة
+  if (fileSeniority === "نعم") {
+    const yearsCount = depositYearValues.length;
+    const depositCountNum = parseInt(depositCount) || 0;
+    
+    if (yearsCount === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "يرجى اختيار سنة إيداع واحدة على الأقل",
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
+    
+    if (depositCountNum === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "يرجى إدخال عدد مرات إيداع الملف",
+      });
+      const depositCountField = document.getElementById("depositCountField");
+      if (depositCountField) {
+        depositCountField.style.border = "2px solid red";
+        setTimeout(() => depositCountField.style.border = "", 3000);
+      }
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
+    
+    if (depositCountNum !== yearsCount) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ في البيانات",
+        html: `
+          <div style="text-align: right; direction: rtl; font-family: 'Cairo', sans-serif;">
+            <p style="font-size: 16px; margin-bottom: 10px;">
+              <strong>عدد مرات الإيداع لا يتطابق مع عدد السنوات المختارة</strong>
+            </p>
+            <p style="font-size: 15px; line-height: 1.8;">
+              عدد مرات الإيداع المدخل: <strong style="color: #d00000;">${depositCountNum}</strong><br>
+              عدد السنوات المختارة: <strong style="color: #d00000;">${yearsCount}</strong>
+            </p>
+            <p style="font-size: 14px; margin-top: 10px; color: #666;">
+              يجب أن يتطابق عدد مرات إيداع الملف مع عدد السنوات المختارة للإيداع.
+            </p>
+          </div>
+        `,
+        confirmButtonText: "حسنًا"
+      });
+      const depositCountField = document.getElementById("depositCountField");
+      if (depositCountField) {
+        depositCountField.style.border = "2px solid red";
+        setTimeout(() => depositCountField.style.border = "", 3000);
+      }
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
+  }
+
+  // ✅ التحقق من المستفيدين السابقين قبل إرسال البيانات (حماية إضافية)
+  if (!isEditMode) {
+    try {
+      const beneficiaryParams = new URLSearchParams();
+      beneficiaryParams.append("action", "check_previous_beneficiary");
+      beneficiaryParams.append("empId", empId);
+      beneficiaryParams.append("loanType", "exceptional");
+
+      const beneficiaryRes = await fetch(scriptURL, {
+        method: "POST",
+        body: beneficiaryParams
+      });
+      const beneficiaryResult = await beneficiaryRes.json();
+
+      if (beneficiaryResult.result === "previous_beneficiary") {
+        Swal.close();
+        Swal.fire({
+          title: "⚠️ لا يمكنك التسجيل",
+          html: `
+            <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+              <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
+                ${beneficiaryResult.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
+              </p>
+              <p style="color:#666;font-size:14px;">
+                لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+              </p>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "حسناً",
+          confirmButtonColor: "#dc3545"
+        });
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = 1;
+        return;
+      }
+    } catch (err) {
+      console.error("check_previous_beneficiary error:", err);
+      // نتابع التسجيل في حالة الخطأ (لأن التحقق الأساسي تم في checkEmployee)
+    }
+  }
+
   // ✅ إعداد البيانات مع action=register أو update
   // ⚠️ ملاحظة مهمة: يجب أن يدعم سكريبت Google Apps action="update" لتحديث البيانات
   // إذا لم يكن مدعوماً، ستحتاج إلى إضافة معالجة update في السكريبت
@@ -2207,6 +2450,27 @@ if (data.result === "success") {
   }).then(() => {
     location.reload(); // عند الإغلاق يعيد تحميل الصفحة فقط
   });
+
+} else if (data.result === "previous_beneficiary") {
+  Swal.close();
+  Swal.fire({
+    title: "⚠️ لا يمكنك التسجيل",
+    html: `
+      <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+        <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
+          ${data.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
+        </p>
+        <p style="color:#666;font-size:14px;">
+          لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+        </p>
+      </div>
+    `,
+    icon: "error",
+    confirmButtonText: "حسناً",
+    confirmButtonColor: "#dc3545"
+  });
+  submitBtn.disabled = false;
+  submitBtn.style.opacity = 1;
 
 } else if (data.result === "exists") {
   const d = data.data || {};
@@ -2430,9 +2694,6 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
-
-
 
 
 
