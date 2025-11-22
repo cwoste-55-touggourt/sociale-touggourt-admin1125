@@ -508,13 +508,49 @@ async function checkEmployee() {
 
     const data = docSnap.data();
 
-    // ✅ التحقق من وجود تسجيل سابق قبل عرض الاستمارة
-    const params = new URLSearchParams();
-    params.append("action", "check_existing");
-    params.append("empId", empId);
-    params.append("loanType", "housing"); // ✅ نوع السلفة: سكن
-
+    // ✅ أولاً: التحقق من المستفيدين السابقين
+    const beneficiaryParams = new URLSearchParams();
+    beneficiaryParams.append("action", "check_previous_beneficiary");
+    beneficiaryParams.append("empId", empId);
+    beneficiaryParams.append("loanType", "housing"); // ✅ نوع السلفة: سكن
+    
     try {
+      const beneficiaryRes = await fetch(scriptURL, {
+        method: "POST",
+        body: beneficiaryParams
+      });
+      const beneficiaryResult = await beneficiaryRes.json();
+
+      if (beneficiaryResult.result === "previous_beneficiary") {
+        Swal.close();
+        Swal.fire({
+          title: "⚠️ لا يمكنك التسجيل",
+          html: `
+            <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+              <p style="color:#2c5aa0;font-weight:700;margin-bottom:10px;font-size:18px;">
+                ${escapeHtml(data.name || 'الموظف')}
+              </p>
+              <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
+                ${beneficiaryResult.message || 'أنت مستفيد من سلفة السكن السابقة'}
+              </p>
+              <p style="color:#666;font-size:14px;">
+                لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+              </p>
+            </div>
+          `,
+          icon: "error",
+          confirmButtonText: "حسناً",
+          confirmButtonColor: "#dc3545"
+        });
+        return;
+      }
+
+      // ✅ ثانياً: التحقق من وجود تسجيل سابق قبل عرض الاستمارة
+      const params = new URLSearchParams();
+      params.append("action", "check_existing");
+      params.append("empId", empId);
+      params.append("loanType", "housing"); // ✅ نوع السلفة: سكن
+
       const res = await fetch(scriptURL, {
         method: "POST",
         body: params
@@ -2131,6 +2167,46 @@ async function submitForm() {
   submitBtn.style.opacity = 0.6;
 
   const empId = document.getElementById("empIdField").value.trim();
+
+  // ✅ أولاً: التحقق من المستفيدين السابقين قبل التسجيل
+  const beneficiaryParams = new URLSearchParams();
+  beneficiaryParams.append("action", "check_previous_beneficiary");
+  beneficiaryParams.append("empId", empId);
+  beneficiaryParams.append("loanType", "housing"); // ✅ نوع السلفة: سكن
+
+  try {
+    const beneficiaryRes = await fetch(scriptURL, {
+      method: "POST",
+      body: beneficiaryParams
+    });
+    const beneficiaryCheck = await beneficiaryRes.json();
+
+    if (beneficiaryCheck.result === "previous_beneficiary") {
+      Swal.fire({
+        title: "⚠️ لا يمكنك التسجيل",
+        html: `
+          <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+            <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
+              ${beneficiaryCheck.message || 'أنت مستفيد من سلفة السكن السابقة'}
+            </p>
+            <p style="color:#666;font-size:14px;">
+              لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+            </p>
+          </div>
+        `,
+        icon: "error",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#dc3545"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
+  } catch (err) {
+    console.error("check_previous_beneficiary error:", err);
+    // نتابع التسجيل حتى لو فشل التحقق من المستفيدين السابقين
+    // (لأن السكريبت سيتحقق مرة أخرى في الخادم)
+  }
   const name = document.getElementById("nameField").value.trim();
   const grade = document.getElementById("gradeField").value.trim();
   const place = document.getElementById("placeField").value.trim();
@@ -2370,6 +2446,26 @@ if (data.result === "success") {
   }).then(() => {
     location.reload(); // عند الإغلاق يعيد تحميل الصفحة فقط
   });
+
+} else if (data.result === "previous_beneficiary") {
+  Swal.fire({
+    title: "⚠️ لا يمكنك التسجيل",
+    html: `
+      <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+        <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
+          ${data.message || 'أنت مستفيد من سلفة السكن السابقة'}
+        </p>
+        <p style="color:#666;font-size:14px;">
+          لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+        </p>
+      </div>
+    `,
+    icon: "error",
+    confirmButtonText: "حسناً",
+    confirmButtonColor: "#dc3545"
+  });
+  submitBtn.disabled = false;
+  submitBtn.style.opacity = 1;
 
 } else if (data.result === "exists") {
   const d = data.data || {};
