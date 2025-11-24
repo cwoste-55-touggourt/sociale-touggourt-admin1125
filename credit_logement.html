@@ -418,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbz1cAJjyrLJxz-l20nrIs9hSioEiZI2Fyq5UINI3-jON4lo2qYddHfg51AiMsc2_5vg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbzYNrJOreK0ggjbdtsU_nFh_zjUJvmAohz-qbCS-Q5eYIP4GJToWRzew0cfZ3hAkImx/exec";
 
 // ✅ تحسين الأداء: تخزين مؤقت للعناصر DOM
 const domCache = {};
@@ -467,7 +467,12 @@ async function checkEmployee() {
   const empId = getEl("empId").value.trim();
 
   if (empId.length < 16) {
-    Swal.fire({ icon: 'warning', title: 'خطأ', text: 'رقم التعريف الوظيفي يجب أن يتكون من 16 رقمًا' });
+    Swal.fire({ 
+      icon: 'warning', 
+      title: 'خطأ', 
+      text: 'رقم التعريف الوظيفي يجب أن يتكون من 16 رقمًا',
+      confirmButtonText: 'حسناً'
+    });
     return;
   }
 
@@ -520,7 +525,8 @@ async function checkEmployee() {
       <strong style="color:#b00000;">0</strong>
       فقط وستنجح العملية.
     </div>
-  `
+  `,
+  confirmButtonText: "حسناً"
 });
 
       return;
@@ -551,7 +557,7 @@ async function checkEmployee() {
                 ${escapeHtml(data.name || 'الموظف')}
               </p>
               <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-                ${beneficiaryResult.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
+                ${beneficiaryResult.message || 'أنت مستفيد من سلفة السكن السابقة'}
               </p>
               <p style="color:#666;font-size:14px;">
                 لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -666,13 +672,23 @@ async function checkEmployee() {
 
     } catch (err) {
       Swal.close();
-      Swal.fire("❌ خطأ", "تعذر التحقق من التسجيلات السابقة", "error");
+      Swal.fire({
+        icon: "error",
+        title: "❌ خطأ",
+        text: "تعذر التحقق من التسجيلات السابقة",
+        confirmButtonText: "حسناً"
+      });
       console.error("check_existing error:", err);
     }
 
   } catch (err) {
     Swal.close();
-    Swal.fire("❌ خطأ", "حدث خطأ أثناء الاتصال بقاعدة بيانات الموظفين", "error");
+    Swal.fire({
+      icon: "error",
+      title: "❌ خطأ",
+      text: "حدث خطأ أثناء الاتصال بقاعدة بيانات الموظفين",
+      confirmButtonText: "حسناً"
+    });
     console.error("Firebase error:", err);
   }
 }
@@ -2132,7 +2148,12 @@ function openReceiptPreview(rawData = {}, options = {}) {
   const receiptWindow = window.open("", "_blank");
 
   if (!receiptWindow) {
-    Swal.fire("تنبيه", "يرجى السماح بفتح النوافذ المنبثقة لتحميل الوصل", "warning");
+    Swal.fire({
+      icon: "warning",
+      title: "تنبيه",
+      text: "يرجى السماح بفتح النوافذ المنبثقة لتحميل الوصل",
+      confirmButtonText: "حسناً"
+    });
     return;
   }
 
@@ -2184,51 +2205,8 @@ async function submitForm() {
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.6;
 
-  // ✅ عرض رسالة التحميل فوراً عند الضغط على زر التسجيل
-  Swal.fire({ title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+  // ✅ جمع البيانات من الحقول أولاً
   const empId = getEl("empIdField").value.trim();
-
-  // ✅ أولاً: التحقق من المستفيدين السابقين قبل التسجيل
-  const beneficiaryParams = new URLSearchParams();
-  beneficiaryParams.append("action", "check_previous_beneficiary");
-  beneficiaryParams.append("empId", empId);
-  beneficiaryParams.append("loanType", "housing"); // ✅ نوع السلفة: سكن
-
-  try {
-    const beneficiaryRes = await fetch(scriptURL, {
-      method: "POST",
-      body: beneficiaryParams
-    });
-    const beneficiaryCheck = await beneficiaryRes.json();
-
-    if (beneficiaryCheck.result === "previous_beneficiary") {
-      Swal.close();
-      Swal.fire({
-        title: "⚠️ لا يمكنك التسجيل",
-        html: `
-          <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
-            <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-              ${beneficiaryCheck.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
-            </p>
-            <p style="color:#666;font-size:14px;">
-              لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
-            </p>
-          </div>
-        `,
-        icon: "error",
-        confirmButtonText: "حسناً",
-        confirmButtonColor: "#dc3545"
-      });
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = 1;
-      return;
-    }
-  } catch (err) {
-    console.error("check_previous_beneficiary error:", err);
-    // نتابع التسجيل حتى لو فشل التحقق من المستفيدين السابقين
-    // (لأن السكريبت سيتحقق مرة أخرى في الخادم)
-  }
   const name = getEl("nameField").value.trim();
   const grade = getEl("gradeField").value.trim();
   const place = getEl("placeField").value.trim();
@@ -2247,6 +2225,7 @@ async function submitForm() {
   const depositYear = depositYearValues.join(", ");
   const depositCount = getEl("depositCountField")?.value.trim() || "";
 
+  // ✅ التحقق من الحقول الفارغة قبل عرض رسالة "جاري تسجيل البيانات..."
   const requiredFields = [
     { id: "daairaField", value: daaira },
     { id: "baladiyaField", value: baladiya },
@@ -2280,63 +2259,81 @@ async function submitForm() {
   });
 
   if (missing) {
-    Swal.close();
     Swal.fire({
       icon: "warning",
       title: "تنبيه",
       text: "الرجاء ملء جميع الحقول المطلوبة قبل التسجيل",
+      confirmButtonText: "حسناً"
     });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
     return;
   }
 
+  // ✅ التحقق من رقم الهاتف
   const personalPhoneDigits = personalPhone.replace(REGEX_PATTERNS.spaces, '');
   if (personalPhoneDigits.length !== 10) {
-    Swal.close();
-    Swal.fire("تنبيه", "رقم الهاتف يجب أن يحتوي على 10 أرقام", "warning");
+    Swal.fire({
+      icon: "warning",
+      title: "تنبيه",
+      text: "رقم الهاتف يجب أن يحتوي على 10 أرقام",
+      confirmButtonText: "حسناً"
+    });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
     return;
   }
 
+  // ✅ التحقق من بيانات الزوج(ة)
   if (dualSector === "نعم") {
     if (spouseId.length !== 16) {
-      Swal.close();
-      Swal.fire("تنبيه", "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
-}
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا",
+        confirmButtonText: "حسناً"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
 
     if (spouseId === empId) {
-      Swal.close();
-      Swal.fire("تنبيه", "لا يمكن استخدام نفس رقم التعريف الخاص بالموظف كرقم للزوج(ة)", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
-}
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "لا يمكن استخدام نفس رقم التعريف الخاص بالموظف كرقم للزوج(ة)",
+        confirmButtonText: "حسناً"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
 
     if (!spouseName) {
-      Swal.close();
-      Swal.fire("تنبيه", "يرجى التحقق من رقم تعريف الزوج(ة) قبل المتابعة", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "يرجى التحقق من رقم تعريف الزوج(ة) قبل المتابعة",
+        confirmButtonText: "حسناً"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
     }
-}
+  }
 
-  // التحقق من تطابق عدد مرات الإيداع مع عدد السنوات المختارة
+  // ✅ التحقق من تطابق عدد مرات الإيداع مع عدد السنوات المختارة
   if (fileSeniority === "نعم") {
     const yearsCount = depositYearValues.length;
     const depositCountNum = parseInt(depositCount) || 0;
     
     if (yearsCount === 0) {
-      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
         text: "يرجى اختيار سنة إيداع واحدة على الأقل",
+        confirmButtonText: "حسناً"
       });
       submitBtn.disabled = false;
       submitBtn.style.opacity = 1;
@@ -2344,11 +2341,11 @@ async function submitForm() {
     }
     
     if (depositCountNum === 0) {
-      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
         text: "يرجى إدخال عدد مرات إيداع الملف",
+        confirmButtonText: "حسناً"
       });
       const depositCountField = getEl("depositCountField");
       if (depositCountField) {
@@ -2361,7 +2358,6 @@ async function submitForm() {
     }
     
     if (depositCountNum !== yearsCount) {
-      Swal.close();
       Swal.fire({
         icon: "error",
         title: "خطأ في البيانات",
@@ -2379,7 +2375,7 @@ async function submitForm() {
             </p>
           </div>
         `,
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسناً"
       });
       const depositCountField = getEl("depositCountField");
       if (depositCountField) {
@@ -2390,6 +2386,50 @@ async function submitForm() {
       submitBtn.style.opacity = 1;
       return;
     }
+  }
+
+  // ✅ بعد التحقق من جميع الحقول، نعرض رسالة "جاري تسجيل البيانات..."
+  Swal.fire({ title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  // ✅ التحقق من المستفيدين السابقين قبل التسجيل
+  const beneficiaryParams = new URLSearchParams();
+  beneficiaryParams.append("action", "check_previous_beneficiary");
+  beneficiaryParams.append("empId", empId);
+  beneficiaryParams.append("loanType", "housing"); // ✅ نوع السلفة: سكن
+
+  try {
+    const beneficiaryRes = await fetch(scriptURL, {
+      method: "POST",
+      body: beneficiaryParams
+    });
+    const beneficiaryCheck = await beneficiaryRes.json();
+
+    if (beneficiaryCheck.result === "previous_beneficiary") {
+      Swal.close();
+      Swal.fire({
+        title: "⚠️ لا يمكنك التسجيل",
+        html: `
+          <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
+            <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
+              ${beneficiaryCheck.message || 'أنت مستفيد من سلفة السكن السابقة'}
+            </p>
+            <p style="color:#666;font-size:14px;">
+              لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
+            </p>
+          </div>
+        `,
+        icon: "error",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#dc3545"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
+  } catch (err) {
+    console.error("check_previous_beneficiary error:", err);
+    // نتابع التسجيل حتى لو فشل التحقق من المستفيدين السابقين
+    // (لأن السكريبت سيتحقق مرة أخرى في الخادم)
   }
 
   // ✅ إعداد البيانات مع action=register أو update
@@ -2481,7 +2521,7 @@ if (data.result === "success") {
     html: `
       <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
         <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-          ${data.message || 'أنت مستفيد(ة) من سلف السكن السابقة'}
+          ${data.message || 'أنت مستفيد من سلفة السكن السابقة'}
         </p>
         <p style="color:#666;font-size:14px;">
           لا يمكن للموظف الذي استفاد من سلفة السكن التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2557,7 +2597,7 @@ if (data.result === "success") {
     icon: "warning",
     title: "⚠️ البريد الإلكتروني مستعمل",
     text: "هذا البريد الإلكتروني مسجل مسبقًا. يرجى استخدام بريد آخر.",
-    confirmButtonText: "حسنًا"
+    confirmButtonText: "حسناً"
   });
 
   // ✅ إعادة تفعيل زر التسجيل بعد التحذير
@@ -2571,7 +2611,7 @@ if (data.result === "success") {
     icon: "warning",
     title: "⚠️ رقم هاتف الموظف مستعمل",
     text: "رقم هاتف الموظف مسجل مسبقًا. يرجى التحقق من الرقم.",
-    confirmButtonText: "حسنًا"
+    confirmButtonText: "حسناً"
   });
 
   // ✅ إعادة تفعيل زر التسجيل بعد التحذير
@@ -2588,8 +2628,8 @@ if (data.result === "success") {
   Swal.fire({
     icon: "error",
     title: "❌ خطأ",
-    text: errorMsg + (isEditMode ? "أعد المحاولة من جديد" : ""),
-    footer: isEditMode ? "أعد المحاولة من جديد" : ""
+    text: errorMsg,
+    confirmButtonText: "حسناً"
   });
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
@@ -2602,7 +2642,7 @@ if (data.result === "success") {
       icon: "error",
       title: "❌ خطأ",
       text: "فشل الاتصال بخدمة التسجيل: " + error.message,
-      footer: isEditMode ? "أعد المحاولة من جديد" : ""
+      confirmButtonText: "حسناً"
     });
     submitBtn.disabled = false; 
     submitBtn.style.opacity = 1;
@@ -2651,7 +2691,7 @@ async function deleteRegistration(empId) {
         title: "✅ تم الحذف بنجاح",
         text: "تم حذف تسجيلك من قائمة تسجيلات سلفة السكن بنجاح",
         icon: "success",
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسناً"
       }).then(() => {
         location.reload(); // إعادة تحميل الصفحة بعد الحذف
       });
@@ -2660,7 +2700,7 @@ async function deleteRegistration(empId) {
         title: "⚠️ لم يتم العثور على التسجيل",
         text: "التسجيل غير موجود في قاعدة البيانات",
         icon: "warning",
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسناً"
       });
     } else {
       const errorMsg = data.message || data.error || "تعذر حذف التسجيل";
@@ -2668,7 +2708,7 @@ async function deleteRegistration(empId) {
         icon: "error",
         title: "❌ خطأ",
         text: errorMsg,
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسناً"
       });
     }
   } catch (error) {
@@ -2677,7 +2717,7 @@ async function deleteRegistration(empId) {
       icon: "error",
       title: "❌ خطأ",
       text: "فشل الاتصال بخدمة الحذف: " + error.message,
-      confirmButtonText: "حسنًا"
+      confirmButtonText: "حسناً"
     });
   }
 }    
@@ -2708,7 +2748,7 @@ async function deleteRegistration(empId) {
            margin-bottom: 20px;
           font-size: 20px;
           font-weight: 600;">
-           التسجيل مغلق حاليًا<br>سيتم إعلامكم فور فتحه إن شاء الله...
+           التسجيل مغلق حاليًا<br>سيتم فتح الموقع قريبا...
         </div>`;
       container.appendChild(msg);
     }
@@ -2717,7 +2757,6 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
 
 
 
