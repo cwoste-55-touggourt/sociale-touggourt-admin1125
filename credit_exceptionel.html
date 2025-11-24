@@ -418,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbz1cAJjyrLJxz-l20nrIs9hSioEiZI2Fyq5UINI3-jON4lo2qYddHfg51AiMsc2_5vg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbzYNrJOreK0ggjbdtsU_nFh_zjUJvmAohz-qbCS-Q5eYIP4GJToWRzew0cfZ3hAkImx/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -447,7 +447,13 @@ async function checkEmployee() {
   const empId = document.getElementById("empId").value.trim();
 
   if (empId.length < 16) {
-    Swal.fire({ icon: 'warning', title: 'خطأ', text: 'رقم التعريف الوظيفي يجب أن يتكون من 16 رقمًا' });
+    Swal.fire({ 
+      icon: 'warning', 
+      title: 'خطأ', 
+      text: 'رقم التعريف الوظيفي يجب أن يتكون من 16 رقمًا',
+      confirmButtonText: 'حسناً',
+      confirmButtonColor: "#6a11cb"
+    });
     return;
   }
 
@@ -458,50 +464,52 @@ async function checkEmployee() {
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
-      Swal.close();
-Swal.fire({
-  icon: "error",
-  title: "❌ خطأ",
-  html: `
-    رقم الموظف غير موجود في قاعدة البيانات.<br><br>
+      await Swal.close();
+      await Swal.fire({
+        icon: "error",
+        title: "❌ خطأ",
+        html: `
+          رقم الموظف غير موجود في قاعدة البيانات.<br><br>
 
-    <style>
-      /* وميض بسيط */
-      @keyframes softBlink {
-        0% { opacity: 1; }
-        50% { opacity: 0.65; }
-        100% { opacity: 1; }
-      }
+          <style>
+            /* وميض بسيط */
+            @keyframes softBlink {
+              0% { opacity: 1; }
+              50% { opacity: 0.65; }
+              100% { opacity: 1; }
+            }
 
-      .note-blink {
-        animation: softBlink 1.6s infinite ease-in-out;
-      }
-    </style>
+            .note-blink {
+              animation: softBlink 1.6s infinite ease-in-out;
+            }
+          </style>
 
-    <div class="note-blink" style="
-      padding: 15px;
-      background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
-      color: #d00000;
-      border: 2px solid #d00000;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(208, 0, 0, 0.2);
-      font-weight: bold;
-      font-size: 15px;
-      text-align: center; /* ← وضع النص في الوسط */
-      line-height: 1.7;
-    ">
-      <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span>
-      <br>
-      إذا كان رقم تعريف الموظف صحيحًا وظهرت هذه الرسالة، وكان رقم الموظف ينتهي بالرقم 
-      <strong style="color:#b00000;">1</strong>،<br>
-      يجب استبدال الرقم 
-      <strong style="color:#b00000;">1</strong> 
-      بالرقم 
-      <strong style="color:#b00000;">0</strong>
-      فقط وستنجح العملية.
-    </div>
-  `
-});
+          <div class="note-blink" style="
+            padding: 15px;
+            background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
+            color: #d00000;
+            border: 2px solid #d00000;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(208, 0, 0, 0.2);
+            font-weight: bold;
+            font-size: 15px;
+            text-align: center; /* ← وضع النص في الوسط */
+            line-height: 1.7;
+          ">
+            <span style="color:#d00000; font-size:16px;">ملاحظة مهمة:</span>
+            <br>
+            إذا كان رقم تعريف الموظف صحيحًا وظهرت هذه الرسالة، وكان رقم الموظف ينتهي بالرقم 
+            <strong style="color:#b00000;">1</strong>،<br>
+            يجب استبدال الرقم 
+            <strong style="color:#b00000;">1</strong> 
+            بالرقم 
+            <strong style="color:#b00000;">0</strong>
+            فقط وستنجح العملية.
+          </div>
+        `,
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
+      });
 
 
 
@@ -524,8 +532,8 @@ Swal.fire({
       const beneficiaryResult = await beneficiaryRes.json();
 
       if (beneficiaryResult.result === "previous_beneficiary") {
-        Swal.close();
-        Swal.fire({
+        await Swal.close();
+        await Swal.fire({
           title: "⚠️ لا يمكنك التسجيل",
           html: `
             <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
@@ -533,16 +541,16 @@ Swal.fire({
                 ${escapeHtml(data.name || 'الموظف')}
               </p>
               <p style="color:#dc3545;font-weight:600;margin-bottom:15px;">
-                ${beneficiaryResult.message || 'أنت مستفيد(ة) من السلف الإستثنائية السابقة'}
+                ${beneficiaryResult.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
               </p>
               <p style="color:#666;font-size:14px;">
-                لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى إلا بعد إنقضاء المدة المحددة لأنها تمنح مرة واحدة كل (5) سنوات.
+                لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
               </p>
             </div>
           `,
           icon: "error",
           confirmButtonText: "حسناً",
-          confirmButtonColor: "#dc3545"
+          confirmButtonColor: "#6a11cb"
         });
         return;
       }
@@ -559,7 +567,7 @@ Swal.fire({
       });
       const result = await res.json();
 
-      Swal.close();
+      await Swal.close();
 
       if (result.result === "exists") {
         const d = result.data || {};
@@ -612,6 +620,7 @@ Swal.fire({
           confirmButtonText: "تعديل البيانات",
           denyButtonText: "حذف التسجيل",
           cancelButtonText: "إغلاق",
+          cancelButtonColor: "#6c757d",
           confirmButtonColor: "#FFAD29",
           denyButtonColor: "#dc3545",
           didOpen: () => {
@@ -643,18 +652,31 @@ Swal.fire({
           
         `,
         icon: "success",
-        confirmButtonText: "متابعة التسجيل"
+        confirmButtonText: "متابعة التسجيل",
+        confirmButtonColor: "#6a11cb"
       }).then(() => showForm(empId, data));
 
     } catch (err) {
-      Swal.close();
-      Swal.fire("❌ خطأ", "تعذر التحقق من التسجيلات السابقة", "error");
+      await Swal.close();
+      await Swal.fire({
+        icon: "error",
+        title: "❌ خطأ",
+        text: "تعذر التحقق من التسجيلات السابقة",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
+      });
       console.error("check_existing error:", err);
     }
 
   } catch (err) {
-    Swal.close();
-    Swal.fire("❌ خطأ", "حدث خطأ أثناء الاتصال بقاعدة بيانات الموظفين", "error");
+    await Swal.close();
+    await Swal.fire({
+      icon: "error",
+      title: "❌ خطأ",
+      text: "حدث خطأ أثناء الاتصال بقاعدة بيانات الموظفين",
+      confirmButtonText: "حسناً",
+      confirmButtonColor: "#6a11cb"
+    });
     console.error("Firebase error:", err);
   }
 }
@@ -1370,7 +1392,7 @@ function toggleFileSeniority(showAlert = true) {
         </div>
       `,
       confirmButtonText: '<span style="font-size: 15px; font-weight: 600;">فهمت</span>',
-      confirmButtonColor: "#2575fc",
+      confirmButtonColor: "#6a11cb",
       width: "520px",
       padding: "1.5rem",
       customClass: {
@@ -2130,7 +2152,13 @@ function openReceiptPreview(rawData = {}, options = {}) {
   const receiptWindow = window.open("", "_blank");
 
   if (!receiptWindow) {
-    Swal.fire("تنبيه", "يرجى السماح بفتح النوافذ المنبثقة لتحميل الوصل", "warning");
+    Swal.fire({
+      icon: "warning",
+      title: "تنبيه",
+      text: "يرجى السماح بفتح النوافذ المنبثقة لتحميل الوصل",
+      confirmButtonText: "حسناً",
+      confirmButtonColor: "#6a11cb"
+    });
     return;
   }
 
@@ -2184,9 +2212,6 @@ async function submitForm() {
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.6;
 
-  // ✅ عرض رسالة التحميل فوراً عند الضغط على زر التسجيل
-  Swal.fire({ title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
   // ✅ تحسين: جمع جميع القيم دفعة واحدة
   const empId = getEl("empIdField").value.trim();
   const name = getEl("nameField").value.trim();
@@ -2239,64 +2264,89 @@ async function submitForm() {
     }
   });
 
+  // ✅ التحقق من الحقول الفارغة قبل عرض شريط الانتظار
   if (missing) {
-    Swal.close();
     Swal.fire({
       icon: "warning",
       title: "تنبيه",
       text: "الرجاء ملء جميع الحقول المطلوبة قبل التسجيل",
+      confirmButtonText: "حسناً",
+      confirmButtonColor: "#6a11cb"
     });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
     return;
   }
 
+  // ✅ التحقق من رقم الهاتف قبل عرض شريط الانتظار
   const personalPhoneDigits = personalPhone.replace(REGEX_PATTERNS.spaces, '');
   if (personalPhoneDigits.length !== 10) {
-    Swal.close();
-    Swal.fire("تنبيه", "رقم الهاتف يجب أن يحتوي على 10 أرقام", "warning");
+    Swal.fire({
+      icon: "warning",
+      title: "تنبيه",
+      text: "رقم الهاتف يجب أن يحتوي على 10 أرقام",
+      confirmButtonText: "حسناً",
+      confirmButtonColor: "#6a11cb"
+    });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
     return;
   }
 
+  // ✅ التحقق من بيانات الزوج قبل عرض شريط الانتظار
   if (dualSector === "نعم") {
     if (spouseId.length !== 16) {
-      Swal.close();
-      Swal.fire("تنبيه", "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
-}
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
 
     if (spouseId === empId) {
-      Swal.close();
-      Swal.fire("تنبيه", "لا يمكن استخدام نفس رقم التعريف الخاص بالموظف كرقم للزوج(ة)", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
-}
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "لا يمكن استخدام نفس رقم التعريف الخاص بالموظف كرقم للزوج(ة)",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
+    }
 
     if (!spouseName) {
-      Swal.close();
-      Swal.fire("تنبيه", "يرجى التحقق من رقم تعريف الزوج(ة) قبل المتابعة", "warning");
-  submitBtn.disabled = false;
-  submitBtn.style.opacity = 1;
-  return;
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "يرجى التحقق من رقم تعريف الزوج(ة) قبل المتابعة",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
+      });
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      return;
     }
-}
+  }
 
-  // التحقق من تطابق عدد مرات الإيداع مع عدد السنوات المختارة
+  // ✅ التحقق من تطابق عدد مرات الإيداع مع عدد السنوات المختارة قبل عرض شريط الانتظار
   if (fileSeniority === "نعم") {
     const yearsCount = depositYearValues.length;
     const depositCountNum = parseInt(depositCount) || 0;
     
     if (yearsCount === 0) {
-      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
         text: "يرجى اختيار سنة إيداع واحدة على الأقل",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
       });
       submitBtn.disabled = false;
       submitBtn.style.opacity = 1;
@@ -2304,11 +2354,12 @@ async function submitForm() {
     }
     
     if (depositCountNum === 0) {
-      Swal.close();
       Swal.fire({
         icon: "warning",
         title: "تنبيه",
         text: "يرجى إدخال عدد مرات إيداع الملف",
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#6a11cb"
       });
       const depositCountField = getEl("depositCountField");
       if (depositCountField) {
@@ -2321,7 +2372,6 @@ async function submitForm() {
     }
     
     if (depositCountNum !== yearsCount) {
-      Swal.close();
       Swal.fire({
         icon: "error",
         title: "خطأ في البيانات",
@@ -2331,15 +2381,16 @@ async function submitForm() {
               <strong>عدد مرات الإيداع لا يتطابق مع عدد السنوات المختارة</strong>
             </p>
             <p style="font-size: 15px; line-height: 1.8;">
-              عدد مرات إيداع الملف: <strong style="color: #d00000;">${depositCountNum}</strong><br>
-              عدد سنوات الإيداع المختارة: <strong style="color: #d00000;">${yearsCount}</strong>
+              عدد مرات الإيداع المدخل: <strong style="color: #d00000;">${depositCountNum}</strong><br>
+              عدد السنوات المختارة: <strong style="color: #d00000;">${yearsCount}</strong>
             </p>
             <p style="font-size: 14px; margin-top: 10px; color: #666;">
               يجب أن يتطابق عدد مرات إيداع الملف مع عدد السنوات المختارة للإيداع.
             </p>
           </div>
         `,
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#6a11cb"
       });
       const depositCountField = getEl("depositCountField");
       if (depositCountField) {
@@ -2351,6 +2402,13 @@ async function submitForm() {
       return;
     }
   }
+
+  // ✅ عرض رسالة التحميل فقط بعد التحقق من جميع الحقول المحلية
+  Swal.fire({ 
+    title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', 
+    allowOutsideClick: false, 
+    didOpen: () => Swal.showLoading() 
+  });
 
   // ✅ التحقق من المستفيدين السابقين قبل إرسال البيانات (حماية إضافية)
   if (!isEditMode) {
@@ -2367,13 +2425,13 @@ async function submitForm() {
       const beneficiaryResult = await beneficiaryRes.json();
 
       if (beneficiaryResult.result === "previous_beneficiary") {
-        Swal.close();
-        Swal.fire({
+        await Swal.close();
+        await Swal.fire({
           title: "⚠️ لا يمكنك التسجيل",
           html: `
             <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
               <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
-                ${beneficiaryResult.message || 'أنت مستفيد(ة) من السلف الإستثنائية السابقة'}
+                ${beneficiaryResult.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
               </p>
               <p style="color:#666;font-size:14px;">
                 لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2382,7 +2440,7 @@ async function submitForm() {
           `,
           icon: "error",
           confirmButtonText: "حسناً",
-          confirmButtonColor: "#dc3545"
+          confirmButtonColor: "#6a11cb"
         });
         submitBtn.disabled = false;
         submitBtn.style.opacity = 1;
@@ -2460,7 +2518,8 @@ if (data.result === "success") {
       : ""
   };
 
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     title: isEditMode ? "✅ تم حفظ التعديلات بنجاح" : "✅ تم التسجيل بنجاح",
     html: `
       <p style="margin-bottom:12px;">
@@ -2470,6 +2529,7 @@ if (data.result === "success") {
     `,
     icon: "success",
     confirmButtonText: "إغلاق",
+    confirmButtonColor: "#6c757d",
     didOpen: () => {
       attachReceiptButton(receiptButtonId, submittedSnapshot, receiptOptions);
     }
@@ -2478,13 +2538,13 @@ if (data.result === "success") {
   });
 
 } else if (data.result === "previous_beneficiary") {
-  Swal.close();
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     title: "⚠️ لا يمكنك التسجيل",
     html: `
       <div style="text-align:center;direction:rtl;font-family:'Cairo',sans-serif;">
         <p style="color:#dc3545;font-weight:600;margin-bottom:15px;font-size:18px;">
-          ${data.message || 'أنت مستفيد(ة) من السلف الإستثنائية السابقة'}
+          ${data.message || 'أنت مستفيد من السلفة الإستثنائية السابقة'}
         </p>
         <p style="color:#666;font-size:14px;">
           لا يمكن للموظف الذي استفاد من السلفة الإستثنائية للخدمات الإجتماعية التسجيل مرة أخرى لأنها تمنح مرة واحدة خلال المسار المهني.
@@ -2493,7 +2553,7 @@ if (data.result === "success") {
     `,
     icon: "error",
     confirmButtonText: "حسناً",
-    confirmButtonColor: "#dc3545"
+    confirmButtonColor: "#6a11cb"
   });
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
@@ -2520,7 +2580,8 @@ if (data.result === "success") {
     ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
     : "";
 
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     title: "⚠️ التسجيل موجود مسبقًا",
     html: `
       <div style="text-align:right;direction:rtl;font-family:'Cairo',sans-serif;">
@@ -2546,6 +2607,7 @@ if (data.result === "success") {
     `,
     icon: "warning",
     confirmButtonText: "إغلاق",
+    confirmButtonColor: "#6c757d",
     didOpen: () => {
       attachReceiptButton("receiptExistsSubmitBtn", d, {
         actionSource: "محاولة تسجيل مكررة",
@@ -2556,56 +2618,58 @@ if (data.result === "success") {
   }).then(() => location.reload());
 
 } else if (data.result === "email_exists") {
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     icon: "warning",
     title: "⚠️ البريد الإلكتروني مستعمل",
     text: "هذا البريد الإلكتروني مسجل مسبقًا. يرجى استخدام بريد آخر.",
-    confirmButtonText: "حسنًا"
+    confirmButtonText: "حسنًا",
+    confirmButtonColor: "#6a11cb"
   });
 
   // ✅ إعادة تفعيل زر التسجيل بعد التحذير
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
 
-
-
 } else if (data.result === "phone_exists") {
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     icon: "warning",
     title: "⚠️ رقم هاتف الموظف مستعمل",
     text: "رقم هاتف الموظف مسجل مسبقًا. يرجى التحقق من الرقم.",
-    confirmButtonText: "حسنًا"
+    confirmButtonText: "حسنًا",
+    confirmButtonColor: "#6a11cb"
   });
 
   // ✅ إعادة تفعيل زر التسجيل بعد التحذير
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
-
-
-
 
 } else {
   // عرض تفاصيل الخطأ للمساعدة في التشخيص
   const errorMsg = data.message || data.error || "تعذر إرسال البيانات";
   console.error("Error response:", data);
-  Swal.fire({
+  await Swal.close();
+  await Swal.fire({
     icon: "error",
     title: "❌ خطأ",
-    text: errorMsg + (isEditMode ? "أعد المحاولة من جديد" : ""),
-    footer: isEditMode ? "أعد المحاولة من جديد" : ""
+    text: errorMsg + (isEditMode ? " - أعد المحاولة من جديد" : ""),
+    confirmButtonText: "حسناً",
+    confirmButtonColor: "#6a11cb"
   });
   submitBtn.disabled = false;
   submitBtn.style.opacity = 1;
 }
 
-
   } catch (error) {
     console.error("Fetch error:", error);
-    Swal.fire({
+    await Swal.close();
+    await Swal.fire({
       icon: "error",
       title: "❌ خطأ",
       text: "فشل الاتصال بخدمة التسجيل: " + error.message,
-      footer: isEditMode ? "أعد المحاولة من جديد" : ""
+      confirmButtonText: "حسناً",
+      confirmButtonColor: "#6a11cb"
     });
     submitBtn.disabled = false; 
     submitBtn.style.opacity = 1;
@@ -2649,38 +2713,44 @@ async function deleteRegistration(empId) {
 
     const data = await res.json();
 
+    await Swal.close();
+
     if (data.result === "success") {
-      Swal.fire({
+      await Swal.fire({
         title: "✅ تم الحذف بنجاح",
         text: "تم حذف تسجيلك من قائمة تسجيلات السلفة الإستثنائية بنجاح",
         icon: "success",
-        confirmButtonText: "حسنًا"
-      }).then(() => {
-        location.reload(); // إعادة تحميل الصفحة بعد الحذف
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#28a745"
       });
+      location.reload(); // إعادة تحميل الصفحة بعد الحذف
     } else if (data.result === "not_found") {
-      Swal.fire({
+      await Swal.fire({
         title: "⚠️ لم يتم العثور على التسجيل",
         text: "التسجيل غير موجود في قاعدة البيانات",
         icon: "warning",
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#6a11cb"
       });
     } else {
       const errorMsg = data.message || data.error || "تعذر حذف التسجيل";
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "❌ خطأ",
         text: errorMsg,
-        confirmButtonText: "حسنًا"
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#6a11cb"
       });
     }
   } catch (error) {
     console.error("Delete error:", error);
-    Swal.fire({
+    await Swal.close();
+    await Swal.fire({
       icon: "error",
       title: "❌ خطأ",
       text: "فشل الاتصال بخدمة الحذف: " + error.message,
-      confirmButtonText: "حسنًا"
+      confirmButtonText: "حسنًا",
+      confirmButtonColor: "#6a11cb"
     });
   }
 }    
@@ -2711,7 +2781,7 @@ async function deleteRegistration(empId) {
            margin-bottom: 20px;
           font-size: 20px;
           font-weight: 600;">
-           التسجيل مغلق حاليًا<br>سيتم إعلامكم فور فتحه إن شاء الله...
+           التسجيل مغلق حاليًا<br>سيتم فتح الموقع قريبا...
         </div>`;
       container.appendChild(msg);
     }
@@ -2720,10 +2790,6 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
