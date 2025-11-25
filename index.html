@@ -450,7 +450,7 @@
   };
 
    // الخدمات التي تظهر عليها الشارة "جديد"
- const newBadgeServices = ["الرحلات", "السلف الإجتماعية", "العمرة"];
+ const newBadgeServices = ["الرحلات", "السلف الإجتماعية", "العمرة","المخيمات"];
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.service').forEach(service => {
@@ -695,7 +695,7 @@
         : 'retraite_ins_voyage.html';
     } else if (serviceType === 'المخيمات') {
       link = category === 'employees'
-        ? 'رابط_صفحة_المخيمات_الموظفين.html'
+        ? 'employe_ins_coping.html'
         : 'رابط_صفحة_المخيمات_المتقاعدين.html';
     } else if (serviceType === 'السلف الإجتماعية') {
       if (category === 'housing') {
@@ -863,6 +863,7 @@
 
 </body>
 </html>
+
 
 
 
