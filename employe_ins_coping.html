@@ -418,7 +418,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbw5YhBPjHaopbMu6KnT-DibzCrFbAu4cbGxILJg7hmMFr3jIGaX3-InLkJnrC745iI8QA/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbzZudS_994v9-1Zqs1JfUjGVanBrpUVYOoy3JY8N0BuxLchJCwZ-2k2r5dM5zhMNC7DOg/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -578,9 +578,16 @@ async function checkEmployee() {
         const spouseStatusLine = isFamilyStatusRequiringChildren && d.spouseStatus
           ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>`
           : "";
-        const spouseBlock = (d.dualSector === "نعم" && d.spouseEmpId)
-          ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseEmpId}<br>${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}`
-          : "";
+        // عرض معلومات الزوج إذا كان ثنائي القطاع = نعم
+        let spouseBlock = "";
+        if (d.dualSector === "نعم") {
+          if (d.spouseEmpId) {
+            spouseBlock += `<b>رقم تعريف الزوج(ة):</b> ${d.spouseEmpId}<br>`;
+          }
+          if (d.spouseName) {
+            spouseBlock += `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>`;
+          }
+        }
         const guaranteeBlock = d.guarantee
           ? `<b>الكفالة:</b> ${d.guarantee}<br>${d.guarantee === "نعم" && d.guaranteedCount ? `<b>عدد الأفراد المكفولين:</b> ${d.guaranteedCount}<br>` : ''}`
           : "";
@@ -1177,7 +1184,7 @@ function initializeForm() {
   toggleChildrenField();
   toggleDualSector();
   toggleSpouseStatus();
-  toggleGuarantee();
+  toggleGuarantee(false); // false = لا تظهر الرسالة عند التهيئة
   updateCohort();
 }
 
@@ -1269,6 +1276,18 @@ function showEditForm(empId, firebaseData, existingData) {
         // إذا كانت الصفة متقاعد(ة)، جعل الحقل قابلاً للتحرير
         if (spouseStatusField && spouseStatusField.value === "متقاعد(ة)") {
           spouseNameField.readOnly = false;
+          // إضافة event listeners للتحقق من الحروف العربية فقط (فقط إذا لم تكن موجودة بالفعل)
+          if (spouseNameField.dataset.arabicListener !== "true") {
+            spouseNameField.addEventListener("input", function() { 
+              allowArabicOnly(this); 
+            });
+            spouseNameField.addEventListener("paste", function(e) {
+              e.preventDefault();
+              const paste = (e.clipboardData || window.clipboardData).getData("text");
+              this.value = paste.replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]/g, '');
+            });
+            spouseNameField.dataset.arabicListener = "true";
+          }
         } else {
           spouseNameField.readOnly = true;
         }
@@ -1279,7 +1298,9 @@ function showEditForm(empId, firebaseData, existingData) {
     const guaranteeField = getEl("guaranteeField");
     if (guaranteeField && existingData.guarantee) {
       guaranteeField.value = existingData.guarantee;
-      toggleGuarantee();
+      // حفظ القيمة السابقة لتجنب إظهار الرسالة عند التحميل
+      guaranteeField.dataset.previousValue = existingData.guarantee;
+      toggleGuarantee(false); // false = لا تظهر الرسالة عند التحميل
     }
 
     const guaranteedCountField = getEl("guaranteedCountField");
@@ -1481,12 +1502,36 @@ function toggleSpouseStatus() {
     // إظهار حقل رقم التعريف
     if (spouseIdWrapper) spouseIdWrapper.style.display = "block";
     // جعل حقل الاسم readonly (سيتم ملؤه تلقائياً من Firebase)
-    if (spouseNameField) spouseNameField.readOnly = true;
+    if (spouseNameField) {
+      spouseNameField.readOnly = true;
+      // إزالة event listeners للعربية عند اختيار موظف
+      if (spouseNameField.dataset.arabicListener === "true") {
+        const currentValue = spouseNameField.value;
+        const newField = spouseNameField.cloneNode(true);
+        newField.value = currentValue; // استعادة القيمة
+        spouseNameField.parentNode.replaceChild(newField, spouseNameField);
+        clearCache(); // مسح الكاش بعد استبدال العنصر
+      }
+    }
   } else if (status === "متقاعد(ة)") {
     // إظهار حقل الاسم الكامل يدوياً
     if (spouseNameWrapper) spouseNameWrapper.style.display = "block";
     // جعل حقل الاسم قابلاً للتحرير
-    if (spouseNameField) spouseNameField.readOnly = false;
+    if (spouseNameField) {
+      spouseNameField.readOnly = false;
+      // إضافة event listeners للتحقق من الحروف العربية فقط (فقط إذا لم تكن موجودة بالفعل)
+      if (spouseNameField.dataset.arabicListener !== "true") {
+        spouseNameField.addEventListener("input", function() { 
+          allowArabicOnly(this); 
+        });
+        spouseNameField.addEventListener("paste", function(e) {
+          e.preventDefault();
+          const paste = (e.clipboardData || window.clipboardData).getData("text");
+          this.value = paste.replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]/g, '');
+        });
+        spouseNameField.dataset.arabicListener = "true";
+      }
+    }
   }
 
   if (spouseLookupTimeout) {
@@ -1560,18 +1605,60 @@ async function verifySpouseInFirebase() {
   }
 }
 
-function toggleGuarantee() {
+function toggleGuarantee(showWarning = true) {
   const guaranteeField = getEl("guaranteeField");
   const wrapper = getEl("guaranteedCountWrapper");
   const guaranteedCountField = getEl("guaranteedCountField");
 
   if (!guaranteeField || !wrapper || !guaranteedCountField) return;
 
-  if (guaranteeField.value === "نعم") {
+  const hasGuarantee = guaranteeField.value === "نعم";
+  const previousValue = guaranteeField.dataset.previousValue || "";
+
+  // حفظ القيمة الحالية كقيمة سابقة
+  guaranteeField.dataset.previousValue = guaranteeField.value;
+
+  if (hasGuarantee) {
     wrapper.style.display = "block";
   } else {
     wrapper.style.display = "none";
     guaranteedCountField.value = "";
+  }
+
+  // إظهار رسالة التنبيه فقط عند التغيير من "لا" أو "" إلى "نعم"
+  if (hasGuarantee && showWarning && previousValue !== "نعم") {
+    // استخدام setTimeout لتأخير ظهور الرسالة قليلاً لضمان تحديث الواجهة
+    setTimeout(() => {
+      Swal.fire({
+        icon: "info",
+        title: '<div style="font-size: 20px; font-weight: 700; color: #1a237e; margin-bottom: 8px;">🔔 تنبيه هام</div>',
+        html: `
+          <div style="text-align: right; direction: rtl; font-family: 'Cairo', sans-serif; padding: 5px 0;">
+            <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-right: 4px solid #2196f3;">
+              <p style="font-size: 14px; line-height: 1.8; margin: 0; color: #1565c0; font-weight: 500;">
+                <span style="font-size: 18px; margin-left: 6px;">📋</span>
+                عند اختياركم خيار الكفالة، يتوجّب عليكم الإدلاء بوثيقة رسمية تثبت صحة كفالة الأشخاص المصرّح بهم.
+              </p>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); padding: 15px; border-radius: 10px; border-right: 4px solid #f44336;">
+              <p style="font-size: 14px; line-height: 1.8; margin: 0; color: #c62828; font-weight: 600;">
+                <span style="font-size: 18px; margin-left: 6px;">⚠️</span>
+                وفي حال عدم تقديم الوثيقة المطلوبة، لن تُعتمد الكفالة، كما لن يُسمح بمرافقة الأشخاص المعنيين إلى المخيم في حال نجاحكم في القرعة.
+              </p>
+            </div>
+          </div>
+        `,
+        confirmButtonText: '<span style="font-size: 15px; font-weight: 600;">فهمت</span>',
+        confirmButtonColor: "#2575fc",
+        width: "520px",
+        padding: "1.5rem",
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom'
+        }
+      });
+    }, 100);
   }
 }
 
@@ -1596,6 +1683,13 @@ function updateBaladiya(selectedBaladiya = "") {
   if (selectedBaladiya) {
     baladiyaSelect.value = selectedBaladiya;
   }
+}
+
+/* دالة للتحقق من الحروف العربية فقط */
+function allowArabicOnly(input) {
+  // إزالة كل شيء ما عدا الحروف العربية والمسافات
+  let value = input.value.replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]/g, '');
+  input.value = value;
 }
 
 /* تنسيق رقم الهاتف على شكل 00 00 00 00 00 */
@@ -1827,18 +1921,26 @@ function renderReceiptTemplate(data = {}) {
     `
     : "";
 
-  const spouseRows = data.dualSector === "نعم"
-    ? `
+  // عرض معلومات الزوج إذا كان ثنائي القطاع = نعم
+  let spouseRows = "";
+  if (data.dualSector === "نعم") {
+    // عرض رقم التعريف فقط إذا كانت الصفة موظف(ة)
+    if (data.spouseStatus === "موظف(ة)" && data.spouseEmpId) {
+      spouseRows += `
       <tr>
         <td class="label">رقم تعريف الزوج(ة)</td>
-        <td>${safe(data.spouseEmpId || "-")}</td>
-      </tr>
+        <td>${safe(data.spouseEmpId)}</td>
+      </tr>`;
+    }
+    // عرض الاسم الكامل للزوج(ة) إذا كان موجوداً
+    if (data.spouseName) {
+      spouseRows += `
       <tr>
         <td class="label">الاسم الكامل للزوج(ة)</td>
-        <td>${safe(data.spouseName || "-")}</td>
-      </tr>
-    `
-    : "";
+        <td>${safe(data.spouseName)}</td>
+      </tr>`;
+    }
+  }
 
   const guaranteeRow = data.guarantee
     ? `
@@ -2562,9 +2664,16 @@ if (data.result === "success") {
   const spouseStatusLine = isFamilyStatusRequiringChildren && d.spouseStatus
     ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>`
     : "";
-  const spouseBlock = (d.dualSector === "نعم" && d.spouseEmpId)
-    ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseEmpId}<br>${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}`
-    : "";
+  // عرض معلومات الزوج إذا كان ثنائي القطاع = نعم
+  let spouseBlock = "";
+  if (d.dualSector === "نعم") {
+    if (d.spouseEmpId) {
+      spouseBlock += `<b>رقم تعريف الزوج(ة):</b> ${d.spouseEmpId}<br>`;
+    }
+    if (d.spouseName) {
+      spouseBlock += `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>`;
+    }
+  }
   const guaranteeBlock = d.guarantee
     ? `<b>الكفالة:</b> ${d.guarantee}<br>${d.guarantee === "نعم" && d.guaranteedCount ? `<b>عدد الأفراد المكفولين:</b> ${d.guaranteedCount}<br>` : ''}`
     : "";
