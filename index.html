@@ -9,6 +9,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+   <script>
+    localStorage.setItem("fromIndex", "yes");
+   </script>
+
+
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -99,7 +104,10 @@
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
-          mask-composite: exclude;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
   padding: 4px;
   transform: translate(-50%, -50%);
   animation: rotateRing 6s linear infinite; /* ⭕ دوران ناعم */
@@ -381,6 +389,16 @@
       font-size: 14px;
     }
     
+    /* تأثير انتقالي لإظهار/إخفاء القسم */
+    #sectorChildrenTrips {
+      transition: all 0.4s ease;
+    }
+    
+    #sectorChildrenTrips.show {
+      display: block !important;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    
   </style>
 </head>
 <body>
@@ -404,32 +422,37 @@
   </header>
 
   <section class="services">
-    <div class="service" onclick="openOptions('العمرة')">
+    <div class="service" id="umrahService" onclick="openOptions('العمرة')">
       <i class="fa-solid fa-kaaba"></i>
       <h3>العمرة</h3>
     </div>
 
-    <div class="service" onclick="openOptions('الرحلات')">
+    <div class="service" id="tripsService" onclick="openOptions('الرحلات')">
       <i class="fa-solid fa-bus"></i>
       <h3>الرحلات</h3>
     </div>
 
-    <div class="service" onclick="openOptions('المخيمات')">
+    <div class="service" id="sectorChildrenTrips" onclick="openOptions('أبناء القطاع')" style="display: none;">
+      <i class="fa-solid fa-child-reaching"></i>
+      <h3>أبناء القطاع</h3>
+    </div>
+
+    <div class="service" id="campsService" onclick="openOptions('المخيمات')">
       <i class="fa-solid fa-building"></i>
       <h3>المخيمات</h3>
     </div>
 
-    <div class="service" onclick="openOptions('السلف الإجتماعية')">
+    <div class="service" id="socialLoansService" onclick="openOptions('السلف الإجتماعية')">
       <i class="fa-solid fa-money-bills"></i>
       <h3>السلف الإجتماعية</h3>
     </div>
 
-    <div class="service" onclick="openOptions('استمارات الخدمات')">
+    <div class="service" id="serviceFormsService" onclick="openOptions('استمارات الخدمات')">
       <i class="fa-solid fa-file-pen"></i>
       <h3>استمارات الخدمات</h3>
     </div>
 
-    <div class="service" onclick="openOptions('الضوابط العامة')">
+    <div class="service" id="generalRulesService" onclick="openOptions('الضوابط العامة')">
     <i class="fa-solid fa-scale-balanced"></i>
       <h3>الضوابط العامة</h3>
     </div>
@@ -446,13 +469,48 @@
     "المخيمات": true,
     "السلف الإجتماعية": true,
     "استمارات الخدمات": true,
-    "الضوابط العامة": true
+    "الضوابط العامة": true,
+    "أبناء القطاع": true
   };
 
    // الخدمات التي تظهر عليها الشارة "جديد"
- const newBadgeServices = ["الرحلات", "السلف الإجتماعية", "العمرة","المخيمات"];
+ const newBadgeServices = ["الرحلات", "السلف الإجتماعية", "العمرة","المخيمات","أبناء القطاع"];
+
+  // 🔹 متغيرات التحكم في إظهار/إخفاء الأيقونات
+  // قم بتغيير القيمة إلى true لإظهار الأيقونة أو false لإخفائها
+  const showUmrah = true;                    // ✅ العمرة
+  const showTrips = true;                   // ✅ الرحلات
+  const showSectorChildrenTrips = true;     // ✅ رحلات أبناء القطاع
+  const showCamps = true;                   // ✅ المخيمات
+  const showSocialLoans = true;             // ✅ السلف الإجتماعية
+  const showServiceForms = true;            // ✅ استمارات الخدمات
+  const showGeneralRules = true;            // ✅ الضوابط العامة
 
   document.addEventListener("DOMContentLoaded", () => {
+    // التحكم في إظهار/إخفاء جميع الأيقونات بناءً على المتغيرات
+    const servicesVisibility = {
+      'umrahService': showUmrah,
+      'tripsService': showTrips,
+      'sectorChildrenTrips': showSectorChildrenTrips,
+      'campsService': showCamps,
+      'socialLoansService': showSocialLoans,
+      'serviceFormsService': showServiceForms,
+      'generalRulesService': showGeneralRules
+    };
+
+    Object.keys(servicesVisibility).forEach(serviceId => {
+      const serviceElement = document.getElementById(serviceId);
+      if (serviceElement) {
+        if (servicesVisibility[serviceId]) {
+          serviceElement.style.display = 'block';
+          serviceElement.classList.add('show');
+        } else {
+          serviceElement.style.display = 'none';
+          serviceElement.classList.remove('show');
+        }
+      }
+    });
+    
     document.querySelectorAll('.service').forEach(service => {
       const title = service.querySelector('h3').textContent.trim();
 
@@ -535,6 +593,24 @@
             <div class="icon-btn retired" onclick="showCampsWarning('${serviceType}', 'retired')">
               <i class="fa-solid fa-user-group"></i>
               <span>المتقاعدون والأرامل</span>
+            </div>
+          </div>
+        `,
+        showConfirmButton: false
+      });
+    }
+    else if (serviceType === "أبناء القطاع") {
+      Swal.fire({
+        title: `اختر الفئة المناسبة للتسجيل في ${serviceType}`,
+        html: `
+          <div class="icon-container">
+            <div class="icon-btn employee" onclick="showSectorChildrenTripWarning('${serviceType}', 'employees')">
+              <i class="fa-solid fa-user-tie"></i>
+              <span>الموظفون</span>
+            </div>
+            <div class="icon-btn retired" onclick="showSectorChildrenTripWarning('${serviceType}', 'retired')">
+              <i class="fa-solid fa-user-group"></i>
+              <span>المتقاعدون</span>
             </div>
           </div>
         `,
@@ -701,6 +777,76 @@
     });
   }
 
+  function showSectorChildrenTripWarning(serviceType, category) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'تنبيه مهم - أبناء القطاع',
+      html: `
+        <div class="housing-alert">
+          <div class="alert-header">
+            <div class="alert-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <h4>تنبيه خاص أبناء القطاع</h4>
+              <p>يرجى قراءة الشروط التالية بعناية قبل المتابعة</p>
+            </div>
+          </div>
+          <ul class="alert-points">
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              تُخصَّص رحلات أبناء القطاع ضمن إطار تنظيمي يضبطها بشروط صارمة ومعايير واضحة، ويُعتمَد نظام القرعة لاختيار المستفيدين بشكل عادل وشفاف.
+            </li>
+            <li>
+              <i class="fa-solid fa-user-slash"></i>
+              يستبعد تلقائياً كل مترشح سبق له الإستفادة من رحلات أبناء القطاع خلال نفس السنة.
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-exclamation"></i>
+              أي تصريح غير صحيح للمعلومات يعتبر إدلاءً بمعلومات مغلوطة ويترتب عنه الإقصاء الفوري ودون إنذار.
+            </li>
+          </ul>
+          <div class="alert-note">
+            <i class="fa-solid fa-shield"></i>
+            <span>الاطلاع على هذه الشروط شرط أساسي قبل المرور إلى استمارة التسجيل.</span>
+          </div>
+          <label class="acknowledge-box">
+            <input type="checkbox" id="sectorChildrenTripAcknowledged">
+            <span>اطلعت عليه وأتحمل مسؤولية صحة المعلومات التي أصرح بها.</span>
+          </label>
+        </div>
+      `,
+      confirmButtonText: 'متابعة',
+      confirmButtonColor: '#1976d2',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      focusConfirm: false,
+      customClass: {
+        confirmButton: 'cairo-btn highlight-confirm'
+      },
+      didOpen: () => {
+        const checkbox = Swal.getPopup().querySelector('#sectorChildrenTripAcknowledged');
+        const confirmButton = Swal.getConfirmButton();
+        confirmButton.disabled = true;
+        checkbox.addEventListener('change', () => {
+          confirmButton.disabled = !checkbox.checked;
+        });
+      },
+      preConfirm: () => {
+        const checkbox = Swal.getPopup().querySelector('#sectorChildrenTripAcknowledged');
+        if (!checkbox || !checkbox.checked) {
+          Swal.showValidationMessage('يجب تأكيد الاطلاع قبل المتابعة');
+          return false;
+        }
+        return true;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        goToPage(serviceType, category);
+      }
+    });
+  }
+
   function showCampsWarning(serviceType, category) {
     Swal.fire({
       icon: 'warning',
@@ -785,6 +931,10 @@
       link = category === 'employees'
         ? 'employe_ins_coping.html'
         : 'رابط_صفحة_المخيمات_المتقاعدين.html';
+    } else if (serviceType === 'أبناء القطاع') {
+      link = category === 'employees'
+        ? 'employe_ins_child.html'
+        : 'retraite_ins_child.html';
     } else if (serviceType === 'السلف الإجتماعية') {
       if (category === 'housing') {
         Swal.fire({
