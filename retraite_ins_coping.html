@@ -611,7 +611,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbzZudS_994v9-1Zqs1JfUjGVanBrpUVYOoy3JY8N0BuxLchJCwZ-2k2r5dM5zhMNC7DOg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyR6ufwjpiaQ5OcMWhW355FIt2ywDxCLzrQ79sNM-MO8mXKjBcUwB9mm8vbrnz3fPsc/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -634,6 +634,56 @@ const receiptBranding = {
 function validateNumber(input) {
   input.value = input.value.replace(/\D/g, '');
   if (input.value.length > 16) input.value = input.value.slice(0, 16);
+}
+
+// دالة لتوليد سطر معلومات الزوج(ة) بناءً على الصفة
+function generateSpouseInfoLine(data) {
+  const spouseStatus = data.spouseStatus || '';
+  // دعم كلا الحالتين: spouseId (للمتقاعدين) و spouseEmpId (للموظفين)
+  const spouseId = data.spouseId || data.spouseEmpId || '';
+  const spouseName = data.spouseName || '';
+  const spouseRetiredName = data.spouseRetiredName || '';
+  
+  // تحديد الاسم الكامل للزوج(ة)
+  const finalSpouseName = spouseStatus === "موظف(ة)" 
+    ? spouseName 
+    : (spouseStatus === "متقاعد(ة)" ? (spouseRetiredName || spouseName) : "");
+  
+  if (!spouseStatus && !finalSpouseName) {
+    return '';
+  }
+  
+  let spouseInfo = '';
+  
+  if (spouseStatus === "موظف(ة)") {
+    // إذا كان موظف، يظهر رقم التعريف والاسم الكامل
+    spouseInfo = `${spouseStatus ? `<b>صفة الزوج(ة):</b> ${spouseStatus}<br>` : ''}`;
+    if (spouseId) {
+      spouseInfo += `<b>رقم تعريف الزوج(ة):</b> ${spouseId}<br>`;
+    }
+    if (finalSpouseName) {
+      spouseInfo += `<b>الاسم الكامل للزوج(ة):</b> ${finalSpouseName}<br>`;
+    }
+  } else if (spouseStatus === "متقاعد(ة)") {
+    // إذا كان متقاعد، يظهر فقط الاسم الكامل (بدون رقم التعريف)
+    spouseInfo = `${spouseStatus ? `<b>صفة الزوج(ة):</b> ${spouseStatus}<br>` : ''}`;
+    if (finalSpouseName) {
+      spouseInfo += `<b>الاسم الكامل للزوج(ة):</b> ${finalSpouseName}<br>`;
+    }
+  } else {
+    // إذا لم تكن هناك صفة محددة، نعرض ما هو متاح
+    if (spouseStatus) {
+      spouseInfo = `<b>صفة الزوج(ة):</b> ${spouseStatus}<br>`;
+    }
+    if (spouseId) {
+      spouseInfo += `<b>رقم تعريف الزوج(ة):</b> ${spouseId}<br>`;
+    }
+    if (finalSpouseName) {
+      spouseInfo += `<b>الاسم الكامل للزوج(ة):</b> ${finalSpouseName}<br>`;
+    }
+  }
+  
+  return spouseInfo;
 }
 
 async function checkEmployee() {
@@ -669,6 +719,7 @@ async function checkEmployee() {
       const dualSectorLine = isFamilyStatusRequiringChildren
         ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
         : "";
+      const spouseInfoLine = generateSpouseInfoLine(d);
       Swal.fire({
         title: "⚠️ التسجيل موجود مسبقًا",
         html: `
@@ -683,9 +734,7 @@ async function checkEmployee() {
             <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
             ${d.childrenCount ? `<b>عدد الأولاد:</b> ${d.childrenCount}<br>` : ''}
             ${dualSectorLine}
-            ${d.spouseStatus ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>` : ''}
-            ${d.spouseId ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseId}<br>` : ''}
-            ${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}
+            ${spouseInfoLine}
             <b>الكفالة العائلية:</b> ${d.familySponsorship || ''}<br>
             ${d.sponsoredCount ? `<b>عدد الأفراد المكفولين:</b> ${d.sponsoredCount}<br>` : ''}
             <b>الوجهة:</b> ${d.destination || d.trip || ''}<br>
@@ -2157,7 +2206,12 @@ async function verifySpouseInFirebase() {
 
   if (!spouseIdField || !spouseNameField) return;
 
-  const spouseId = spouseIdField.value.trim();
+  // تنظيف رقم التعريف - إزالة كل شيء ما عدا الأرقام
+  const spouseId = spouseIdField.value.replace(/\D/g, '').trim();
+  // تحديث قيمة الحقل بالرقم النظيف
+  if (spouseIdField.value !== spouseId) {
+    spouseIdField.value = spouseId;
+  }
 
   // إعادة تعيين الحقل والرسالة
   spouseNameField.value = "";
@@ -3132,7 +3186,8 @@ async function submitNewForm() {
   const childrenCount = childrenCountField ? childrenCountField.value.trim() : "";
   const dualSector = dualSectorField ? dualSectorField.value.trim() : "";
   const spouseStatus = spouseStatusField ? spouseStatusField.value.trim() : "";
-  const spouseId = spouseIdField ? spouseIdField.value.trim() : "";
+  // تنظيف رقم تعريف الزوج(ة) - إزالة كل شيء ما عدا الأرقام
+  const spouseId = spouseIdField ? spouseIdField.value.replace(/\D/g, '').trim() : "";
   const spouseName = spouseNameField ? spouseNameField.value.trim() : "";
   const spouseRetiredName = spouseRetiredNameField ? spouseRetiredNameField.value.trim() : "";
   const familySponsorship = familySponsorshipField ? familySponsorshipField.value.trim() : "";
@@ -3180,15 +3235,42 @@ async function submitNewForm() {
       
       // التحقق من حقول الزوج حسب الصفة
       if (spouseStatus === "موظف(ة)") {
-        if (!spouseId || !spouseName) {
+        // التحقق من وجود رقم التعريف
+        if (!spouseId) {
           Swal.fire({
             icon: "warning",
             title: "تنبيه",
-            text: "الرجاء ملء رقم التعريف والاسم الكامل للزوج(ة) الموظف",
+            text: "الرجاء إدخال رقم تعريف الزوج(ة) الموظف",
           });
-          if (!spouseId && spouseIdField) spouseIdField.focus();
-          else if (!spouseName && spouseNameField) spouseNameField.focus();
+          if (spouseIdField) spouseIdField.focus();
           return;
+        }
+        
+        // التحقق من أن رقم التعريف يتكون من 16 رقمًا بالضبط
+        if (spouseId.length !== 16) {
+          Swal.fire({
+            icon: "warning",
+            title: "تنبيه",
+            text: "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا بالضبط",
+          });
+          if (spouseIdField) spouseIdField.focus();
+          return;
+        }
+        
+        // التحقق من وجود الاسم الكامل
+        if (!spouseName) {
+          Swal.fire({
+            icon: "warning",
+            title: "تنبيه",
+            text: "الرجاء التحقق من رقم تعريف الزوج(ة) ليظهر الاسم الكامل تلقائياً",
+          });
+          if (spouseNameField) spouseNameField.focus();
+          return;
+        }
+        
+        // تحديث قيمة الحقل بالرقم النظيف (بدون مسافات أو أحرف)
+        if (spouseIdField && spouseIdField.value !== spouseId) {
+          spouseIdField.value = spouseId;
         }
       } else if (spouseStatus === "متقاعد(ة)") {
         if (!spouseRetiredName) {
@@ -3199,6 +3281,10 @@ async function submitNewForm() {
           });
           if (spouseRetiredNameField) spouseRetiredNameField.focus();
           return;
+        }
+        // التأكد من أن spouseId فارغ عند المتقاعد
+        if (spouseIdField && spouseIdField.value) {
+          spouseIdField.value = "";
         }
       }
     }
@@ -3346,6 +3432,7 @@ async function submitNewForm() {
         const dualSectorLine = isFamilyStatusRequiringChildren
           ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
           : "";
+        const spouseInfoLine = generateSpouseInfoLine(d);
         Swal.fire({
           title: "⚠️ التسجيل موجود مسبقًا",
           html: `
@@ -3361,9 +3448,7 @@ async function submitNewForm() {
               <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
               ${d.childrenCount ? `<b>عدد الأولاد:</b> ${d.childrenCount}<br>` : ''}
               ${dualSectorLine}
-              ${d.spouseStatus ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>` : ''}
-              ${d.spouseId ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseId}<br>` : ''}
-              ${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}
+              ${spouseInfoLine}
               <b>الكفالة العائلية:</b> ${d.familySponsorship || ''}<br>
               ${d.sponsoredCount ? `<b>عدد الأفراد المكفولين:</b> ${d.sponsoredCount}<br>` : ''}
               <b>الوجهة:</b> ${d.destination || d.trip || ''}<br>
@@ -3411,6 +3496,7 @@ async function submitNewForm() {
         const dualSectorLine = isFamilyStatusRequiringChildren
           ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
           : "";
+        const spouseInfoLine = generateSpouseInfoLine(d);
         Swal.fire({
           title: "⚠️ التسجيل موجود مسبقًا",
           html: `
@@ -3427,9 +3513,7 @@ async function submitNewForm() {
               <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
               ${d.childrenCount ? `<b>عدد الأولاد:</b> ${d.childrenCount}<br>` : ''}
               ${dualSectorLine}
-              ${d.spouseStatus ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>` : ''}
-              ${d.spouseId ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseId}<br>` : ''}
-              ${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}
+              ${spouseInfoLine}
               <b>الكفالة العائلية:</b> ${d.familySponsorship || ''}<br>
               ${d.sponsoredCount ? `<b>عدد الأفراد المكفولين:</b> ${d.sponsoredCount}<br>` : ''}
               <b>الوجهة:</b> ${d.destination || d.trip || ''}<br>
@@ -3468,6 +3552,24 @@ async function submitNewForm() {
     // تحديد اسم الزوج حسب الصفة
     const finalSpouseName = spouseStatus === "موظف(ة)" ? spouseName : (spouseStatus === "متقاعد(ة)" ? spouseRetiredName : "");
     
+    // تنظيف رقم تعريف الزوج(ة) - spouseId تم تنظيفه بالفعل عند القراءة
+    // إذا كان الزوج متقاعد أو لم يتم اختيار صفة، spouseId يجب أن يكون فارغاً
+    let cleanSpouseId = "";
+    if (spouseStatus === "موظف(ة)" && spouseId) {
+      // التأكد من أن الرقم يحتوي على 16 رقمًا بالضبط (تم التحقق من ذلك مسبقاً)
+      if (spouseId.length !== 16) {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          text: "رقم تعريف الزوج(ة) يجب أن يتكون من 16 رقمًا بالضبط"
+        });
+        return;
+      }
+      cleanSpouseId = spouseId; // spouseId نظيف بالفعل
+    } else {
+      cleanSpouseId = ""; // فارغ عند المتقاعد أو عدم اختيار صفة
+    }
+    
     console.log("Submitting registration data:", {
       action: isEditMode ? "update_by_phone" : "register_by_phone",
       phone: phone,
@@ -3480,7 +3582,7 @@ async function submitNewForm() {
       childrenCount: childrenCount,
       dualSector: dualSector,
       spouseStatus: spouseStatus,
-      spouseId: spouseId,
+      spouseId: cleanSpouseId,
       spouseName: finalSpouseName,
       spouseRetiredName: spouseRetiredName,
       familySponsorship: familySponsorship,
@@ -3503,7 +3605,7 @@ async function submitNewForm() {
     params.append("childrenCount", childrenCount);
     params.append("dualSector", dualSector);
     params.append("spouseStatus", spouseStatus);
-    params.append("spouseId", spouseId);
+    params.append("spouseId", cleanSpouseId); // إرسال الرقم النظيف فقط
     params.append("spouseName", finalSpouseName);
     params.append("spouseRetiredName", spouseRetiredName);
     params.append("familySponsorship", familySponsorship);
@@ -3587,6 +3689,7 @@ async function submitNewForm() {
       const dualSectorLine = isFamilyStatusRequiringChildren
         ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
         : "";
+      const spouseInfoLine = generateSpouseInfoLine(d);
       Swal.fire({
         title: "⚠️ رقم الهاتف مسجل مسبقًا",
         html: `
@@ -3601,9 +3704,7 @@ async function submitNewForm() {
             <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
             ${d.childrenCount ? `<b>عدد الأولاد:</b> ${d.childrenCount}<br>` : ''}
             ${dualSectorLine}
-            ${d.spouseStatus ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>` : ''}
-            ${d.spouseId ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseId}<br>` : ''}
-            ${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}
+            ${spouseInfoLine}
             <b>الكفالة العائلية:</b> ${d.familySponsorship || ''}<br>
             ${d.sponsoredCount ? `<b>عدد الأفراد المكفولين:</b> ${d.sponsoredCount}<br>` : ''}
             <b>الوجهة:</b> ${d.destination || d.trip || ''}<br>
@@ -3627,6 +3728,7 @@ async function submitNewForm() {
       const dualSectorLine = isFamilyStatusRequiringChildren
         ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
         : "";
+      const spouseInfoLine = generateSpouseInfoLine(d);
       Swal.fire({
         title: "⚠️ التسجيل موجود مسبقًا",
         html: `
@@ -3642,9 +3744,7 @@ async function submitNewForm() {
             <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
             ${d.childrenCount ? `<b>عدد الأولاد:</b> ${d.childrenCount}<br>` : ''}
             ${dualSectorLine}
-            ${d.spouseStatus ? `<b>صفة الزوج(ة):</b> ${d.spouseStatus}<br>` : ''}
-            ${d.spouseId ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseId}<br>` : ''}
-            ${d.spouseName ? `<b>الاسم الكامل للزوج(ة):</b> ${d.spouseName}<br>` : ''}
+            ${spouseInfoLine}
             <b>الكفالة العائلية:</b> ${d.familySponsorship || ''}<br>
             ${d.sponsoredCount ? `<b>عدد الأفراد المكفولين:</b> ${d.sponsoredCount}<br>` : ''}
             <b>الوجهة:</b> ${d.destination || d.trip || ''}<br>
@@ -3872,9 +3972,7 @@ if (data.result === "success") {
         const hasChildrenValue = childrenValue !== "";
         const shouldRenderChildren = hasChildrenValue || isFamilyStatusRequiringChildren;
         const childrenLine = shouldRenderChildren ? `<b>عدد الأولاد:</b> ${childrenValue || "0"}<br>` : "";
-  const spouseBlock = (d.dualSector === "نعم" && d.spouseEmpId)
-    ? `<b>رقم تعريف الزوج(ة):</b> ${d.spouseEmpId}<br>${d.spouseName ? `<b>اسم الزوج(ة):</b> ${d.spouseName}<br>` : ''}`
-    : "";
+  const spouseInfoLine = generateSpouseInfoLine(d);
   const fileYearLine = (d.fileSeniority === "نعم" && d.fileDepositYear)
     ? `<b>سنة إيداع الملف:</b> ${d.fileDepositYear}<br>`
     : "";
@@ -3902,7 +4000,7 @@ if (data.result === "success") {
         <b>الحالة العائلية:</b> ${d.maritalStatus || ''}<br>
         ${childrenLine}
         ${dualSectorLine}
-        ${spouseBlock}
+        ${spouseInfoLine}
         <b>أقدمية الملف:</b> ${d.fileSeniority || ''}<br>
         ${depositCountLine}
         ${fileYearLine}
