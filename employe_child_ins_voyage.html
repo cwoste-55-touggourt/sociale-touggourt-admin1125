@@ -11,6 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
+
 <script>
         if (sessionStorage.getItem("fromIndex") !== "yes") {
             window.location.href = "index.html";
@@ -1933,12 +1934,13 @@ async function submitForm() {
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.6;
 
-  // ✅ عرض رسالة "جاري تسجيل البيانات" مباشرة بعد الضغط على الزر
-  Swal.fire({ 
-    title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...', 
-    allowOutsideClick: false, 
-    didOpen: () => Swal.showLoading() 
-  });
+  const showLoadingDialog = () => {
+    Swal.fire({
+      title: isEditMode ? 'جاري حفظ التعديلات...' : 'جاري تسجيل البيانات...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+  };
 
   const empId = document.getElementById("empIdField").value.trim();
   const name = document.getElementById("nameField").value.trim();
@@ -1978,6 +1980,7 @@ async function submitForm() {
       icon: "warning",
       title: "تنبيه",
       text: "الرجاء ملء جميع الحقول المطلوبة قبل التسجيل",
+      confirmButtonText: "حسناً"
     });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
@@ -2010,6 +2013,8 @@ async function submitForm() {
     }
     return;
   }
+
+  showLoadingDialog();
 
   // ✅ التحقق من المستفيدين السابقين قبل إرسال البيانات (حماية إضافية)
   if (!isEditMode) {
