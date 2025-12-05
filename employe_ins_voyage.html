@@ -9,10 +9,13 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-
+<script>
+        if (sessionStorage.getItem("fromIndex") !== "yes") {
+            window.location.href = "index.html";
+        }
+    </script>
 
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1501,8 +1504,6 @@ function renderReceiptTemplate(data = {}) {
   <meta charset="UTF-8">
   <title>وصل التسجيل - ${receiptBranding.service}</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></scr${"ipt>"}
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></scr${"ipt>"}
   <style>
     body {
       margin: 0;
@@ -1606,18 +1607,6 @@ function renderReceiptTemplate(data = {}) {
       cursor: pointer;
       font-family: 'Cairo', sans-serif;
     }
-    .download-btn {
-      display: block;
-      margin: 10px auto 0;
-      background: linear-gradient(45deg, #0ba360, #3cba92);
-      padding: 12px 24px;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      font-family: 'Cairo', sans-serif;
-    }
     @media print {
       body {
         margin: 0;
@@ -1685,9 +1674,6 @@ function renderReceiptTemplate(data = {}) {
       .print-btn {
         display: none;
       }
-      .download-btn {
-        display: none;
-      }
       @page {
         size: A4;
         margin: 0.5cm;
@@ -1752,101 +1738,11 @@ function renderReceiptTemplate(data = {}) {
       </tbody>
     </table>
     <div class="print-hint">
-      يمكن طباعة الوصل أو حفظه بصيغة PDF عبر الأزرار أدناه.
+      يمكن طباعة الوصل أو حفظه بصيغة PDF عبر زر الطباعة في الأسفل.
       <br>
       <button class="print-btn" onclick="window.print()">طباعة الوصل</button>
-      <button class="print-btn download-btn" onclick="downloadReceiptPdf()">تحميل الوصل PDF</button>
     </div>
   </div>
-  <script>
-    function downloadReceiptPdf() {
-      const receiptCard = document.querySelector(".receipt-card");
-      const { jsPDF } = window.jspdf || {};
-
-      if (!receiptCard || !window.html2canvas || !jsPDF) {
-        alert("تعذر تحميل الوصل الآن، يرجى المحاولة مرة أخرى بعد لحظات.");
-        return;
-      }
-
-      const hint = document.querySelector(".print-hint");
-      const previousDisplay = hint ? hint.style.display : null;
-      if (hint) hint.style.display = "none";
-
-      // نولد صورة من العنصر ثم نبني PDF ونحاول رفعه إلى Firebase Storage
-      window.html2canvas(receiptCard, { scale: 2, useCORS: true }).then(async (canvas) => {
-        try {
-          const imgData = canvas.toDataURL("image/png");
-          const pdf = new jsPDF("p", "pt", "a4");
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const ratio = Math.min(pageWidth / canvas.width, (pageHeight - 40) / canvas.height);
-          const pdfWidth = canvas.width * ratio;
-          const pdfHeight = canvas.height * ratio;
-          const marginX = (pageWidth - pdfWidth) / 2;
-          const marginY = 20;
-          pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
-
-          const arrayBuf = pdf.output("arraybuffer");
-          const blob = new Blob([arrayBuf], { type: "application/pdf" });
-
-          // اسم ملف مميز
-          const fileName = 'receipts/receipt_' + Date.now() + '.pdf';
-
-          // إذا كان Firebase Storage متاحًا، نحاول رفع الملف ثم فتح رابط التنزيل
-          if (window.firebase && firebase.storage) {
-            try {
-              const storageRef = firebase.storage().ref();
-              const ref = storageRef.child(fileName);
-              const uploadTask = await ref.put(blob, { contentType: 'application/pdf' });
-              const downloadURL = await uploadTask.ref.getDownloadURL();
-
-              // افتح الرابط في تبويب جديد — في AppCreator هذا عادةً يفتح المتصفح الخارجي
-              try {
-                window.open(downloadURL, '_blank');
-              } catch (e) {
-                // كحالة احتياطية
-                window.location.href = downloadURL;
-              }
-              // نحتفظ بالرابط مؤقتًا في الذاكرة (لا حاجة لإنشاء blob URL هنا)
-              return;
-            } catch (storageErr) {
-              console.warn('Firebase Storage upload failed, falling back to blob URL', storageErr);
-              // نتابع إلى الفالباك أدناه
-            }
-          }
-
-          // Fallback: إنشاء blob URL وفتحه
-          try {
-            const url = URL.createObjectURL(blob);
-            const win = window.open(url, '_blank', 'noopener');
-            if (!win) {
-              // محاولة التوجيه إلى الرابط إذا لم تُفتح نافذة جديدة
-              window.location.href = url;
-            }
-            // تحرير الذاكرة لاحقًا
-            setTimeout(() => URL.revokeObjectURL(url), 15000);
-          } catch (err) {
-            // كحل أخير، إنشاء رابط تحميل
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'وصل_التسجيل.pdf';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-          }
-
-        } catch (err) {
-          console.error('Failed to generate/open PDF:', err);
-          alert('تعذر فتح الوصل PDF في نافذة جديدة، حاول حفظه بدلاً من ذلك.');
-        }
-      }).catch((err) => {
-        console.error('PDF generation failed:', err);
-        alert('تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.');
-      }).finally(() => {
-        if (hint) hint.style.display = previousDisplay;
-      });
-    }
-  </scr${"ipt>"}
 </body>
 </html>
 `;
@@ -2281,7 +2177,7 @@ async function deleteRegistration(empId) {
            margin-bottom: 20px;
           font-size: 20px;
           font-weight: 600;">
-           التسجيل مغلق حاليًا<br>سيتم إعلامكم عند فتحه إن شاء الله...
+           التسجيل مغلق حاليًا<br>
         </div>`;
       container.appendChild(msg);
     }
@@ -2290,18 +2186,6 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
