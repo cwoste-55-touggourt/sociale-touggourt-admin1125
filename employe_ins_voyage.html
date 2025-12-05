@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
 
@@ -1771,8 +1772,8 @@ function renderReceiptTemplate(data = {}) {
       const previousDisplay = hint ? hint.style.display : null;
       if (hint) hint.style.display = "none";
 
-      // توليد صورة من العنصر ثم إنشاء PDF وفتحه في نافذة جديدة عبر blob URL
-      window.html2canvas(receiptCard, { scale: 2, useCORS: true }).then((canvas) => {
+      // نولد صورة من العنصر ثم نبني PDF ونحاول رفعه إلى Firebase Storage
+      window.html2canvas(receiptCard, { scale: 2, useCORS: true }).then(async (canvas) => {
         try {
           const imgData = canvas.toDataURL("image/png");
           const pdf = new jsPDF("p", "pt", "a4");
@@ -1785,46 +1786,62 @@ function renderReceiptTemplate(data = {}) {
           const marginY = 20;
           pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
 
-          // افتح الملف في تبويب/نافذة جديدة كـ blob (لن يقوم بتشغيل عملية حفظ داخل التطبيق)
           const arrayBuf = pdf.output("arraybuffer");
           const blob = new Blob([arrayBuf], { type: "application/pdf" });
-          const url = URL.createObjectURL(blob);
 
-          // حاول فتح تبويب جديد؛ إذا فشل، نفّذ التوجيه للرابط (قد يفتح المتصفح الخارجي)
-          let opened = false;
-          try {
-            const win = window.open(url, "_blank", "noopener");
-            opened = !!win;
-          } catch (e) {
-            opened = false;
-          }
+          // اسم ملف مميز
+          const fileName = 'receipts/receipt_' + Date.now() + '.pdf';
 
-          if (!opened) {
+          // إذا كان Firebase Storage متاحًا، نحاول رفع الملف ثم فتح رابط التنزيل
+          if (window.firebase && firebase.storage) {
             try {
-              // محاولة التوجيه لرابط blob (fallback)
-              window.location.href = url;
-            } catch (e) {
-              // كحل أخير، إنشاء رابط تحميل لكن لا نعتمد على pdf.save
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "وصل_التسجيل.pdf";
-              a.style.display = "none";
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
+              const storageRef = firebase.storage().ref();
+              const ref = storageRef.child(fileName);
+              const uploadTask = await ref.put(blob, { contentType: 'application/pdf' });
+              const downloadURL = await uploadTask.ref.getDownloadURL();
+
+              // افتح الرابط في تبويب جديد — في AppCreator هذا عادةً يفتح المتصفح الخارجي
+              try {
+                window.open(downloadURL, '_blank');
+              } catch (e) {
+                // كحالة احتياطية
+                window.location.href = downloadURL;
+              }
+              // نحتفظ بالرابط مؤقتًا في الذاكرة (لا حاجة لإنشاء blob URL هنا)
+              return;
+            } catch (storageErr) {
+              console.warn('Firebase Storage upload failed, falling back to blob URL', storageErr);
+              // نتابع إلى الفالباك أدناه
             }
           }
 
-          // تحرير الذاكرة بعد مهلة قصيرة
-          setTimeout(() => URL.revokeObjectURL(url), 15000);
+          // Fallback: إنشاء blob URL وفتحه
+          try {
+            const url = URL.createObjectURL(blob);
+            const win = window.open(url, '_blank', 'noopener');
+            if (!win) {
+              // محاولة التوجيه إلى الرابط إذا لم تُفتح نافذة جديدة
+              window.location.href = url;
+            }
+            // تحرير الذاكرة لاحقًا
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
+          } catch (err) {
+            // كحل أخير، إنشاء رابط تحميل
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'وصل_التسجيل.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
 
         } catch (err) {
-          console.error("Failed to generate/open PDF:", err);
-          alert("تعذر فتح الوصل PDF في نافذة جديدة، حاول حفظه بدلاً من ذلك.");
+          console.error('Failed to generate/open PDF:', err);
+          alert('تعذر فتح الوصل PDF في نافذة جديدة، حاول حفظه بدلاً من ذلك.');
         }
       }).catch((err) => {
-        console.error("PDF generation failed:", err);
-        alert("تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.");
+        console.error('PDF generation failed:', err);
+        alert('تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.');
       }).finally(() => {
         if (hint) hint.style.display = previousDisplay;
       });
