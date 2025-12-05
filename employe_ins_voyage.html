@@ -11,11 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <script>
-        if (sessionStorage.getItem("fromIndex") !== "yes") {
-            window.location.href = "index.html";
-        }
-    </script>
 
 
 <style>
@@ -1787,8 +1782,21 @@ function renderReceiptTemplate(data = {}) {
         const marginX = (pageWidth - pdfWidth) / 2;
         const marginY = 20;
 
-        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
-        pdf.save("وصل_التسجيل.pdf");
+                        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
+        try {
+          pdf.save("وصل_التسجيل.pdf");
+        } catch (saveErr) {
+          const blob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "وصل_التسجيل.pdf";
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
       }).catch((err) => {
         console.error("PDF download failed:", err);
         alert("تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.");
@@ -2240,15 +2248,4 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
