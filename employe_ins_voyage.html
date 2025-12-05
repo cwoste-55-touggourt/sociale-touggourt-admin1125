@@ -11,11 +11,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-<script>
+  <script>
         if (sessionStorage.getItem("fromIndex") !== "yes") {
             window.location.href = "index.html";
         }
     </script>
+
 
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1504,6 +1505,8 @@ function renderReceiptTemplate(data = {}) {
   <meta charset="UTF-8">
   <title>وصل التسجيل - ${receiptBranding.service}</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></scr${"ipt>"}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></scr${"ipt>"}
   <style>
     body {
       margin: 0;
@@ -1607,6 +1610,18 @@ function renderReceiptTemplate(data = {}) {
       cursor: pointer;
       font-family: 'Cairo', sans-serif;
     }
+    .download-btn {
+      display: block;
+      margin: 10px auto 0;
+      background: linear-gradient(45deg, #0ba360, #3cba92);
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Cairo', sans-serif;
+    }
     @media print {
       body {
         margin: 0;
@@ -1674,6 +1689,9 @@ function renderReceiptTemplate(data = {}) {
       .print-btn {
         display: none;
       }
+      .download-btn {
+        display: none;
+      }
       @page {
         size: A4;
         margin: 0.5cm;
@@ -1738,11 +1756,47 @@ function renderReceiptTemplate(data = {}) {
       </tbody>
     </table>
     <div class="print-hint">
-      يمكن طباعة الوصل أو حفظه بصيغة PDF عبر زر الطباعة في الأسفل.
+      يمكن طباعة الوصل أو حفظه بصيغة PDF عبر الأزرار أدناه.
       <br>
       <button class="print-btn" onclick="window.print()">طباعة الوصل</button>
+      <button class="print-btn download-btn" onclick="downloadReceiptPdf()">تحميل الوصل PDF</button>
     </div>
   </div>
+  <script>
+    function downloadReceiptPdf() {
+      const receiptCard = document.querySelector(".receipt-card");
+      const { jsPDF } = window.jspdf || {};
+
+      if (!receiptCard || !window.html2canvas || !jsPDF) {
+        alert("تعذر تحميل الوصل الآن، يرجى المحاولة مرة أخرى بعد لحظات.");
+        return;
+      }
+
+      const hint = document.querySelector(".print-hint");
+      const previousDisplay = hint ? hint.style.display : null;
+      if (hint) hint.style.display = "none";
+
+      window.html2canvas(receiptCard, { scale: 2, useCORS: true }).then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "pt", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / canvas.width, (pageHeight - 40) / canvas.height);
+        const pdfWidth = canvas.width * ratio;
+        const pdfHeight = canvas.height * ratio;
+        const marginX = (pageWidth - pdfWidth) / 2;
+        const marginY = 20;
+
+        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
+        pdf.save("وصل_التسجيل.pdf");
+      }).catch((err) => {
+        console.error("PDF download failed:", err);
+        alert("تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.");
+      }).finally(() => {
+        if (hint) hint.style.display = previousDisplay;
+      });
+    }
+  </scr${"ipt>"}
 </body>
 </html>
 `;
@@ -2186,6 +2240,7 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
 
 
 
