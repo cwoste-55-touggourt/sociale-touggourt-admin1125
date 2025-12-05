@@ -1781,21 +1781,48 @@ function renderReceiptTemplate(data = {}) {
         const pdfHeight = canvas.height * ratio;
         const marginX = (pageWidth - pdfWidth) / 2;
         const marginY = 20;
+        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
+        const fileName = "وصل_التسجيل.pdf";
 
-                        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
+
+        let saved = false;
         try {
-          pdf.save("وصل_التسجيل.pdf");
+          pdf.save(fileName);
+          saved = true;
         } catch (saveErr) {
+          console.warn("Direct pdf.save failed, using blob fallback", saveErr);
+        }
+
+        if (!saved) {
           const blob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
           const url = URL.createObjectURL(blob);
+
+          (() => {
+            try {
+              const win = window.open(url, "_blank");
+              if (win) return true;
+            } catch (_) {}
+            try {
+              window.location.href = url;
+              return true;
+            } catch (_) {}
+            return false;
+          })();
+
+          try {
+            const dataUri = pdf.output("datauristring");
+            window.location.href = dataUri;
+          } catch (_) {}
+
           const a = document.createElement("a");
           a.href = url;
-          a.download = "وصل_التسجيل.pdf";
+          a.download = fileName;
           a.style.display = "none";
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
         }
       }).catch((err) => {
         console.error("PDF download failed:", err);
@@ -2248,4 +2275,3 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
-
