@@ -1771,61 +1771,59 @@ function renderReceiptTemplate(data = {}) {
       const previousDisplay = hint ? hint.style.display : null;
       if (hint) hint.style.display = "none";
 
+      // توليد صورة من العنصر ثم إنشاء PDF وفتحه في نافذة جديدة عبر blob URL
       window.html2canvas(receiptCard, { scale: 2, useCORS: true }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "pt", "a4");
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const ratio = Math.min(pageWidth / canvas.width, (pageHeight - 40) / canvas.height);
-        const pdfWidth = canvas.width * ratio;
-        const pdfHeight = canvas.height * ratio;
-        const marginX = (pageWidth - pdfWidth) / 2;
-        const marginY = 20;
-        pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
-        const fileName = "وصل_التسجيل.pdf";
-
-
-        let saved = false;
         try {
-          pdf.save(fileName);
-          saved = true;
-        } catch (saveErr) {
-          console.warn("Direct pdf.save failed, using blob fallback", saveErr);
-        }
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF("p", "pt", "a4");
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const ratio = Math.min(pageWidth / canvas.width, (pageHeight - 40) / canvas.height);
+          const pdfWidth = canvas.width * ratio;
+          const pdfHeight = canvas.height * ratio;
+          const marginX = (pageWidth - pdfWidth) / 2;
+          const marginY = 20;
+          pdf.addImage(imgData, "PNG", marginX, marginY, pdfWidth, pdfHeight);
 
-        if (!saved) {
-          const blob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
+          // افتح الملف في تبويب/نافذة جديدة كـ blob (لن يقوم بتشغيل عملية حفظ داخل التطبيق)
+          const arrayBuf = pdf.output("arraybuffer");
+          const blob = new Blob([arrayBuf], { type: "application/pdf" });
           const url = URL.createObjectURL(blob);
 
-          (() => {
-            try {
-              const win = window.open(url, "_blank");
-              if (win) return true;
-            } catch (_) {}
-            try {
-              window.location.href = url;
-              return true;
-            } catch (_) {}
-            return false;
-          })();
-
+          // حاول فتح تبويب جديد؛ إذا فشل، نفّذ التوجيه للرابط (قد يفتح المتصفح الخارجي)
+          let opened = false;
           try {
-            const dataUri = pdf.output("datauristring");
-            window.location.href = dataUri;
-          } catch (_) {}
+            const win = window.open(url, "_blank", "noopener");
+            opened = !!win;
+          } catch (e) {
+            opened = false;
+          }
 
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          a.style.display = "none";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          if (!opened) {
+            try {
+              // محاولة التوجيه لرابط blob (fallback)
+              window.location.href = url;
+            } catch (e) {
+              // كحل أخير، إنشاء رابط تحميل لكن لا نعتمد على pdf.save
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "وصل_التسجيل.pdf";
+              a.style.display = "none";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+          }
 
-          setTimeout(() => URL.revokeObjectURL(url), 4000);
+          // تحرير الذاكرة بعد مهلة قصيرة
+          setTimeout(() => URL.revokeObjectURL(url), 15000);
+
+        } catch (err) {
+          console.error("Failed to generate/open PDF:", err);
+          alert("تعذر فتح الوصل PDF في نافذة جديدة، حاول حفظه بدلاً من ذلك.");
         }
       }).catch((err) => {
-        console.error("PDF download failed:", err);
+        console.error("PDF generation failed:", err);
         alert("تعذر تحميل الوصل PDF، يرجى المحاولة مرة أخرى.");
       }).finally(() => {
         if (hint) hint.style.display = previousDisplay;
@@ -2275,3 +2273,26 @@ async function deleteRegistration(empId) {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
