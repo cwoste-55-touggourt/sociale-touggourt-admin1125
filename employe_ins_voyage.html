@@ -2194,45 +2194,68 @@ async function deleteRegistration(empId) {
 
 // ========== تشغيل الكاميرا لمسح الباركود ==========
 
+
 let scanner = null;
 
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
 
-    // إذا كان الماسح يعمل، لا تعِد تشغيله
     if (scanner) return;
 
     readerDiv.style.display = "block";
-
     scanner = new Html5Qrcode("reader");
 
-    Html5Qrcode.getCameras().then(cameras => {
-        if (cameras.length > 0) {
+    // 🎯 محاولة تشغيل الكاميرا الخلفية مباشرة
+    const backCameraConfig = {
+        facingMode: { exact: "environment" } // ← الكاميرا الخلفية
+    };
+
+    scanner.start(
+        backCameraConfig,
+        { fps: 10, qrbox: 250 },
+        decodedText => {
+
+            // كتابة الرقم الوظيفي تلقائيًا
+            document.getElementById("empId").value = decodedText;
+
+            // إيقاف الكاميرا
+            scanner.stop().then(() => {
+                scanner = null;
+                readerDiv.style.display = "none";
+            });
+
+            // التحقق مباشرة
+            checkEmployee();
+        }
+    ).catch(err => {
+        // في حال فشل التوجيه للكاميرا الخلفية، نحاول اختيارها من القائمة
+        Html5Qrcode.getCameras().then(cameras => {
+            // البحث عن كاميرا اسمها يحتوي على back أو rear
+            let backCam = cameras.find(cam =>
+                cam.label.toLowerCase().includes("back") ||
+                cam.label.toLowerCase().includes("rear")
+            );
+
+            let camToUse = backCam ? backCam.id : cameras[0].id;
 
             scanner.start(
-                cameras[0].id,
+                camToUse,
                 { fps: 10, qrbox: 250 },
                 decodedText => {
-
-                    // وضع الرقم في الحقل
                     document.getElementById("empId").value = decodedText;
-
-                    // إيقاف الكاميرا وإخفاء القارئ
                     scanner.stop().then(() => {
                         scanner = null;
                         readerDiv.style.display = "none";
                     });
-
-                    // الضغط على زر تسجيل الدخول تلقائيًا
                     checkEmployee();
                 }
             );
-
-        }
-    }).catch(err => {
-        Swal.fire("خطأ", "لم يتم فتح كاميرا الهاتف", "error");
+        }).catch(err2 => {
+            Swal.fire("خطأ", "تعذر تشغيل كاميرا الهاتف", "error");
+        });
     });
 }
+
 
 
 
