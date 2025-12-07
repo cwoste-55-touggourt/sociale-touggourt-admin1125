@@ -10,12 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
-<script>
-        if (sessionStorage.getItem("fromIndex") !== "yes") {
-            window.location.href = "index.html";
-        }
-    </script>
+
 
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -301,6 +298,18 @@ button {
       <h2 class="gradient-title">بوابة تسجيل الموظفين في الرحلات</h2>
       <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
       <button onclick="checkEmployee()">تسجيل الدخول</button>
+
+<!-- 🔍 زر مسح الباركود -->
+<button type="button" onclick="startBarcodeScanner()" 
+style="background:#007bff; color:white; padding:6px 12px; font-size:13px;
+border:none; border-radius:6px; margin-top:8px;">
+📷 مسح الباركود
+</button>
+
+<!-- مكان عرض الكاميرا -->
+<div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
+
+
     </div>
   </div>
 
@@ -2177,11 +2186,56 @@ async function deleteRegistration(empId) {
            margin-bottom: 20px;
           font-size: 20px;
           font-weight: 600;">
-           التسجيل مغلق حاليًا<br>
+           التسجيل مغلق حاليًا<br>سيتم إعلامكم عند فتحه إن شاء الله...
         </div>`;
       container.appendChild(msg);
     }
   };   
+
+// ========== تشغيل الكاميرا لمسح الباركود ==========
+
+let scanner = null;
+
+function startBarcodeScanner() {
+    const readerDiv = document.getElementById("reader");
+
+    // إذا كان الماسح يعمل، لا تعِد تشغيله
+    if (scanner) return;
+
+    readerDiv.style.display = "block";
+
+    scanner = new Html5Qrcode("reader");
+
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras.length > 0) {
+
+            scanner.start(
+                cameras[0].id,
+                { fps: 10, qrbox: 250 },
+                decodedText => {
+
+                    // وضع الرقم في الحقل
+                    document.getElementById("empId").value = decodedText;
+
+                    // إيقاف الكاميرا وإخفاء القارئ
+                    scanner.stop().then(() => {
+                        scanner = null;
+                        readerDiv.style.display = "none";
+                    });
+
+                    // الضغط على زر تسجيل الدخول تلقائيًا
+                    checkEmployee();
+                }
+            );
+
+        }
+    }).catch(err => {
+        Swal.fire("خطأ", "لم يتم فتح كاميرا الهاتف", "error");
+    });
+}
+
+
+
 
 </script>
 </body>
