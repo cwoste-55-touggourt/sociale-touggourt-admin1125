@@ -2200,7 +2200,9 @@ async function deleteRegistration(empId) {
     }
   };   
 
-// 🔍 بدء بار كود مسح الكاميرا
+/* ===============================
+      إعداد المتغيرات العامة
+================================ */
 let scanner = null;
 let barcodeImage = null;
 
@@ -2208,20 +2210,30 @@ window.addEventListener("load", () => {
     barcodeImage = document.getElementById("barcodeImage");
 });
 
-// 🔍 بدء مسح الكاميرا
+/* =========================================
+        تشغيل ماسح الباركود بالكاميرا
+========================================= */
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
+
+    // تنظيف الإطار حتى لا يتمدد
+    readerDiv.innerHTML = "";
+    readerDiv.style.height = "260px";
+    readerDiv.style.display = "block";
+    readerDiv.style.padding = "0";
+
+    // إظهار خيار رفع الصورة
     barcodeImage.style.display = "block";
 
     if (scanner) return;
 
-    readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    // محاولة تشغيل الكاميرا الخلفية
+    const config = { fps: 12, qrbox: 230 };
+
     scanner.start(
-        { facingMode: { exact: "environment" } },
-        { fps: 10, qrbox: 230 },
+        { facingMode: "environment" }, // الكاميرا الخلفية
+        config,
         decodedText => {
             document.getElementById("empId").value = decodedText;
 
@@ -2234,11 +2246,16 @@ function startBarcodeScanner() {
             checkEmployee();
         }
     ).catch(() => {
+        // في حال لم يقبل facingMode
         Html5Qrcode.getCameras().then(cameras => {
-            const camId = cameras[0].id;
+            let camId = cameras.find(c => 
+                c.label.toLowerCase().includes("back") ||
+                c.label.toLowerCase().includes("rear")
+            )?.id || cameras[0].id;
+
             scanner.start(
                 camId,
-                { fps: 10, qrbox: 230 },
+                config,
                 decodedText => {
                     document.getElementById("empId").value = decodedText;
 
@@ -2255,18 +2272,26 @@ function startBarcodeScanner() {
     });
 }
 
-// 🖼 مسح باركود من صورة
+/* =========================================
+        مسح باركود من صورة (بدون عرض الصورة)
+========================================= */
 document.getElementById("barcodeImage").addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const readerDiv = document.getElementById("reader");
+
+    // إخفاء إطار الماسح فورًا حتى لا يتمدد
+    readerDiv.innerHTML = "";
+    readerDiv.style.display = "none";
+    readerDiv.style.height = "0px";
+
     const fileScanner = new Html5Qrcode("reader");
 
     fileScanner.scanFile(file, true)
         .then(decodedText => {
             document.getElementById("empId").value = decodedText;
-            readerDiv.style.display = "none";
+
             barcodeImage.style.display = "none";
             checkEmployee();
         })
@@ -2277,9 +2302,11 @@ document.getElementById("barcodeImage").addEventListener("change", function(e) {
 });
 
 
+
 </script>
 </body>
 </html>
+
 
 
 
