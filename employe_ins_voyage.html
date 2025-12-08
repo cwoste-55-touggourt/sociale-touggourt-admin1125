@@ -310,9 +310,7 @@ border:none; border-radius:6px; margin-top:8px;">
 <div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
 
 <!-- زر رفع صورة (مخفي) -->
-<input type="file" id="barcodeImage" accept="image/*" capture="gallery" style="display:none;">
-
-style="display:none; margin-top:8px;">
+<input type="file" id="barcodeImage" accept="image/*" capture="gallery" style="display:none; margin-top:8px;">
 
 
     </div>
@@ -2197,11 +2195,12 @@ async function deleteRegistration(empId) {
     }
   };   
 
+
+
 // ========== تشغيل الكاميرا لمسح الباركود ==========
 
-
 // 🎯 إضافة المسح من صورة مع رسالة خطأ واضحة
-imageInput.onchange = function (e) {
+barcodeImage.onchange = function (e) {
     let file = e.target.files[0];
     if (!file) return;
 
@@ -2209,18 +2208,14 @@ imageInput.onchange = function (e) {
 
     fileScanner.scanFile(file, true)
     .then(decodedText => {
-
-        // وضع الرقم في الحقل
         document.getElementById("empId").value = decodedText;
 
-        // إخفاء قارئ الكاميرا وزر الصورة
         document.getElementById("reader").style.display = "none";
-        imageInput.style.display = "none";
+        barcodeImage.style.display = "none";
 
-        checkEmployee(); // تشغيل تسجيل الدخول تلقائيًا
+        checkEmployee();
     })
     .catch(err => {
-
         Swal.fire({
             icon: "error",
             title: "لم يتم العثور على باركود",
@@ -2228,13 +2223,12 @@ imageInput.onchange = function (e) {
             confirmButtonText: "حسنًا"
         });
 
-        // إعادة إظهار زر اختيار الصورة للمحاولة
-        imageInput.style.display = "block";
+        barcodeImage.style.display = "block";
     });
 };
 
 
-}
+
 
 
 
@@ -2242,8 +2236,6 @@ imageInput.onchange = function (e) {
 </script>
 </body>
 </html>
-
-
 
 
 
