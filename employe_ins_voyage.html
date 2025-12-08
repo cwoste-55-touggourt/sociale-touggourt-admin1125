@@ -13,6 +13,7 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
 
 
+
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -280,35 +281,10 @@ button {
   direction: ltr;
 }
 
-/* جعل إطار ماسح الباركود متجاوب تماماً */
-#reader {
-    width: 100% !important;
-    max-width: 320px;     /* الحجم المثالي للهاتف */
-    height: 260px !important;
-    margin: 10px auto;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #000;
-    display: none;
-}
-
-/* تحسين زر رفع الصورة للهاتف */
-#barcodeImage {
-    width: 100%;
-    max-width: 260px;
-    margin: 10px auto;
-    display: none;
-}
-
-
-  
   </style>
 </head>
 
 <body>
-
- 
-
   <div class="container" id="mainContainer">
     <div class="page-header">
      
@@ -323,6 +299,7 @@ button {
       <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
       <button onclick="checkEmployee()">تسجيل الدخول</button>
 
+
 <!-- 🔍 زر مسح الباركود -->
 <button type="button" onclick="startBarcodeScanner()" 
 style="background:#007bff; color:white; padding:6px 12px; font-size:13px;
@@ -330,18 +307,12 @@ border:none; border-radius:6px; margin-top:8px;">
 📷 مسح الباركود
 </button>
 
-<!-- 📸 قارئ الكاميرا + زر رفع صورة (ثابت وغير قابل للحذف) -->
-<div id="reader" style="width:260px; margin:10px auto; display:none;"></div>
-
-<input type="file" id="barcodeImage" accept="image/*"
-       style="display:none; margin:10px auto; text-align:center;">
+<!-- مكان عرض الكاميرا -->
+<div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
 
 
     </div>
   </div>
-
-
-
 
 <!-- ✅ قسم الاستمارة -->
 <div id="registrationForm" style="display:none; margin-top:25px;">
@@ -2220,125 +2191,75 @@ async function deleteRegistration(empId) {
         </div>`;
       container.appendChild(msg);
     }
-  };   
+  };  
 
-/* ===============================
-      الإعدادات العامة
-================================ */
+
 let scanner = null;
-let barcodeImage = null;
 
-window.addEventListener("load", () => {
-    barcodeImage = document.getElementById("barcodeImage");
-});
-
-/* ===============================
-    تنظيف إطار الماسح بالكامل
-=============================== */
-function resetReader() {
-    const readerDiv = document.getElementById("reader");
-    readerDiv.innerHTML = "";
-    readerDiv.style.display = "none";
-}
-
-/* ===============================
-     تشغيل ماسح الباركود بالكاميرا
-=============================== */
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
 
-    resetReader();              // تنظيف قبل البدء
-    barcodeImage.value = "";    // حذف ملف سابق
-    barcodeImage.style.display = "block";
+    if (scanner) return;
 
     readerDiv.style.display = "block";
-
-    if (scanner) {
-        scanner.stop().then(() => {
-            scanner = null;
-            startBarcodeScanner();
-        });
-        return;
-    }
-
     scanner = new Html5Qrcode("reader");
 
+    // 🎯 محاولة تشغيل الكاميرا الخلفية مباشرة
+    const backCameraConfig = {
+        facingMode: { exact: "environment" } // ← الكاميرا الخلفية
+    };
+
     scanner.start(
-        { facingMode: "environment" },
-        { fps: 12, qrbox: { width: 200, height: 200 } },
+        backCameraConfig,
+        { fps: 10, qrbox: 250 },
         decodedText => {
+
+            // كتابة الرقم الوظيفي تلقائيًا
             document.getElementById("empId").value = decodedText;
 
+            // إيقاف الكاميرا
             scanner.stop().then(() => {
                 scanner = null;
-                resetReader();
-                barcodeImage.style.display = "none";
+                readerDiv.style.display = "none";
             });
 
+            // التحقق مباشرة
             checkEmployee();
         }
-    ).catch(() => {
+    ).catch(err => {
+        // في حال فشل التوجيه للكاميرا الخلفية، نحاول اختيارها من القائمة
         Html5Qrcode.getCameras().then(cameras => {
-            let camId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
+            // البحث عن كاميرا اسمها يحتوي على back أو rear
+            let backCam = cameras.find(cam =>
+                cam.label.toLowerCase().includes("back") ||
+                cam.label.toLowerCase().includes("rear")
+            );
+
+            let camToUse = backCam ? backCam.id : cameras[0].id;
 
             scanner.start(
-                camId,
-                { fps: 12, qrbox: { width: 200, height: 200 } },
+                camToUse,
+                { fps: 10, qrbox: 250 },
                 decodedText => {
                     document.getElementById("empId").value = decodedText;
-
                     scanner.stop().then(() => {
                         scanner = null;
-                        resetReader();
-                        barcodeImage.style.display = "none";
+                        readerDiv.style.display = "none";
                     });
-
                     checkEmployee();
                 }
             );
+        }).catch(err2 => {
+            Swal.fire("خطأ", "تعذر تشغيل كاميرا الهاتف", "error");
         });
     });
 }
 
-/* ===============================
-     مسح باركود من صورة — بدون عرض الصورة
-=============================== */
-barcodeImage.addEventListener("change", function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    resetReader();
-
-    const fileScanner = new Html5Qrcode("reader");
-
-    fileScanner.scanFile(file, true)
-        .then(decodedText => {
-            document.getElementById("empId").value = decodedText;
-
-            barcodeImage.value = "";
-            barcodeImage.style.display = "none";
-
-            checkEmployee();
-        })
-        .catch(() => {
-            Swal.fire("تنبيه", "لم يتم التعرف على الباركود — يرجى اختيار صورة أوضح", "warning");
-
-            barcodeImage.value = "";
-            barcodeImage.style.display = "block";
-
-            resetReader();
-        });
-});
-
-
+ 
 
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
