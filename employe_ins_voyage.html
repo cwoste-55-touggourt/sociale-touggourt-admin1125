@@ -281,14 +281,6 @@ button {
 }
 
 
-#reader {
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    margin: 0 auto !important;
-    border: none !important;
-}
 
 
   
@@ -325,12 +317,6 @@ border:none; border-radius:6px; margin-top:8px;">
 
 <input type="file" id="barcodeImage" accept="image/*"
        style="display:none; margin:10px auto; text-align:center;">
-
-<!-- عرض الصورة المصغرة -->
-<div id="previewArea" style="display:none; text-align:center; margin-top:10px;">
-    <img id="previewImage" 
-         style="max-width:160px; border-radius:10px; border:1px solid #ccc;">
-</div>
 
     </div>
   </div>
@@ -2228,14 +2214,19 @@ window.addEventListener("load", () => {
 // 🔍 بدء مسح الكاميرا
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
+
+    // إعادة تهيئة إطار المسح (لمنع التمدد بعد رفع الصورة)
+    readerDiv.style.display = "block";
+    readerDiv.style.height = "280px";
+    readerDiv.style.padding = "0";
+    readerDiv.innerHTML = "";
+
     barcodeImage.style.display = "block";
 
     if (scanner) return;
 
-    readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    // محاولة تشغيل الكاميرا الخلفية
     scanner.start(
         { facingMode: { exact: "environment" } },
         { fps: 10, qrbox: 230 },
@@ -2253,6 +2244,7 @@ function startBarcodeScanner() {
     ).catch(() => {
         Html5Qrcode.getCameras().then(cameras => {
             const camId = cameras[0].id;
+
             scanner.start(
                 camId,
                 { fps: 10, qrbox: 230 },
@@ -2272,56 +2264,44 @@ function startBarcodeScanner() {
     });
 }
 
-// 🖼 مسح باركود من صورة
-barcodeImage.addEventListener("change", function(e) {
+// 🖼 مسح باركود من صورة (بدون عرض الصورة — فقط قراءة)
+document.getElementById("barcodeImage").addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const readerDiv = document.getElementById("reader");
-    const previewArea = document.getElementById("previewArea");
-    const previewImage = document.getElementById("previewImage");
-
-    // 🛑 إخفاء إطار الكاميرا ومنع التمدد نهائياً
-    readerDiv.style.display = "none";
-    readerDiv.innerHTML = "";
-    readerDiv.style.height = "0px";
-
-    // 🎯 عرض الصورة المصغره فقط
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        previewImage.src = event.target.result;
-        previewArea.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-
     const fileScanner = new Html5Qrcode("reader");
 
+    // تصفير الإطار حتى لا يظهر شيء
+    readerDiv.innerHTML = "";
+    readerDiv.style.height = "0px";
+    readerDiv.style.padding = "0";
+
     fileScanner.scanFile(file, true)
-    .then(decodedText => {
+        .then(decodedText => {
+            document.getElementById("empId").value = decodedText;
 
-        previewArea.style.display = "none";
-        document.getElementById("empId").value = decodedText;
+            // إخفاء أدوات المسح
+            readerDiv.style.display = "none";
+            barcodeImage.style.display = "none";
 
-        barcodeImage.style.display = "none";
+            checkEmployee();
+        })
+        .catch(() => {
+            Swal.fire("تنبيه", "لم يتم التعرف على الباركود، اختر صورة واضحة.", "warning");
 
-        checkEmployee();
-    })
-    .catch(() => {
-
-        Swal.fire({
-            icon: "error",
-            title: "لم يتم التعرف على الباركود",
-            text: "يرجى اختيار صورة أوضح",
+            // إظهار زر اختيار صورة فقط — بدون أي إطار
+            barcodeImage.style.display = "block";
+            readerDiv.style.display = "none";
         });
-
-        previewArea.style.display = "block";  // تبقى الصورة الصغيرة فقط
-    });
 });
+
 
 
 </script>
 </body>
 </html>
+
 
 
 
