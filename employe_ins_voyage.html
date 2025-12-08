@@ -314,6 +314,11 @@ border:none; border-radius:6px; margin-top:8px;">
 <input type="file" id="barcodeImage" accept="image/*"
        style="display:none; margin:10px auto; text-align:center;">
 
+<!-- عرض الصورة المصغرة -->
+<div id="previewArea" style="display:none; text-align:center; margin-top:10px;">
+    <img id="previewImage" 
+         style="max-width:160px; border-radius:10px; border:1px solid #ccc;">
+</div>
 
     </div>
   </div>
@@ -2280,6 +2285,7 @@ document.getElementById("barcodeImage").addEventListener("change", function(e) {
 </script>
 </body>
 </html>
+
 
 
 
