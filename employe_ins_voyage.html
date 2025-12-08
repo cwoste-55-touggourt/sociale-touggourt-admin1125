@@ -2276,6 +2276,8 @@ document.getElementById("barcodeImage").addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+  document.getElementById("reader").style.display = "none";
+
     const readerDiv = document.getElementById("reader");
     const fileScanner = new Html5Qrcode("reader");
 
@@ -2296,6 +2298,7 @@ document.getElementById("barcodeImage").addEventListener("change", function(e) {
 </script>
 </body>
 </html>
+
 
 
 
