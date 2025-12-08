@@ -2200,79 +2200,11 @@ async function deleteRegistration(empId) {
 // ========== تشغيل الكاميرا لمسح الباركود ==========
 
 
-let scanner = null;
-
-function startBarcodeScanner() {
-    const readerDiv = document.getElementById("reader");
-    const imageInput = document.getElementById("barcodeImage");
-
-    // إظهار زر رفع الصورة عند تشغيل المسح
-    imageInput.style.display = "block";
-
-    if (scanner) return;
-
-    readerDiv.style.display = "block";
-    scanner = new Html5Qrcode("reader");
-
-    // 🎯 تشغيل الكاميرا الخلفية
-    const backCameraConfig = {
-        facingMode: { exact: "environment" }
-    };
-
-    scanner.start(
-        backCameraConfig,
-        { fps: 10, qrbox: 250 },
-        decodedText => {
-            // كتابة الرقم
-            document.getElementById("empId").value = decodedText;
-
-            // إيقاف الماسح
-            scanner.stop().then(() => {
-                scanner = null;
-                readerDiv.style.display = "none";
-                imageInput.style.display = "none"; // إخفاء زر الصورة بعد الانتهاء
-            });
-
-            // تشغيل التحقق
-            checkEmployee();
-        }
-    ).catch(err => {
-
-        // إذا فشلت محاولة الكاميرا الخلفية، اختر كاميرا مناسبة
-        Html5Qrcode.getCameras().then(cameras => {
-            let backCam = cameras.find(cam =>
-                cam.label.toLowerCase().includes("back") ||
-                cam.label.toLowerCase().includes("rear")
-            );
-
-            let camToUse = backCam ? backCam.id : cameras[0].id;
-
-            scanner.start(
-                camToUse,
-                { fps: 10, qrbox: 250 },
-                decodedText => {
-                    document.getElementById("empId").value = decodedText;
-
-                    scanner.stop().then(() => {
-                        scanner = null;
-                        readerDiv.style.display = "none";
-                        imageInput.style.display = "none";
-                    });
-
-                    checkEmployee();
-                }
-            );
-        }).catch(err2 => {
-            Swal.fire("خطأ", "تعذر تشغيل كاميرا الهاتف", "error");
-        });
-    });
-
-    // 🎯 إضافة المسح من صورة
+// 🎯 إضافة المسح من صورة مع رسالة خطأ واضحة
 imageInput.onchange = function (e) {
     let file = e.target.files[0];
     if (!file) return;
 
-    // كائن مستقل لقراءة الصور
     const fileScanner = new Html5Qrcode("reader");
 
     fileScanner.scanFile(file, true)
@@ -2281,24 +2213,26 @@ imageInput.onchange = function (e) {
         // وضع الرقم في الحقل
         document.getElementById("empId").value = decodedText;
 
-        // إيقاف الكاميرا إذا كانت تعمل
-        if (scanner) {
-            scanner.stop().then(() => {
-                scanner = null;
-            });
-        }
-
-        // إخفاء واجهة المسح
+        // إخفاء قارئ الكاميرا وزر الصورة
         document.getElementById("reader").style.display = "none";
         imageInput.style.display = "none";
 
-        // تشغيل تسجيل الدخول
-        checkEmployee();
+        checkEmployee(); // تشغيل تسجيل الدخول تلقائيًا
     })
     .catch(err => {
-        Swal.fire("خطأ", "لم يتم العثور على باركود صالح في الصورة", "error");
+
+        Swal.fire({
+            icon: "error",
+            title: "لم يتم العثور على باركود",
+            text: "الرجاء اختيار صورة تحتوي على باركود واضح.",
+            confirmButtonText: "حسنًا"
+        });
+
+        // إعادة إظهار زر اختيار الصورة للمحاولة
+        imageInput.style.display = "block";
     });
 };
+
 
 }
 
@@ -2308,6 +2242,7 @@ imageInput.onchange = function (e) {
 </script>
 </body>
 </html>
+
 
 
 
