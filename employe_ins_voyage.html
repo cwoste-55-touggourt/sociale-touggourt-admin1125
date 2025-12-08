@@ -13,7 +13,6 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
 
 
-
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -285,6 +284,9 @@ button {
 </head>
 
 <body>
+
+ 
+
   <div class="container" id="mainContainer">
     <div class="page-header">
      
@@ -306,18 +308,18 @@ border:none; border-radius:6px; margin-top:8px;">
 📷 مسح الباركود
 </button>
 
-<!-- مكان عرض الكاميرا + زر رفع الصورة -->
-<div id="reader" style="width:280px; margin:10px auto; display:none;">
-    
-    <!-- زر رفع صورة (مخفي) -->
-    <input type="file" id="barcodeImage" accept="image/*" capture="gallery" style="display:none; margin-top:8px;">
-  
-</div>
+<!-- 📸 قارئ الكاميرا + زر رفع صورة (ثابت وغير قابل للحذف) -->
+<div id="reader" style="width:260px; margin:10px auto; display:none;"></div>
 
+<input type="file" id="barcodeImage" accept="image/*"
+       style="display:none; margin:10px auto; text-align:center;">
 
 
     </div>
   </div>
+
+
+
 
 <!-- ✅ قسم الاستمارة -->
 <div id="registrationForm" style="display:none; margin-top:25px;">
@@ -2198,23 +2200,17 @@ async function deleteRegistration(empId) {
     }
   };   
 
-
-
-
-
-// ===================== ماسح الباركود بالكاميرا =====================
-
+// 🔍 بدء بار كود مسح الكاميرا
 let scanner = null;
-let barcodeImage;
+let barcodeImage = null;
 
-window.onload = function() {
+window.addEventListener("load", () => {
     barcodeImage = document.getElementById("barcodeImage");
-};
+});
 
+// 🔍 بدء مسح الكاميرا
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
-
-    // إظهار زر رفع الصورة
     barcodeImage.style.display = "block";
 
     if (scanner) return;
@@ -2222,38 +2218,36 @@ function startBarcodeScanner() {
     readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    const config = { facingMode: { exact: "environment" } };
-
+    // محاولة تشغيل الكاميرا الخلفية
     scanner.start(
-        config,
-        { fps: 12, qrbox: 250 },
+        { facingMode: { exact: "environment" } },
+        { fps: 10, qrbox: 230 },
         decodedText => {
             document.getElementById("empId").value = decodedText;
+
             scanner.stop().then(() => {
                 scanner = null;
                 readerDiv.style.display = "none";
                 barcodeImage.style.display = "none";
             });
+
             checkEmployee();
         }
     ).catch(() => {
         Html5Qrcode.getCameras().then(cameras => {
-            let cam = cameras.find(c =>
-                c.label.toLowerCase().includes("back") ||
-                c.label.toLowerCase().includes("rear")
-            );
-            let camId = cam ? cam.id : cameras[0].id;
-
+            const camId = cameras[0].id;
             scanner.start(
                 camId,
-                { fps: 12, qrbox: 250 },
+                { fps: 10, qrbox: 230 },
                 decodedText => {
                     document.getElementById("empId").value = decodedText;
+
                     scanner.stop().then(() => {
                         scanner = null;
                         readerDiv.style.display = "none";
                         barcodeImage.style.display = "none";
                     });
+
                     checkEmployee();
                 }
             );
@@ -2261,42 +2255,31 @@ function startBarcodeScanner() {
     });
 }
 
-barcodeImage?.addEventListener("change", function (e) {
-    let file = e.target.files[0];
+// 🖼 مسح باركود من صورة
+document.getElementById("barcodeImage").addEventListener("change", function(e) {
+    const file = e.target.files[0];
     if (!file) return;
 
+    const readerDiv = document.getElementById("reader");
     const fileScanner = new Html5Qrcode("reader");
 
     fileScanner.scanFile(file, true)
-    .then(decodedText => {
-        document.getElementById("empId").value = decodedText;
-        document.getElementById("reader").style.display = "none";
-        barcodeImage.style.display = "none";
-        checkEmployee();
-    })
-    .catch(() => {
-        Swal.fire({
-            icon: "error",
-            title: "لم يتم التعرف على الباركود",
-            text: "يرجى اختيار صورة واضحة",
-            confirmButtonText: "حسنًا"
+        .then(decodedText => {
+            document.getElementById("empId").value = decodedText;
+            readerDiv.style.display = "none";
+            barcodeImage.style.display = "none";
+            checkEmployee();
+        })
+        .catch(() => {
+            Swal.fire("تنبيه", "لم يتم التعرف على الباركود، اختر صورة واضحة.", "warning");
+            barcodeImage.style.display = "block";
         });
-        barcodeImage.style.display = "block";
-    });
 });
-
-
-
-
 
 
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
