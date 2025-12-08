@@ -306,11 +306,15 @@ border:none; border-radius:6px; margin-top:8px;">
 📷 مسح الباركود
 </button>
 
-<!-- مكان عرض الكاميرا -->
-<div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
+<!-- مكان عرض الكاميرا + زر رفع الصورة -->
+<div id="reader" style="width:280px; margin:10px auto; display:none;">
+    
+    <!-- زر رفع صورة (مخفي) -->
+    <input type="file" id="barcodeImage" accept="image/*" capture="gallery" 
+    style="display:none; margin-top:8px;">
 
-<!-- زر رفع صورة (مخفي) -->
-<input type="file" id="barcodeImage" accept="image/*" capture="gallery" style="display:none; margin-top:8px;">
+</div>
+
 
 
     </div>
