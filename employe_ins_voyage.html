@@ -2206,7 +2206,9 @@ async function deleteRegistration(empId) {
 // ===================== ماسح الباركود بالكاميرا =====================
 
 let scanner = null;
+  
 const barcodeImage = document.getElementById("barcodeImage");
+  
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
     const imageInput = document.getElementById("barcodeImage");
@@ -2302,6 +2304,7 @@ barcodeImage.onchange = function (e) {
 </script>
 </body>
 </html>
+
 
 
 
