@@ -2201,7 +2201,7 @@ async function deleteRegistration(empId) {
   };   
 
 /* ===============================
-      إعداد المتغيرات العامة
+      الإعدادات العامة
 ================================ */
 let scanner = null;
 let barcodeImage = null;
@@ -2216,23 +2216,30 @@ window.addEventListener("load", () => {
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
 
-    // تنظيف الإطار حتى لا يتمدد
+    // تنظيف أي بقايا من تشغيل سابق
     readerDiv.innerHTML = "";
     readerDiv.style.height = "260px";
     readerDiv.style.display = "block";
     readerDiv.style.padding = "0";
 
-    // إظهار خيار رفع الصورة
+    // إظهار زر رفع الصورة
     barcodeImage.style.display = "block";
 
-    if (scanner) return;
+    // في حال بقي ماسح عالق
+    if (scanner) {
+        scanner.stop().then(() => {
+            scanner = null;
+            startBarcodeScanner(); // إعادة تشغيل الماسح
+        });
+        return;
+    }
 
     scanner = new Html5Qrcode("reader");
 
     const config = { fps: 12, qrbox: 230 };
 
     scanner.start(
-        { facingMode: "environment" }, // الكاميرا الخلفية
+        { facingMode: "environment" }, // تشغيل الكاميرا الخلفية مباشرة
         config,
         decodedText => {
             document.getElementById("empId").value = decodedText;
@@ -2246,12 +2253,11 @@ function startBarcodeScanner() {
             checkEmployee();
         }
     ).catch(() => {
-        // في حال لم يقبل facingMode
+        // إذا لم يقبل facingMode
         Html5Qrcode.getCameras().then(cameras => {
-            let camId = cameras.find(c => 
-                c.label.toLowerCase().includes("back") ||
-                c.label.toLowerCase().includes("rear")
-            )?.id || cameras[0].id;
+            let camId =
+                cameras.find(c => c.label.toLowerCase().includes("back"))?.id ||
+                cameras[0].id;
 
             scanner.start(
                 camId,
@@ -2273,39 +2279,59 @@ function startBarcodeScanner() {
 }
 
 /* =========================================
-        مسح باركود من صورة (بدون عرض الصورة)
+     مسح باركود من صورة — بدون عرض الصورة
 ========================================= */
-document.getElementById("barcodeImage").addEventListener("change", function(e) {
+document.getElementById("barcodeImage").addEventListener("change", function (e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const readerDiv = document.getElementById("reader");
 
-    // إخفاء إطار الماسح فورًا حتى لا يتمدد
+    // إخفاء إطار الماسح بالكامل
     readerDiv.innerHTML = "";
     readerDiv.style.display = "none";
     readerDiv.style.height = "0px";
 
+    // تشغيل ماسح الصور فقط
     const fileScanner = new Html5Qrcode("reader");
 
-    fileScanner.scanFile(file, true)
+    fileScanner
+        .scanFile(file, true)
         .then(decodedText => {
+            // نجاح القراءة
             document.getElementById("empId").value = decodedText;
 
+            barcodeImage.value = ""; // حذف ملف الصورة
             barcodeImage.style.display = "none";
+
             checkEmployee();
         })
         .catch(() => {
-            Swal.fire("تنبيه", "لم يتم التعرف على الباركود، اختر صورة واضحة.", "warning");
+            // فشل القراءة
+            Swal.fire(
+                "تنبيه",
+                "لم يتم التعرف على الباركود — يرجى اختيار صورة أوضح",
+                "warning"
+            );
+
+            // تنظيف الصورة حتى يمكن إعادة الرفع
+            barcodeImage.value = "";
             barcodeImage.style.display = "block";
+
+            // تنظيف إطار الماسح تمامًا
+            readerDiv.innerHTML = "";
+            readerDiv.style.height = "0px";
+            readerDiv.style.display = "none";
         });
 });
+
 
 
 
 </script>
 </body>
 </html>
+
 
 
 
