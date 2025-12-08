@@ -2197,9 +2197,72 @@ async function deleteRegistration(empId) {
 
 
 
-// ========== تشغيل الكاميرا لمسح الباركود ==========
 
-// 🎯 إضافة المسح من صورة مع رسالة خطأ واضحة
+
+// ===================== ماسح الباركود بالكاميرا =====================
+
+let scanner = null;
+
+function startBarcodeScanner() {
+    const readerDiv = document.getElementById("reader");
+    const imageInput = document.getElementById("barcodeImage");
+
+    // إظهار زر اختيار صورة
+    imageInput.style.display = "block";
+
+    if (scanner) return;
+
+    readerDiv.style.display = "block";
+    scanner = new Html5Qrcode("reader");
+
+    // محاولة اختيار الكاميرا الخلفية
+    const config = { facingMode: { exact: "environment" } };
+
+    scanner.start(
+        config,
+        { fps: 12, qrbox: 250 },
+        decodedText => {
+            document.getElementById("empId").value = decodedText;
+
+            scanner.stop().then(() => {
+                scanner = null;
+                readerDiv.style.display = "none";
+                imageInput.style.display = "none";
+            });
+
+            checkEmployee();
+        }
+    ).catch(() => {
+        // اختيار أي كاميرا متاحة عند الفشل
+        Html5Qrcode.getCameras().then(cameras => {
+            let cam = cameras.find(c =>
+                c.label.toLowerCase().includes("back") ||
+                c.label.toLowerCase().includes("rear")
+            );
+
+            let camId = cam ? cam.id : cameras[0].id;
+
+            scanner.start(
+                camId,
+                { fps: 12, qrbox: 250 },
+                decodedText => {
+                    document.getElementById("empId").value = decodedText;
+
+                    scanner.stop().then(() => {
+                        scanner = null;
+                        readerDiv.style.display = "none";
+                        imageInput.style.display = "none";
+                    });
+
+                    checkEmployee();
+                }
+            );
+        });
+    });
+}
+
+// ========= مسح الكود من صورة =========
+
 barcodeImage.onchange = function (e) {
     let file = e.target.files[0];
     if (!file) return;
@@ -2215,18 +2278,17 @@ barcodeImage.onchange = function (e) {
 
         checkEmployee();
     })
-    .catch(err => {
+    .catch(() => {
         Swal.fire({
             icon: "error",
-            title: "لم يتم العثور على باركود",
-            text: "الرجاء اختيار صورة تحتوي على باركود واضح.",
+            title: "لم يتم التعرف على الباركود",
+            text: "يرجى اختيار صورة واضحة",
             confirmButtonText: "حسنًا"
         });
 
         barcodeImage.style.display = "block";
     });
 };
-
 
 
 
