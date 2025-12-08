@@ -280,10 +280,6 @@ button {
   direction: ltr;
 }
 
-
-
-
-  
   </style>
 </head>
 
@@ -317,6 +313,7 @@ border:none; border-radius:6px; margin-top:8px;">
 
 <input type="file" id="barcodeImage" accept="image/*"
        style="display:none; margin:10px auto; text-align:center;">
+
 
     </div>
   </div>
@@ -2214,19 +2211,14 @@ window.addEventListener("load", () => {
 // 🔍 بدء مسح الكاميرا
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
-
-    // إعادة تهيئة إطار المسح (لمنع التمدد بعد رفع الصورة)
-    readerDiv.style.display = "block";
-    readerDiv.style.height = "280px";
-    readerDiv.style.padding = "0";
-    readerDiv.innerHTML = "";
-
     barcodeImage.style.display = "block";
 
     if (scanner) return;
 
+    readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
+    // محاولة تشغيل الكاميرا الخلفية
     scanner.start(
         { facingMode: { exact: "environment" } },
         { fps: 10, qrbox: 230 },
@@ -2244,7 +2236,6 @@ function startBarcodeScanner() {
     ).catch(() => {
         Html5Qrcode.getCameras().then(cameras => {
             const camId = cameras[0].id;
-
             scanner.start(
                 camId,
                 { fps: 10, qrbox: 230 },
@@ -2264,7 +2255,7 @@ function startBarcodeScanner() {
     });
 }
 
-// 🖼 مسح باركود من صورة (بدون عرض الصورة — فقط قراءة)
+// 🖼 مسح باركود من صورة
 document.getElementById("barcodeImage").addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2272,40 +2263,23 @@ document.getElementById("barcodeImage").addEventListener("change", function(e) {
     const readerDiv = document.getElementById("reader");
     const fileScanner = new Html5Qrcode("reader");
 
-    // تصفير الإطار حتى لا يظهر شيء
-    readerDiv.innerHTML = "";
-    readerDiv.style.height = "0px";
-    readerDiv.style.padding = "0";
-
     fileScanner.scanFile(file, true)
         .then(decodedText => {
             document.getElementById("empId").value = decodedText;
-
-            // إخفاء أدوات المسح
             readerDiv.style.display = "none";
             barcodeImage.style.display = "none";
-
             checkEmployee();
         })
         .catch(() => {
             Swal.fire("تنبيه", "لم يتم التعرف على الباركود، اختر صورة واضحة.", "warning");
-
-            // إظهار زر اختيار صورة فقط — بدون أي إطار
             barcodeImage.style.display = "block";
-            readerDiv.style.display = "none";
         });
 });
-
 
 
 </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
