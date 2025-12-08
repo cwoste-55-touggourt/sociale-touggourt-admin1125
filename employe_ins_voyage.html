@@ -309,6 +309,10 @@ border:none; border-radius:6px; margin-top:8px;">
 <!-- مكان عرض الكاميرا -->
 <div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
 
+<!-- زر رفع صورة (مخفي) -->
+<input type="file" id="barcodeImage" accept="image/*" 
+style="display:none; margin-top:8px;">
+
 
     </div>
   </div>
@@ -2199,38 +2203,42 @@ let scanner = null;
 
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
+    const imageInput = document.getElementById("barcodeImage");
+
+    // إظهار زر رفع الصورة عند تشغيل المسح
+    imageInput.style.display = "block";
 
     if (scanner) return;
 
     readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    // 🎯 محاولة تشغيل الكاميرا الخلفية مباشرة
+    // 🎯 تشغيل الكاميرا الخلفية
     const backCameraConfig = {
-        facingMode: { exact: "environment" } // ← الكاميرا الخلفية
+        facingMode: { exact: "environment" }
     };
 
     scanner.start(
         backCameraConfig,
         { fps: 10, qrbox: 250 },
         decodedText => {
-
-            // كتابة الرقم الوظيفي تلقائيًا
+            // كتابة الرقم
             document.getElementById("empId").value = decodedText;
 
-            // إيقاف الكاميرا
+            // إيقاف الماسح
             scanner.stop().then(() => {
                 scanner = null;
                 readerDiv.style.display = "none";
+                imageInput.style.display = "none"; // إخفاء زر الصورة بعد الانتهاء
             });
 
-            // التحقق مباشرة
+            // تشغيل التحقق
             checkEmployee();
         }
     ).catch(err => {
-        // في حال فشل التوجيه للكاميرا الخلفية، نحاول اختيارها من القائمة
+
+        // إذا فشلت محاولة الكاميرا الخلفية، اختر كاميرا مناسبة
         Html5Qrcode.getCameras().then(cameras => {
-            // البحث عن كاميرا اسمها يحتوي على back أو rear
             let backCam = cameras.find(cam =>
                 cam.label.toLowerCase().includes("back") ||
                 cam.label.toLowerCase().includes("rear")
@@ -2243,10 +2251,13 @@ function startBarcodeScanner() {
                 { fps: 10, qrbox: 250 },
                 decodedText => {
                     document.getElementById("empId").value = decodedText;
+
                     scanner.stop().then(() => {
                         scanner = null;
                         readerDiv.style.display = "none";
+                        imageInput.style.display = "none";
                     });
+
                     checkEmployee();
                 }
             );
@@ -2254,8 +2265,31 @@ function startBarcodeScanner() {
             Swal.fire("خطأ", "تعذر تشغيل كاميرا الهاتف", "error");
         });
     });
-}
 
+    // 🎯 إضافة المسح من صورة
+    imageInput.onchange = function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        scanner.scanFile(file, true)
+        .then(decodedText => {
+
+            document.getElementById("empId").value = decodedText;
+
+            // إيقاف المسح
+            scanner.stop().then(() => {
+                scanner = null;
+                readerDiv.style.display = "none";
+                imageInput.style.display = "none";
+            });
+
+            checkEmployee();
+        })
+        .catch(err => {
+            Swal.fire("خطأ", "لم يتم التعرف على الباركود في الصورة", "error");
+        });
+    };
+}
 
 
 
@@ -2263,12 +2297,6 @@ function startBarcodeScanner() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
