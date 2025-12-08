@@ -2206,22 +2206,23 @@ async function deleteRegistration(empId) {
 // ===================== ماسح الباركود بالكاميرا =====================
 
 let scanner = null;
-  
-const barcodeImage = document.getElementById("barcodeImage");
-  
+let barcodeImage;
+
+window.onload = function() {
+    barcodeImage = document.getElementById("barcodeImage");
+};
+
 function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
-    const imageInput = document.getElementById("barcodeImage");
 
-    // إظهار زر اختيار صورة
-    imageInput.style.display = "block";
+    // إظهار زر رفع الصورة
+    barcodeImage.style.display = "block";
 
     if (scanner) return;
 
     readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    // محاولة اختيار الكاميرا الخلفية
     const config = { facingMode: { exact: "environment" } };
 
     scanner.start(
@@ -2229,23 +2230,19 @@ function startBarcodeScanner() {
         { fps: 12, qrbox: 250 },
         decodedText => {
             document.getElementById("empId").value = decodedText;
-
             scanner.stop().then(() => {
                 scanner = null;
                 readerDiv.style.display = "none";
-                imageInput.style.display = "none";
+                barcodeImage.style.display = "none";
             });
-
             checkEmployee();
         }
     ).catch(() => {
-        // اختيار أي كاميرا متاحة عند الفشل
         Html5Qrcode.getCameras().then(cameras => {
             let cam = cameras.find(c =>
                 c.label.toLowerCase().includes("back") ||
                 c.label.toLowerCase().includes("rear")
             );
-
             let camId = cam ? cam.id : cameras[0].id;
 
             scanner.start(
@@ -2253,13 +2250,11 @@ function startBarcodeScanner() {
                 { fps: 12, qrbox: 250 },
                 decodedText => {
                     document.getElementById("empId").value = decodedText;
-
                     scanner.stop().then(() => {
                         scanner = null;
                         readerDiv.style.display = "none";
-                        imageInput.style.display = "none";
+                        barcodeImage.style.display = "none";
                     });
-
                     checkEmployee();
                 }
             );
@@ -2267,9 +2262,7 @@ function startBarcodeScanner() {
     });
 }
 
-// ========= مسح الكود من صورة =========
-
-barcodeImage.onchange = function (e) {
+barcodeImage?.addEventListener("change", function (e) {
     let file = e.target.files[0];
     if (!file) return;
 
@@ -2278,10 +2271,8 @@ barcodeImage.onchange = function (e) {
     fileScanner.scanFile(file, true)
     .then(decodedText => {
         document.getElementById("empId").value = decodedText;
-
         document.getElementById("reader").style.display = "none";
         barcodeImage.style.display = "none";
-
         checkEmployee();
     })
     .catch(() => {
@@ -2291,10 +2282,9 @@ barcodeImage.onchange = function (e) {
             text: "يرجى اختيار صورة واضحة",
             confirmButtonText: "حسنًا"
         });
-
         barcodeImage.style.display = "block";
     });
-};
+});
 
 
 
@@ -2304,6 +2294,7 @@ barcodeImage.onchange = function (e) {
 </script>
 </body>
 </html>
+
 
 
 
