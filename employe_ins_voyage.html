@@ -2268,29 +2268,38 @@ function startBarcodeScanner() {
     });
 
     // 🎯 إضافة المسح من صورة
-    imageInput.onchange = function (e) {
-        let file = e.target.files[0];
-        if (!file) return;
+imageInput.onchange = function (e) {
+    let file = e.target.files[0];
+    if (!file) return;
 
-        scanner.scanFile(file, true)
-        .then(decodedText => {
+    // كائن مستقل لقراءة الصور
+    const fileScanner = new Html5Qrcode("reader");
 
-            document.getElementById("empId").value = decodedText;
+    fileScanner.scanFile(file, true)
+    .then(decodedText => {
 
-            // إيقاف المسح
+        // وضع الرقم في الحقل
+        document.getElementById("empId").value = decodedText;
+
+        // إيقاف الكاميرا إذا كانت تعمل
+        if (scanner) {
             scanner.stop().then(() => {
                 scanner = null;
-                readerDiv.style.display = "none";
-                imageInput.style.display = "none";
             });
+        }
 
-            checkEmployee();
-        })
-        .catch(err => {
-            Swal.fire("خطأ", "لم يتم التعرف على الباركود في الصورة", "error");
-        });
-    };
-}
+        // إخفاء واجهة المسح
+        document.getElementById("reader").style.display = "none";
+        imageInput.style.display = "none";
+
+        // تشغيل تسجيل الدخول
+        checkEmployee();
+    })
+    .catch(err => {
+        Swal.fire("خطأ", "لم يتم العثور على باركود صالح في الصورة", "error");
+    });
+};
+
  
 
 </script>
