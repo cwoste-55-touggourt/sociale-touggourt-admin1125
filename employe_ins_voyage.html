@@ -16,27 +16,33 @@
 
 <style>
 
-/* لودر دائري أنيق */
+/* لودر يغطي نصف الشاشة فقط */
 #imageLoaderOverlay {
     position: fixed;
-    top: 0;
     left: 0;
+    bottom: 0;               /* يظهر في الجزء السفلي */
     width: 100%;
-    height: 100%;
-    background: rgba(255,255,255,0.8);
+    height: 50vh;            /* نصف الشاشة */
+    background: rgba(255,255,255,0.9);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 99999;
+    border-top: 2px solid #ccc; /* خط علوي خفيف جميل */
 }
 
 .loader-circle {
     border: 6px solid #ddd;
     border-top: 6px solid #2575fc;
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     animation: spinLoader 0.9s linear infinite;
+}
+
+@keyframes spinLoader {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @keyframes spinLoader {
@@ -445,10 +451,21 @@ style="display:none; margin-top:8px;">
   </form>
 </div>
 
-<!-- لودر انتظار مسح الصورة -->
 <div id="imageLoaderOverlay">
-    <div class="loader-circle"></div>
+    <div style="text-align:center;">
+        <div class="loader-circle"></div>
+        <div style="
+            margin-top:15px;
+            font-size:18px;
+            font-weight:700;
+            color:#d40000;
+            font-family:'Cairo', sans-serif;
+        ">
+            جاري تحليل الصورة…
+        </div>
+    </div>
 </div>
+
 
 
 <script>
@@ -2371,6 +2388,7 @@ function startBarcodeScanner() {
 </script>
 </body>
 </html>
+
 
 
 
