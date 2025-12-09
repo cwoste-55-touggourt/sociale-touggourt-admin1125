@@ -28,13 +28,6 @@
     justify-content: center;
     align-items: center;
     z-index: 99999;
-    animation: fadeInOverlay 0.3s ease;
-}
-
-/* تأثير دخول الخلفية */
-@keyframes fadeInOverlay {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 /* الصندوق الأبيض */
@@ -44,24 +37,6 @@
     border-radius: 16px;
     box-shadow: 0 8px 35px rgba(0,0,0,0.20);
     text-align: center;
-    animation: popIn 0.35s ease;
-}
-
-/* تأثير دخول الصندوق */
-@keyframes popIn {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* نبض خفيف للصندوق */
-#loaderBox {
-    animation: popIn 0.35s ease, pulseBox 1.8s infinite ease-in-out;
-}
-
-@keyframes pulseBox {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.03); }
-    100% { transform: scale(1); }
 }
 
 /* دائرة التحميل */
@@ -72,30 +47,22 @@
     width: 60px;
     height: 60px;
     margin: auto;
-    animation: spinLoader 0.9s linear infinite;
+    animation: spinLoader 0.9s linear infinite; /* دوران فقط */
 }
 
-/* دوران */
+/* دوران اللودر */
 @keyframes spinLoader {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* نص التحليل */
+/* نص التحليل ثابت */
 .loader-text {
     margin-top: 15px;
     font-size: 19px;
     font-weight: 700;
     color: #2575fc;
     font-family: 'Cairo', sans-serif;
-    animation: pulseText 1.5s infinite ease-in-out;
-}
-
-/* نبض للنص */
-@keyframes pulseText {
-    0% { opacity: 1; }
-    50% { opacity: 0.55; }
-    100% { opacity: 1; }
 }
 
 
@@ -2429,6 +2396,7 @@ function startBarcodeScanner() {
 </script>
 </body>
 </html>
+
 
 
 
