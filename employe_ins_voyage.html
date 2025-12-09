@@ -2206,46 +2206,47 @@ function startBarcodeScanner() {
     const readerDiv = document.getElementById("reader");
     const imageInput = document.getElementById("barcodeImage");
 
-    // إظهار زر رفع الصورة عند تشغيل المسح
+    // إظهار زر رفع الصورة فقط، دون عرض الصورة داخل الإطار
     imageInput.style.display = "block";
 
+    // تنظيف الإطار قبل بدء تشغيل جديد
+    readerDiv.innerHTML = "";
+    readerDiv.style.display = "block";
+
+    // منع تكرار إنشاء الماسح
     if (scanner) return;
 
-    readerDiv.style.display = "block";
     scanner = new Html5Qrcode("reader");
 
-    // 🎯 تشغيل الكاميرا الخلفية
-    const backCameraConfig = {
-        facingMode: { exact: "environment" }
-    };
-
+    // محاولة تشغيل الكاميرا الخلفية
     scanner.start(
-        backCameraConfig,
+        { facingMode: { exact: "environment" } },
         { fps: 10, qrbox: 250 },
         decodedText => {
-            // كتابة الرقم
             document.getElementById("empId").value = decodedText;
 
-            // إيقاف الماسح
             scanner.stop().then(() => {
                 scanner = null;
                 readerDiv.style.display = "none";
-                imageInput.style.display = "none"; // إخفاء زر الصورة بعد الانتهاء
+                imageInput.style.display = "none";
             });
 
-            // تشغيل التحقق
             checkEmployee();
         }
-    ).catch(err => {
-
-        // إذا فشلت محاولة الكاميرا الخلفية، اختر كاميرا مناسبة
+    ).catch(() => {
+        // اختيار الكاميرا المتاحة إذا فشلت الخلفية
         Html5Qrcode.getCameras().then(cameras => {
-            let backCam = cameras.find(cam =>
-                cam.label.toLowerCase().includes("back") ||
-                cam.label.toLowerCase().includes("rear")
+            if (!cameras.length) {
+                Swal.fire("خطأ", "لا يوجد كاميرا متاحة", "error");
+                return;
+            }
+
+            const backCam = cameras.find(c =>
+                c.label.toLowerCase().includes("back") ||
+                c.label.toLowerCase().includes("rear")
             );
 
-            let camToUse = backCam ? backCam.id : cameras[0].id;
+            const camToUse = backCam ? backCam.id : cameras[0].id;
 
             scanner.start(
                 camToUse,
@@ -2262,49 +2263,54 @@ function startBarcodeScanner() {
                     checkEmployee();
                 }
             );
-        }).catch(err2 => {
-            Swal.fire("خطأ", "تعذر تشغيل كاميرا الهاتف", "error");
+        }).catch(() => {
+            Swal.fire("خطأ", "تعذر تشغيل الكاميرا", "error");
         });
     });
 
-    // 🎯 إضافة المسح من صورة
-imageInput.onchange = function (e) {
-    let file = e.target.files[0];
-    if (!file) return;
+    // ================================
+    // 💡 مسح باركود من الصورة (بدون عرض الصورة)
+    // ================================
+    imageInput.onchange = function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
 
-    // كائن مستقل لقراءة الصور
-    const fileScanner = new Html5Qrcode("reader");
+        // لا نعرض الصورة في الإطار
+        readerDiv.innerHTML = "";
 
-    fileScanner.scanFile(file, true)
-    .then(decodedText => {
+        // ماسح مستقل للصور
+        const fileScanner = new Html5Qrcode("reader");
 
-        // وضع الرقم في الحقل
-        document.getElementById("empId").value = decodedText;
+        fileScanner.scanFile(file, true)
+        .then(decodedText => {
+            // وضع الرقم في input
+            document.getElementById("empId").value = decodedText;
 
-        // إيقاف الكاميرا إذا كانت تعمل
-        if (scanner) {
-            scanner.stop().then(() => {
-                scanner = null;
-            });
-        }
+            // إيقاف الكاميرا إن كانت تعمل
+            if (scanner) {
+                scanner.stop().then(() => scanner = null);
+            }
 
-        // إخفاء واجهة المسح
-        document.getElementById("reader").style.display = "none";
-        imageInput.style.display = "none";
+            // إخفاء الماسح
+            readerDiv.style.display = "none";
+            imageInput.style.display = "none";
 
-        // تشغيل تسجيل الدخول
-        checkEmployee();
-    })
-    .catch(err => {
-        Swal.fire("خطأ", "لم يتم العثور على باركود صالح في الصورة", "error");
-    });
-};
+            checkEmployee();
+        })
+        .catch(() => {
+            // فشل التعرف على الكود
+            Swal.fire("تنبيه", "لم يتم العثور على باركود واضح في الصورة", "warning")
+            .then(() => location.reload()); // إعادة تحميل الصفحة بالكامل
+        });
+    };
 }
+
  
 
 </script>
 </body>
 </html>
+
 
 
 
