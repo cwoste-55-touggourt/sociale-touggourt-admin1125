@@ -10,7 +10,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+  
 <script>
         if (sessionStorage.getItem("fromIndex") !== "yes") {
             window.location.href = "index.html";
@@ -18,6 +21,58 @@
     </script>
 
   <style>
+
+/* خلفية شفافة */
+#imageLoaderOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.22);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+/* الصندوق الأبيض */
+#loaderBox {
+    background: #ffffff;
+    padding: 28px 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.20);
+    text-align: center;
+}
+
+/* دائرة التحميل */
+.loader-circle {
+    border: 6px solid #e6e6e6;
+    border-top: 6px solid #2575fc;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    margin: auto;
+    animation: spinLoader 0.9s linear infinite; /* دوران فقط */
+}
+
+/* دوران اللودر */
+@keyframes spinLoader {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* نص التحليل ثابت */
+.loader-text {
+    margin-top: 15px;
+    font-size: 19px;
+    font-weight: 700;
+    color: #2575fc;
+    font-family: 'Cairo', sans-serif;
+}
+
+
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -312,9 +367,49 @@ button {
       <h2 class="gradient-title">بوابة تسجيل الموظفين في المخيمات</h2>
       <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
       <button onclick="checkEmployee()">تسجيل الدخول</button>
+
+
+      <!-- 🔍 زر مسح الباركود -->
+<button type="button" onclick="startBarcodeScanner()" 
+style="
+  background:#007bff; 
+  color:white; 
+  padding:6px 12px; 
+  font-size:13px;
+  border:none; 
+  border-radius:6px; 
+  margin-top:8px; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center;
+  gap:6px;
+  width:100%;
+">
+  <i class="fa-solid fa-camera"></i>
+  مسح الباركود
+</button>
+
+
+
+
+<!-- مكان عرض الكاميرا -->
+<div id="reader" style="width:280px; margin:10px auto; display:none;"></div>
+
+<!-- زر رفع صورة (مخفي) -->
+<input type="file" id="barcodeImage" accept="image/*" 
+style="display:none; margin-top:8px;">
+
     </div>
   </div>
 
+  <div id="imageLoaderOverlay">
+    <div id="loaderBox">
+        <div class="loader-circle"></div>
+        <div class="loader-text">جاري تحليل الصورة…</div>
+    </div>
+</div>
+
+  
 <!-- ✅ قسم الاستمارة -->
 <div id="registrationForm" style="display:none; margin-top:25px;">
 
@@ -2911,6 +3006,141 @@ async function deleteRegistration(empId) {
       container.appendChild(msg);
     }
   };   
+
+
+// كود ماسح الباركود
+
+let scanner = null;
+
+function startBarcodeScanner() {
+    const readerDiv = document.getElementById("reader");
+    const imageInput = document.getElementById("barcodeImage");
+
+    // إظهار زر رفع الصورة
+    imageInput.style.display = "block";
+
+    // تنظيف الإطار
+    readerDiv.innerHTML = "";
+    readerDiv.style.display = "block";
+
+    // منع إنشاء ماسح جديد إذا كان يعمل
+    if (scanner) return;
+
+    scanner = new Html5Qrcode("reader");
+
+    // تشغيل الكاميرا الخلفية
+    scanner.start(
+        { facingMode: { exact: "environment" } },
+        { fps: 12, qrbox: 250 },
+        decodedText => {
+
+            // 📳 اهتزاز عند قراءة الكود
+            if (navigator.vibrate) navigator.vibrate(200);
+
+            document.getElementById("empId").value = decodedText;
+
+            scanner.stop().then(() => {
+                scanner = null;
+                readerDiv.style.display = "none";
+                imageInput.style.display = "none";
+            });
+
+            checkEmployee();
+        }
+    ).catch(() => {
+        // اختيار أي كاميرا متاحة عند الفشل
+        Html5Qrcode.getCameras().then(cameras => {
+            if (!cameras.length) {
+                Swal.fire("خطأ", "لا توجد كاميرات متاحة", "error");
+                return;
+            }
+
+            // تفضيل الكاميرا الخلفية
+            const backCam = cameras.find(c =>
+                c.label.toLowerCase().includes("back") ||
+                c.label.toLowerCase().includes("rear")
+            );
+
+            const camToUse = backCam ? backCam.id : cameras[0].id;
+
+            scanner.start(
+                camToUse,
+                { fps: 12, qrbox: 250 },
+                decodedText => {
+
+                    if (navigator.vibrate) navigator.vibrate(200);
+
+                    document.getElementById("empId").value = decodedText;
+
+                    scanner.stop().then(() => {
+                        scanner = null;
+                        readerDiv.style.display = "none";
+                        imageInput.style.display = "none";
+                    });
+
+                    checkEmployee();
+                }
+            );
+        });
+    });
+
+    // ================================
+    // 🖼 مسح باركود من الصورة — بدون عرض الصورة نهائيًا
+    // ================================
+  imageInput.onchange = function (e) {
+    let file = e.target.files[0];
+    if (!file) return;
+
+    // إظهار اللودر
+    document.getElementById("imageLoaderOverlay").style.display = "flex";
+
+    // إزالة أي محتوى داخل الماسح
+    readerDiv.innerHTML = "";
+
+    // إنشاء div مؤقت للفحص
+    let hiddenDiv = document.createElement("div");
+    hiddenDiv.id = "temp-file-scan";
+    hiddenDiv.style.display = "none";
+    document.body.appendChild(hiddenDiv);
+
+    const fileScanner = new Html5Qrcode("temp-file-scan");
+
+    fileScanner.scanFile(file, true)
+        .then(decodedText => {
+
+            // اهتزاز عند النجاح
+            if (navigator.vibrate) navigator.vibrate(200);
+
+            document.getElementById("empId").value = decodedText;
+
+            document.body.removeChild(hiddenDiv);
+
+            // إيقاف الكاميرا إذا تعمل
+            if (scanner) scanner.stop().then(() => scanner = null);
+
+            readerDiv.style.display = "none";
+            imageInput.value = "";
+            imageInput.style.display = "none";
+
+            // إخفاء اللودر
+            document.getElementById("imageLoaderOverlay").style.display = "none";
+
+            checkEmployee();
+        })
+        .catch(() => {
+
+            document.body.removeChild(hiddenDiv);
+
+            // إخفاء اللودر
+            document.getElementById("imageLoaderOverlay").style.display = "none";
+
+            Swal.fire("تنبيه", "لم يتم العثور على باركود واضح في الصورة", "warning")
+                .then(() => location.reload());
+        });
+};
+}
+
+  
 
 </script>
 </body>
