@@ -16,38 +16,86 @@
 
 <style>
 
-/* لودر يغطي نصف الشاشة فقط */
+/* خلفية شفافة */
 #imageLoaderOverlay {
     position: fixed;
+    top: 0;
     left: 0;
-    bottom: 0;               /* يظهر في الجزء السفلي */
     width: 100%;
-    height: 50vh;            /* نصف الشاشة */
-    background: rgba(255,255,255,0.9);
+    height: 100%;
+    background: rgba(0,0,0,0.22);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 99999;
-    border-top: 2px solid #ccc; /* خط علوي خفيف جميل */
+    animation: fadeInOverlay 0.3s ease;
 }
 
+/* تأثير دخول الخلفية */
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* الصندوق الأبيض */
+#loaderBox {
+    background: #ffffff;
+    padding: 28px 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.20);
+    text-align: center;
+    animation: popIn 0.35s ease;
+}
+
+/* تأثير دخول الصندوق */
+@keyframes popIn {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* نبض خفيف للصندوق */
+#loaderBox {
+    animation: popIn 0.35s ease, pulseBox 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseBox {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+/* دائرة التحميل */
 .loader-circle {
-    border: 6px solid #ddd;
+    border: 6px solid #e6e6e6;
     border-top: 6px solid #2575fc;
     border-radius: 50%;
-    width: 55px;
-    height: 55px;
+    width: 60px;
+    height: 60px;
+    margin: auto;
     animation: spinLoader 0.9s linear infinite;
 }
 
+/* دوران */
 @keyframes spinLoader {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-@keyframes spinLoader {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* نص التحليل */
+.loader-text {
+    margin-top: 15px;
+    font-size: 19px;
+    font-weight: 700;
+    color: #2575fc;
+    font-family: 'Cairo', sans-serif;
+    animation: pulseText 1.5s infinite ease-in-out;
+}
+
+/* نبض للنص */
+@keyframes pulseText {
+    0% { opacity: 1; }
+    50% { opacity: 0.55; }
+    100% { opacity: 1; }
 }
 
 
@@ -452,19 +500,12 @@ style="display:none; margin-top:8px;">
 </div>
 
 <div id="imageLoaderOverlay">
-    <div style="text-align:center;">
+    <div id="loaderBox">
         <div class="loader-circle"></div>
-        <div style="
-            margin-top:15px;
-            font-size:18px;
-            font-weight:700;
-            color:#d40000;
-            font-family:'Cairo', sans-serif;
-        ">
-            جاري تحليل الصورة…
-        </div>
+        <div class="loader-text">جاري تحليل الصورة…</div>
     </div>
 </div>
+
 
 
 
@@ -2388,6 +2429,7 @@ function startBarcodeScanner() {
 </script>
 </body>
 </html>
+
 
 
 
