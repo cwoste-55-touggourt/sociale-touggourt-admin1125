@@ -36,6 +36,181 @@
       z-index: -1;
     }
 
+    /* طبقة الحماية الأولية */
+    body.locked { overflow: hidden; }
+
+    .access-gate {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        radial-gradient(140% 140% at 20% 20%, rgba(25, 118, 210, 0.18), rgba(25, 118, 210, 0) 60%),
+        radial-gradient(160% 160% at 80% 0%, rgba(38, 198, 218, 0.14), rgba(38, 198, 218, 0) 55%),
+        linear-gradient(135deg, #0d47a1, #26c6da);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+
+    .access-gate.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .gate-card {
+      position: relative;
+      width: min(92vw, 420px);
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 22px;
+      padding: 26px 24px 24px;
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.5);
+      overflow: hidden;
+    }
+
+    .gate-card::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      background: radial-gradient(circle at center, rgba(25, 118, 210, 0.08), transparent 45%);
+      animation: gateGlow 6s ease-in-out infinite;
+    }
+
+    .gate-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .gate-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 14px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #1976d2, #26c6da);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 32px;
+      box-shadow: 0 12px 30px rgba(25, 118, 210, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gate-icon::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.35), transparent 45%);
+    }
+
+    .gate-card h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      color: #0d47a1;
+      font-weight: 700;
+    }
+
+    .gate-card p {
+      margin: 0 0 18px;
+      color: #45637a;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .gate-input {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      background: #f5f8ff;
+      border: 1px solid #c7dcff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .gate-input i {
+      color: #0d47a1;
+      font-size: 18px;
+    }
+
+    .gate-input input {
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      padding: 4px 6px;
+      color: #0d1b2a;
+      outline: none;
+    }
+
+    .gate-input button {
+      border: none;
+      background: transparent;
+      color: #0d47a1;
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s ease;
+    }
+
+    .gate-input button:hover { color: #26c6da; }
+
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      background: linear-gradient(135deg, #0d47a1, #26c6da);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 14px 25px rgba(25, 118, 210, 0.28);
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .gate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(25, 118, 210, 0.32);
+    }
+
+    .gate-btn:active { transform: translateY(0); }
+
+    .gate-message {
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0d47a1;
+    }
+
+    .gate-note {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #607d8b;
+    }
+
+    .gate-card.shake { animation: gateShake 0.4s ease; }
+
+    @keyframes gateGlow {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    @keyframes gateShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(6px); }
+      50% { transform: translateX(-6px); }
+      75% { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
     .welcome-bar {
       background: #0d47a1;
       color: #fff;
@@ -403,6 +578,30 @@
 </head>
 <body>
 
+  <div id="accessGate" class="access-gate">
+    <div class="gate-card">
+      <div class="gate-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+     <h2 style="margin-bottom: 5px;">لجنة الخدمات الإجتماعية توقرت</h2>
+
+<h3 style="color: orange; margin: 0;">- لوحة التحكم -</h3>
+
+<p>أدخل الرمز السري للمتابعة</p>
+
+      <div class="gate-input">
+        <i class="fa-solid fa-key"></i>
+        <input id="accessCodeInput" type="password" inputmode="numeric" autocomplete="off" placeholder="اكتب الرمز السري هنا">
+        <button type="button" id="toggleCodeVisibility" aria-label="إظهار/إخفاء الرمز">
+          <i class="fa-solid fa-eye-slash"></i>
+        </button>
+      </div>
+      <button id="unlockPageBtn" class="gate-btn">دخول</button>
+      <div id="gateMessage" class="gate-message">سيتم تذكر الرمز خلال هذه الجلسة فقط.</div>
+      
+    </div>
+  </div>
+
   <div class="welcome-bar">
     <div class="welcome-text"> الجمهورية الجزائرية الديمقراطية الشعبية - وزارة التربية الوطنية - اللجنة الوطنية للخدمات الإجتماعية لعمال التربية </div>
   </div>
@@ -486,8 +685,80 @@
   const showServiceForms = true;            // ✅ استمارات الخدمات
   const showGeneralRules = true;            // ✅ الضوابط العامة
 
+  const ACCESS_CODE_HASH = "3850b99b66a3ff50cf83f5af3c3980e6b0614002c7d1000a415f1f09a3561955"; // SHA-256 للرمز الحقيقي
+  const ACCESS_SESSION_KEY = "accessGatePassed";
+
+  const hashText = async (text) => {
+    const encoded = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+
+  function initAccessGate() {
+    const gate = document.getElementById('accessGate');
+    const card = gate?.querySelector('.gate-card');
+    const input = document.getElementById('accessCodeInput');
+    const unlockBtn = document.getElementById('unlockPageBtn');
+    const toggleBtn = document.getElementById('toggleCodeVisibility');
+    const message = document.getElementById('gateMessage');
+
+    if (!gate || !card || !input || !unlockBtn || !toggleBtn || !message) return;
+
+    const hideGate = () => {
+      gate.classList.add('hidden');
+      document.body.classList.remove('locked');
+    };
+
+    const unlockPage = () => {
+      sessionStorage.setItem(ACCESS_SESSION_KEY, 'true');
+      message.textContent = 'تم التحقق بنجاح، أهلاً بك.';
+      hideGate();
+    };
+
+    const showError = () => {
+      message.textContent = 'الرمز غير صحيح، حاول مرة أخرى.';
+      card.classList.add('shake');
+      setTimeout(() => card.classList.remove('shake'), 450);
+    };
+
+    const tryUnlock = async () => {
+      const codeValue = (input.value || '').trim();
+      const codeHash = await hashText(codeValue);
+      if (codeHash === ACCESS_CODE_HASH) {
+        unlockPage();
+      } else {
+        showError();
+      }
+    };
+
+    if (sessionStorage.getItem(ACCESS_SESSION_KEY) === 'true') {
+      hideGate();
+      return;
+    }
+
+    document.body.classList.add('locked');
+    setTimeout(() => input.focus(), 100);
+
+    unlockBtn.addEventListener('click', tryUnlock);
+    input.addEventListener('keyup', event => {
+      if (event.key === 'Enter') {
+        tryUnlock();
+      }
+    });
+    toggleBtn.addEventListener('click', () => {
+      const isPassword = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPassword ? 'text' : 'password');
+      toggleBtn.innerHTML = isPassword
+        ? '<i class="fa-solid fa-eye"></i>'
+        : '<i class="fa-solid fa-eye-slash"></i>';
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     // التحكم في إظهار/إخفاء جميع الأيقونات بناءً على المتغيرات
+    initAccessGate();
     const servicesVisibility = {
       'umrahService': showUmrah,
       'tripsService': showTrips,
@@ -1101,6 +1372,4 @@
 
 </body>
 </html>
-
-
 
