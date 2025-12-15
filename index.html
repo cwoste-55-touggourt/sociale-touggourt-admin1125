@@ -590,6 +590,20 @@
       display: block !important;
       animation: fadeInUp 0.6s ease forwards;
     }
+
+
+    .icon-btn.database {
+  background: #ede7f6;
+  border: 2px solid #673ab7;
+  color: #4527a0;
+}
+
+.icon-btn.database:hover {
+  background: #673ab7;
+  color: white;
+}
+
+    
     
   </style>
 </head>
@@ -637,6 +651,11 @@
     <p>أهلاً وسهلاً بكم في البوابة الإلكترونية للجنة الولائية للخدمات الإجتماعية لعمال التربية لولاية توقرت</p>
   </header>
 
+  <div class="service" onclick="openBaseDonne()">
+  <i class="fa-solid fa-database"></i>
+  <h3>قاعدة البيانات</h3>
+</div>
+  
   <section class="services">
     <div class="service" id="umrahService" onclick="openOptions('العمرة')">
       <i class="fa-solid fa-kaaba"></i>
@@ -679,6 +698,12 @@
   </footer>
 
 <script>
+
+function openBaseDonne() {
+  window.location.href = "base_donne.html";
+}
+
+  
   const registrationStatus = {
     "العمرة": true,
     "الرحلات": true,
@@ -1389,3 +1414,4 @@
 
 </body>
 </html>
+
