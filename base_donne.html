@@ -4,42 +4,194 @@
 <meta charset="UTF-8">
 <title>قاعدة بيانات الموظفين</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body { font-family:Cairo; background:#f4f6fb; margin:0; padding:20px; }
-h2 { color:#0d47a1; }
-input, button { font-family:Cairo; padding:10px; border-radius:10px; border:1px solid #ccc; }
-button { cursor:pointer; border:none; }
-.search { width:100%; max-width:500px; margin-bottom:10px; }
-.add { background:#1976d2; color:#fff; }
-.edit { background:#ffca28; }
-.delete { background:#ef5350; color:#fff; }
-table { width:100%; background:#fff; border-collapse:collapse; margin-top:15px; }
-th { background:#1976d2; color:#fff; padding:10px; }
-td { padding:8px; border-bottom:1px solid #eee; text-align:center; }
-.actions button { margin:2px; }
-#loading { position:fixed; inset:0; background:rgba(255,255,255,.9); display:none;
-           align-items:center; justify-content:center; font-size:18px; }
+body {
+  font-family: Cairo;
+  background: #f4f6fb;
+  margin: 0;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+h2 { color: #0d47a1; margin: 0; }
+
+input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: Cairo;
+}
+.search-input {
+  min-width: 320px;
+  flex: 1 1 420px;
+  max-width: 620px;
+}
+
+button {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: Cairo;
+  transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+
+button:active,
+.actions button:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
+}
+
+.add-btn { background: #1976d2; color: white; }
+.back-btn { background: #607d8b; color: white; }
+
+.stats {
+  margin: 15px 0;
+  font-weight: bold;
+  color: #333;
+}
+
+.swal2-popup { font-family: Cairo; }
+.swal2-input {
+  width: calc(100% - 24px);
+  margin: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid #cfd8dc;
+  padding: 10px 12px;
+  text-align: center;
+}
+.swal2-input:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
+}
+.swal2-label {
+  display: block;
+  margin: 6px 12px 2px;
+  font-size: 13px;
+  color: #0d47a1;
+  text-align: right;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(135deg, #eef5ff 0%, #ffffff 40%);
+  border: 1px solid #e0e7ff;
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+table {
+  width: 100%;
+  background: white;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  table-layout: auto;
+  min-width: 780px;
+  border-spacing: 0;
+}
+
+th {
+  background: #1976d2;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+tr:hover { background: #e3f2fd; }
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  margin: 2px;
+  font-size: 14px;
+}
+
+.edit { background: #ffca28; }
+.delete { background: #ef5350; color: white; }
+.hidden-row { display: none !important; }
+
+#loading {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e3f2fd;
+  border-top: 6px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  body { padding: 14px; }
+  .table-wrap { padding: 4px; }
+  table { min-width: 640px; font-size: 13px; }
+  th, td { padding: 10px 6px; }
+}
+
+@media (max-width: 600px) {
+  table { min-width: 600px; font-size: 12px; }
+  .actions button { padding: 8px 10px; font-size: 13px; }
+}
 </style>
 </head>
 
 <body>
 
-<h2>قاعدة بيانات الموظفين</h2>
+<div id="loading"><div class="spinner"></div></div>
 
-<input id="search" class="search"
-       placeholder="ابحث بالرقم الوطني أو الاسم أو الرتبة أو مكان العمل">
+<header>
+  <h2>قاعدة بيانات الموظفين</h2>
+  <input id="search" class="search-input" placeholder="بحث بالاسم أو الرقم...">
+  <button class="add-btn" onclick="openForm()">إضافة موظف جديد</button>
+  <button class="back-btn" onclick="history.back()">رجوع</button>
+</header>
 
-<button class="add" onclick="openForm()">➕ إضافة موظف جديد</button>
+<div class="stats">عدد الموظفين المسجلين: <span id="count">0</span></div>
 
-<div id="loading">جاري التحميل...</div>
-
+<div class="table-wrap">
 <table>
 <thead>
 <tr>
-  <th>الرقم الوطني</th>
+  <th>الرقم التعريفي</th>
   <th>الاسم الكامل</th>
   <th>تاريخ الازدياد</th>
   <th>تاريخ التوظيف</th>
@@ -50,135 +202,297 @@ td { padding:8px; border-bottom:1px solid #eee; text-align:center; }
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script type="module">
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-  getFirestore, collection, query, where, limit, getDocs,
-  doc, getDoc, setDoc, updateDoc, deleteDoc
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* Firebase */
+/* إعداد Firebase */
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT"
+  apiKey: "AIzaSyAkQz9pB2ZNlYIvdlTRvi4try3D8LLXS4g",
+  authDomain: "databaseemploye.firebaseapp.com",
+  projectId: "databaseemploye",
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* عناصر */
-const searchInput = document.getElementById("search");
+/* الذاكرة المؤقتة */
+const CACHE = new Map();
+const STORAGE_KEY = "employees-session-cache-v1";
 const tbody = document.getElementById("tbody");
+const count = document.getElementById("count");
 const loading = document.getElementById("loading");
+const searchInput = document.getElementById("search");
 
-/* أدوات */
-const showLoading = () => loading.style.display = "flex";
-const hideLoading = () => loading.style.display = "none";
-const debounce = (fn,d=400)=>{ let t; return(...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),d); }; };
+/* مؤشر الانتظار */
+const showLoading = () => { if (loading) { loading.style.display = "flex"; loading.setAttribute('aria-hidden','false'); } };
+const hideLoading = () => { if (loading) { loading.style.display = "none"; loading.setAttribute('aria-hidden','true'); } };
 
-/* 🔍 البحث فقط */
-async function searchEmployees(){
-  const term = searchInput.value.trim().toLowerCase();
-  tbody.innerHTML = "";
-  if(!term) return;
-
-  showLoading();
-  try{
-    const q = query(
-      collection(db,"employeescom"),
-      where("search",">=",term),
-      where("search","<=",term+"\uf8ff"),
-      limit(20)
-    );
-    const snap = await getDocs(q);
-    snap.forEach(d => renderRow(d.id, d.data()));
-  }catch(e){
-    Swal.fire("خطأ","فشل البحث","error");
-  }finally{
-    hideLoading();
+/* تنسيق تاريخ */
+const fmt = v => {
+  if (!v && v !== 0) return "";
+  try {
+    let dt;
+    if (typeof v === 'object' && v !== null && typeof v.toDate === 'function') {
+      dt = v.toDate();
+    } else {
+      dt = new Date(v);
+    }
+    if (!isFinite(dt.getTime())) return "";
+    return dt.toISOString().slice(0,10);
+  } catch (e) {
+    console.warn('fmt: invalid date value', v, e);
+    return "";
   }
-}
-searchInput.addEventListener("input", debounce(searchEmployees));
+};
 
-/* عرض سطر */
-function renderRow(id,d){
-  tbody.insertAdjacentHTML("beforeend",`
-    <tr>
-      <td>${id}</td>
-      <td>${d.name||""}</td>
-      <td>${d.diz||""}</td>
-      <td>${d.dtw||""}</td>
-      <td>${d.grade||""}</td>
-      <td>${d.place||""}</td>
+/* مهدئ الإدخال */
+const debounce = (fn, delay = 250) => {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+};
+
+const htmlEscape = v => String(v ?? "")
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#39;");
+
+const rowMarkup = (id, d) => {
+  const nm = htmlEscape(d?.name ?? "");
+  const gr = htmlEscape(d?.grade ?? "");
+  const pl = htmlEscape(d?.place ?? "");
+  const diz = htmlEscape(fmt(d?.diz));
+  const dtw = htmlEscape(fmt(d?.dtw));
+  const safeId = htmlEscape(id);
+  const searchKey = htmlEscape(`${id} ${d?.name ?? ""} ${d?.grade ?? ""} ${d?.place ?? ""}`.toLowerCase());
+  return `
+    <tr data-id="${safeId}" data-search="${searchKey}">
+      <td>${safeId}</td>
+      <td>${nm}</td>
+      <td>${diz}</td>
+      <td>${dtw}</td>
+      <td>${gr}</td>
+      <td>${pl}</td>
       <td class="actions">
         <button class="edit" onclick="openForm('${id}')">تعديل</button>
         <button class="delete" onclick="removeEmp('${id}')">حذف</button>
       </td>
-    </tr>
-  `);
+    </tr>`;
+};
+
+let rowCache = [];
+let currentFilter = "";
+const syncRowCache = () => { rowCache = Array.from(tbody.rows); };
+
+const runFilter = term => {
+  currentFilter = term;
+  const q = term.trim().toLowerCase();
+  if (!rowCache.length) return;
+  if (!q) {
+    rowCache.forEach(tr => tr.classList.remove('hidden-row'));
+    return;
+  }
+  rowCache.forEach(tr => {
+    const match = (tr.dataset.search || "").includes(q);
+    tr.classList.toggle('hidden-row', !match);
+  });
+};
+
+const scheduleFilter = debounce(v => runFilter(v), 250);
+if (searchInput) {
+  searchInput.addEventListener("input", e => scheduleFilter(e.target.value || ""));
 }
 
-/* ➕ إضافة / ✏️ تعديل */
-window.openForm = async (id=null)=>{
-  let d = {};
-  if(id){
-    const snap = await getDoc(doc(db,"employeescom",id));
-    if(snap.exists()) d = snap.data();
+/* تخزين الجلسة (تحميل مرة واحدة) */
+const persistSessionCache = () => {
+  try {
+    const obj = Object.fromEntries(CACHE);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch (e) {
+    console.warn("persistSessionCache failed", e);
   }
+};
 
+const hydrateSessionCache = () => {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== "object") return false;
+    CACHE.clear();
+    Object.entries(obj).forEach(([id, data]) => CACHE.set(id, data));
+    renderAll();
+    return true;
+  } catch (e) {
+    console.warn("hydrateSessionCache failed", e);
+    return false;
+  }
+};
+
+/* تحميل البيانات */
+async function init() {
+  const restored = hydrateSessionCache();
+  if (restored) return;
+
+  showLoading();
+  const loaderTimer = setTimeout(() => {
+    if (loading && loading.style.display !== 'none') {
+      hideLoading();
+      console.error('Loading timeout');
+      Swal.fire("تنبيه","استغرق التحميل وقتاً طويلاً، يرجى المحاولة مجدداً","error");
+    }
+  }, 15000);
+
+  try {
+    const snap = await getDocs(collection(db, "employeescom"));
+    snap.forEach(docu => {
+      const data = docu.data();
+      CACHE.set(docu.id, data);
+    });
+    renderAll();
+    persistSessionCache();
+  } catch (err) {
+    console.error('Failed to load data:', err);
+    Swal.fire("خطأ","تعذّر تحميل البيانات: " + (err.message || err),"error");
+  } finally {
+    clearTimeout(loaderTimer);
+    hideLoading();
+  }
+}
+init();
+
+window.addEventListener('unhandledrejection', e => { console.error('Unhandled rejection', e); hideLoading(); });
+window.addEventListener('error', e => { console.error('Global error', e.error || e.message || e); hideLoading(); });
+
+/* عرض الجدول */
+function renderAll() {
+  const rows = [];
+  CACHE.forEach((d,id) => rows.push(rowMarkup(id,d)));
+  tbody.innerHTML = rows.join("");
+  syncRowCache();
+  count.textContent = CACHE.size;
+  const activeFilter = searchInput ? searchInput.value : currentFilter;
+  runFilter(activeFilter || "");
+}
+
+const upsertRow = (id, data) => {
+  const html = rowMarkup(id, data);
+  const existing = tbody.querySelector(`tr[data-id="${id}"]`);
+  if (existing) {
+    existing.outerHTML = html;
+  } else {
+    tbody.insertAdjacentHTML("beforeend", html);
+  }
+  syncRowCache();
+  count.textContent = CACHE.size;
+  runFilter(searchInput ? searchInput.value : currentFilter);
+  persistSessionCache();
+};
+
+const removeRowDom = id => {
+  const tr = tbody.querySelector(`tr[data-id="${id}"]`);
+  if (tr) tr.remove();
+  syncRowCache();
+  count.textContent = CACHE.size;
+  runFilter(searchInput ? searchInput.value : currentFilter);
+  persistSessionCache();
+};
+
+/* نموذج إضافة/تعديل */
+window.openForm = (id=null) => {
+  const d = id ? CACHE.get(id) : {};
   Swal.fire({
     title: id ? "تعديل بيانات الموظف" : "إضافة موظف جديد",
-    showCancelButton:true,
-    confirmButtonText:"حفظ",
-    cancelButtonText:"إلغاء",
-    html:`
-      <input id="fid" class="swal2-input" placeholder="الرقم الوطني"
-             value="${id||""}" ${id?"disabled":""}>
-      <input id="fname" class="swal2-input" placeholder="الاسم الكامل"
-             value="${d.name||""}">
-      <label class="swal2-label">تاريخ الازدياد</label>
-      <input id="fdiz" type="date" class="swal2-input"
-             value="${d.diz||""}">
-      <label class="swal2-label">تاريخ التوظيف</label>
-      <input id="fdtw" type="date" class="swal2-input"
-             value="${d.dtw||""}">
-      <input id="fgrade" class="swal2-input" placeholder="الرتبة"
-             value="${d.grade||""}">
-      <input id="fplace" class="swal2-input" placeholder="مكان العمل"
-             value="${d.place||""}">
+    showCancelButton: true,
+    cancelButtonText: "إغلاق",
+    showCloseButton: true,
+    html: `
+      <label class="swal2-label" for="fid">الرقم التعريفي (16 رقم)</label>
+      <input id="fid" class="swal2-input" placeholder="الرقم التعريفي" value="${id||""}" ${id?"disabled":""}>
+      <label class="swal2-label" for="fname">الاسم الكامل</label>
+      <input id="fname" class="swal2-input" placeholder="الاسم الكامل" value="${d?.name||""}">
+      <label class="swal2-label" for="fdiz">تاريخ الازدياد</label>
+      <input id="fdiz" type="date" class="swal2-input" value="${fmt(d?.diz)}">
+      <label class="swal2-label" for="fdtw">تاريخ التوظيف</label>
+      <input id="fdtw" type="date" class="swal2-input" value="${fmt(d?.dtw)}">
+      <label class="swal2-label" for="fgrade">الرتبة</label>
+      <input id="fgrade" class="swal2-input" placeholder="الرتبة" value="${d?.grade||""}">
+      <label class="swal2-label" for="fplace">مكان العمل</label>
+      <input id="fplace" class="swal2-input" placeholder="مكان العمل" value="${d?.place||""}">
     `,
-    preConfirm: async ()=>{
-      const fid = document.getElementById("fid").value.trim();
-      if(!/^\d{16}$/.test(fid))
-        return Swal.showValidationMessage("الرقم الوطني يجب أن يكون 16 رقمًا");
+    preConfirm: async () => {
+      const fid = document.getElementById("fid").value;
+      const fnameEl = document.getElementById("fname");
+      const fdizEl = document.getElementById("fdiz");
+      const fdtwEl = document.getElementById("fdtw");
+      const fgradeEl = document.getElementById("fgrade");
+      const fplaceEl = document.getElementById("fplace");
+
+      if (!/^\\d{16}$/.test(fid)) return Swal.showValidationMessage("الرقم التعريفي يجب أن يتكون من 16 رقماً");
+      if (!id && CACHE.has(fid)) return Swal.showValidationMessage("هذا الرقم مسجّل مسبقاً");
 
       const data = {
-        name: fname.value,
-        diz: fdiz.value,
-        dtw: fdtw.value,
-        grade: fgrade.value,
-        place: fplace.value,
-        search: `${fid} ${fname.value} ${fgrade.value} ${fplace.value}`.toLowerCase()
+        id: fid,
+        name: fnameEl ? fnameEl.value : "",
+        diz: fdizEl ? fdizEl.value : "",
+        dtw: fdtwEl ? fdtwEl.value : "",
+        grade: fgradeEl ? fgradeEl.value : "",
+        place: fplaceEl ? fplaceEl.value : ""
       };
 
-      if(id) await updateDoc(doc(db,"employeescom",id),data);
-      else await setDoc(doc(db,"employeescom",fid),data);
+      showLoading();
+      try {
+        if (id) {
+          await updateDoc(doc(db,"employeescom",id),data);
+        } else {
+          await setDoc(doc(db,"employeescom",fid),data);
+        }
+        CACHE.set(fid,data);
+        upsertRow(fid,data);
+        Swal.fire("تم الحفظ","تم حفظ بيانات الموظف بنجاح","success");
+      } catch (err) {
+        console.error('Save error', err);
+        Swal.showValidationMessage('حدث خطأ أثناء الحفظ: ' + (err.message || err));
+      } finally {
+        hideLoading();
+      }
     }
   });
 };
 
-/* 🗑️ حذف */
-window.removeEmp = async id=>{
-  if(!confirm("هل أنت متأكد من الحذف؟")) return;
-  await deleteDoc(doc(db,"employeescom",id));
-  searchEmployees();
+/* حذف */
+window.removeEmp = async id => {
+  const confirm = await Swal.fire({
+    title:"تأكيد الحذف",
+    text:"هل تريد حذف هذا الموظف؟",
+    icon:"warning",
+    showCancelButton:true,
+    confirmButtonText:"تأكيد الحذف",
+    cancelButtonText:"إلغاء"
+  }).then(r=>r.isConfirmed);
+  if (!confirm) return;
+  showLoading();
+  try {
+    await deleteDoc(doc(db,"employeescom",id));
+    CACHE.delete(id);
+    removeRowDom(id);
+    Swal.fire("تم الحذف","تم حذف الموظف بنجاح","success");
+  } catch (err) {
+    console.error('Delete error', err);
+    Swal.fire("خطأ","حدث خطأ أثناء الحذف: " + (err.message || err),"error");
+  } finally {
+    hideLoading();
+  }
 };
 </script>
 
