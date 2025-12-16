@@ -83,7 +83,16 @@ button:active,
   text-align: right;
 }
 
-.table-wrap { overflow-x: auto; }
+.table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(135deg, #eef5ff 0%, #ffffff 40%);
+  border: 1px solid #e0e7ff;
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
 
 table {
   width: 100%;
@@ -92,21 +101,34 @@ table {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  table-layout: fixed;
+  table-layout: auto;
+  min-width: 780px;
+  border-spacing: 0;
 }
 
 th {
   background: #1976d2;
   color: white;
-  padding: 12px;
+  padding: 12px 10px;
+  text-align: center;
 }
 
 td {
-  padding: 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid #eee;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
 }
 
 tr:hover { background: #e3f2fd; }
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 .actions button {
   margin: 2px;
@@ -137,6 +159,18 @@ tr:hover { background: #e3f2fd; }
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  body { padding: 14px; }
+  .table-wrap { padding: 4px; }
+  table { min-width: 640px; font-size: 13px; }
+  th, td { padding: 10px 6px; }
+}
+
+@media (max-width: 600px) {
+  table { min-width: 600px; font-size: 12px; }
+  .actions button { padding: 8px 10px; font-size: 13px; }
+}
 </style>
 </head>
 
