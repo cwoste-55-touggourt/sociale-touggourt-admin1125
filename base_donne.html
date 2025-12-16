@@ -54,7 +54,6 @@ button:active,
 }
 
 .add-btn { background: #1976d2; color: white; }
-.load-btn { background: #2e7d32; color: white; }
 .back-btn { background: #607d8b; color: white; }
 
 .stats {
@@ -182,7 +181,6 @@ tr:hover { background: #e3f2fd; }
 <header>
   <h2>قاعدة بيانات الموظفين</h2>
   <input id="search" class="search-input" placeholder="بحث بالاسم أو الرقم...">
-  <button id="load-btn" class="load-btn">تحميل البيانات</button>
   <button class="add-btn" onclick="openForm()">إضافة موظف جديد</button>
   <button class="back-btn" onclick="history.back()">رجوع</button>
 </header>
@@ -230,10 +228,6 @@ const tbody = document.getElementById("tbody");
 const count = document.getElementById("count");
 const loading = document.getElementById("loading");
 const searchInput = document.getElementById("search");
-const loadBtn = document.getElementById("load-btn");
-
-let hasLoadedData = false;
-let isLoadingData = false;
 
 /* مؤشر الانتظار */
 const showLoading = () => { if (loading) { loading.style.display = "flex"; loading.setAttribute('aria-hidden','false'); } };
@@ -329,18 +323,6 @@ if (searchInput) {
   searchInput.addEventListener("input", e => scheduleFilter(e.target.value || ""));
 }
 
-const updateLoadBtnState = () => {
-  if (!loadBtn) return;
-  loadBtn.disabled = hasLoadedData || isLoadingData;
-  if (isLoadingData) {
-    loadBtn.textContent = "جار التحميل...";
-  } else if (hasLoadedData) {
-    loadBtn.textContent = "تم التحميل";
-  } else {
-    loadBtn.textContent = "تحميل البيانات";
-  }
-};
-
 /* تخزين الجلسة (تحميل مرة واحدة) */
 const persistSessionCache = () => {
   try {
@@ -360,8 +342,6 @@ const hydrateSessionCache = () => {
     CACHE.clear();
     Object.entries(obj).forEach(([id, data]) => CACHE.set(id, data));
     renderAll();
-    hasLoadedData = true;
-    updateLoadBtnState();
     return true;
   } catch (e) {
     console.warn("hydrateSessionCache failed", e);
@@ -371,16 +351,8 @@ const hydrateSessionCache = () => {
 
 /* تحميل البيانات */
 async function init() {
-  if (isLoadingData || hasLoadedData) return;
-  isLoadingData = true;
-  updateLoadBtnState();
-
   const restored = hydrateSessionCache();
-  if (restored) {
-    isLoadingData = false;
-    updateLoadBtnState();
-    return;
-  }
+  if (restored) return;
 
   showLoading();
   const loaderTimer = setTimeout(() => {
@@ -399,22 +371,15 @@ async function init() {
     });
     renderAll();
     persistSessionCache();
-    hasLoadedData = true;
-    updateLoadBtnState();
   } catch (err) {
     console.error('Failed to load data:', err);
     Swal.fire("خطأ","تعذّر تحميل البيانات: " + (err.message || err),"error");
   } finally {
     clearTimeout(loaderTimer);
     hideLoading();
-    isLoadingData = false;
-    updateLoadBtnState();
   }
 }
-if (loadBtn) {
-  loadBtn.addEventListener("click", () => init());
-  updateLoadBtnState();
-}
+init();
 
 window.addEventListener('unhandledrejection', e => { console.error('Unhandled rejection', e); hideLoading(); });
 window.addEventListener('error', e => { console.error('Global error', e.error || e.message || e); hideLoading(); });
