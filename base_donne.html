@@ -135,6 +135,14 @@ tr:hover { background: #e3f2fd; }
   font-size: 14px;
 }
 
+.table-message td {
+  text-align: center;
+  padding: 16px;
+  font-weight: 600;
+  color: #0d47a1;
+  background: #e3f2fd;
+}
+
 .edit { background: #ffca28; }
 .delete { background: #ef5350; color: white; }
 .hidden-row { display: none !important; }
@@ -304,6 +312,13 @@ let rowCache = [];
 let currentFilter = "";
 const syncRowCache = () => { rowCache = Array.from(tbody.rows); };
 
+const showTableMessage = msg => {
+  if (!tbody) return;
+  tbody.innerHTML = `<tr class="table-message"><td colspan="7">${htmlEscape(msg)}</td></tr>`;
+  syncRowCache();
+  count.textContent = CACHE.size;
+};
+
 const runFilter = term => {
   currentFilter = term;
   const q = term.trim().toLowerCase();
@@ -352,7 +367,9 @@ const hydrateSessionCache = () => {
 /* تحميل البيانات */
 async function init() {
   const restored = hydrateSessionCache();
-  if (restored) return;
+  if (restored) {
+    showTableMessage("جاري التحميل (بيانات الجلسة)...");
+  }
 
   showLoading();
   const loaderTimer = setTimeout(() => {
