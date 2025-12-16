@@ -135,6 +135,34 @@ tr:hover { background: #e3f2fd; }
   font-size: 14px;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.pagination button {
+  background: #1976d2;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: Cairo;
+}
+
+.pagination button:disabled {
+  background: #9e9e9e;
+  cursor: not-allowed;
+}
+
+.pagination .page-info {
+  font-weight: 600;
+  color: #0d47a1;
+}
+
 .table-message td {
   text-align: center;
   padding: 16px;
@@ -146,6 +174,7 @@ tr:hover { background: #e3f2fd; }
 .edit { background: #ffca28; }
 .delete { background: #ef5350; color: white; }
 .hidden-row { display: none !important; }
+.page-hidden { display: none !important; }
 
 #loading {
   position: fixed;
@@ -195,6 +224,12 @@ tr:hover { background: #e3f2fd; }
 
 <div class="stats">عدد الموظفين المسجلين: <span id="count">0</span></div>
 
+<div class="pagination" id="pagination">
+  <button id="prev-page" disabled>السابق</button>
+  <span class="page-info" id="page-info">صفحة 1 من 1</span>
+  <button id="next-page" disabled>التالي</button>
+</div>
+
 <div class="table-wrap">
 <table>
 <thead>
@@ -229,19 +264,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* الذاكرة المؤقتة */
+/* البيانات والذاكرة */
 const CACHE = new Map();
 const STORAGE_KEY = "employees-session-cache-v1";
 const tbody = document.getElementById("tbody");
 const count = document.getElementById("count");
 const loading = document.getElementById("loading");
 const searchInput = document.getElementById("search");
+const paginationEl = document.getElementById("pagination");
+const prevPageBtn = document.getElementById("prev-page");
+const nextPageBtn = document.getElementById("next-page");
+const pageInfo = document.getElementById("page-info");
+const PAGE_SIZE = 100;
+let currentPage = 1;
 
 /* مؤشر الانتظار */
 const showLoading = () => { if (loading) { loading.style.display = "flex"; loading.setAttribute('aria-hidden','false'); } };
 const hideLoading = () => { if (loading) { loading.style.display = "none"; loading.setAttribute('aria-hidden','true'); } };
 
-/* تنسيق تاريخ */
+/* تنسيق التاريخ */
 const fmt = v => {
   if (!v && v !== 0) return "";
   try {
@@ -325,17 +366,53 @@ const runFilter = term => {
   if (!rowCache.length) return;
   if (!q) {
     rowCache.forEach(tr => tr.classList.remove('hidden-row'));
-    return;
+  } else {
+    rowCache.forEach(tr => {
+      const match = (tr.dataset.search || "").includes(q);
+      tr.classList.toggle('hidden-row', !match);
+    });
   }
-  rowCache.forEach(tr => {
-    const match = (tr.dataset.search || "").includes(q);
-    tr.classList.toggle('hidden-row', !match);
-  });
+  applyPagination();
 };
 
 const scheduleFilter = debounce(v => runFilter(v), 250);
 if (searchInput) {
   searchInput.addEventListener("input", e => scheduleFilter(e.target.value || ""));
+}
+
+const applyPagination = () => {
+  if (!rowCache.length) {
+    if (pageInfo) pageInfo.textContent = "صفحة 1 من 1";
+    if (prevPageBtn) prevPageBtn.disabled = true;
+    if (nextPageBtn) nextPageBtn.disabled = true;
+    return;
+  }
+  const visibleRows = rowCache.filter(tr => !tr.classList.contains('hidden-row'));
+  const total = visibleRows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  visibleRows.forEach((tr, idx) => {
+    const page = Math.floor(idx / PAGE_SIZE) + 1;
+    tr.classList.toggle('page-hidden', page !== currentPage);
+  });
+  if (pageInfo) pageInfo.textContent = `صفحة ${currentPage} من ${totalPages} (إجمالي ${total} صفوف)`;
+  if (prevPageBtn) prevPageBtn.disabled = currentPage <= 1;
+  if (nextPageBtn) nextPageBtn.disabled = currentPage >= totalPages;
+};
+
+if (prevPageBtn) {
+  prevPageBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage -= 1;
+      applyPagination();
+    }
+  });
+}
+if (nextPageBtn) {
+  nextPageBtn.addEventListener("click", () => {
+    currentPage += 1;
+    applyPagination();
+  });
 }
 
 /* تخزين الجلسة (تحميل مرة واحدة) */
@@ -369,6 +446,12 @@ async function init() {
   const restored = hydrateSessionCache();
   if (restored) {
     showTableMessage("جاري التحميل (بيانات الجلسة)...");
+    showLoading();
+    setTimeout(() => {
+      renderAll();
+      hideLoading();
+    }, 300);
+    return;
   }
 
   showLoading();
@@ -376,7 +459,7 @@ async function init() {
     if (loading && loading.style.display !== 'none') {
       hideLoading();
       console.error('Loading timeout');
-      Swal.fire("تنبيه","استغرق التحميل وقتاً طويلاً، يرجى المحاولة مجدداً","error");
+      Swal.fire("تحذير","استغرق التحميل وقتاً طويلاً، يرجى المحاولة مجدداً","error");
     }
   }, 15000);
 
