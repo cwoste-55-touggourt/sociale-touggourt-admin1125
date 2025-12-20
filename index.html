@@ -324,14 +324,16 @@
       font-weight: 700;
     }
 
-    .services {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 25px;
-      padding: 40px 20px 60px;
-      max-width: 1000px;
-      margin: auto;
-    }
+   .services {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
+  padding: 40px 20px 60px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+
 
     .service {
       background-color: white;
@@ -343,6 +345,8 @@
       opacity: 0;
       transform: translateY(50px);
       animation: fadeInUp 1s ease forwards;
+ 
+
     }
 
     .service:nth-child(1) { animation-delay: 0.3s; }
@@ -664,10 +668,7 @@
   
   <section class="services">
 
- <div class="service" onclick="openBaseDonne()">
-  <i class="fa-solid fa-database"></i>
-  <h3>قاعدة البيانات</h3>
- </div>
+
     
     <div class="service" id="umrahService" onclick="openOptions('العمرة')">
       <i class="fa-solid fa-kaaba"></i>
@@ -694,6 +695,16 @@
       <h3>السلف الإجتماعية</h3>
     </div>
 
+<div class="service" id="preliminaryResultsService" onclick="openPreliminaryResultsMain()">
+  <i class="fa-solid fa-clipboard-list"></i>
+  <h3>النتائج الأولية<br>للسلف الإجتماعية</h3>
+</div>
+
+ <div class="service" onclick="openBaseDonne()">
+  <i class="fa-solid fa-database"></i>
+  <h3>قاعدة البيانات</h3>
+ </div>
+
     <div class="service" id="serviceFormsService" onclick="openOptions('استمارات الخدمات')">
       <i class="fa-solid fa-file-pen"></i>
       <h3>استمارات الخدمات</h3>
@@ -704,10 +715,7 @@
       <h3>الضوابط العامة</h3>
     </div>
 
-<div class="service" id="preliminaryResultsService" onclick="openPreliminaryResultsMain()">
-  <i class="fa-solid fa-clipboard-list"></i>
-  <h3>النتائج الأولية<br>للسلف الاجتماعية</h3>
-</div>
+
 
 
   </section>
@@ -734,7 +742,15 @@ function openBaseDonne() {
   };
 
    // الخدمات التي تظهر عليها الشارة "جديد"
- const newBadgeServices = ["الرحلات", "السلف الإجتماعية", "العمرة","المخيمات","أبناء القطاع"];
+ const newBadgeServices = [
+  "الرحلات",
+  "السلف الإجتماعية",
+  "العمرة",
+  "المخيمات",
+  "أبناء القطاع",
+  "النتائج الأوليةللسلف الإجتماعية"
+];
+
 
   // 🔹 متغيرات التحكم في إظهار/إخفاء الأيقونات
   // قم بتغيير القيمة إلى true لإظهار الأيقونة أو false لإخفائها
@@ -853,18 +869,21 @@ if (preliminaryService) {
       }
     });
     
-    document.querySelectorAll('.service').forEach(service => {
-      const title = service.querySelector('h3').textContent.trim();
+ document.querySelectorAll('.service').forEach(service => {
+  const title = service.querySelector('h3').textContent
+    .replace(/\s+/g, ' ')
+    .trim();
 
-      // ✅ يظهر الوسم فقط إن كانت الخدمة مفتوحة ومحددة في القائمة
-      if (registrationStatus[title] && newBadgeServices.includes(title)) {
-        const badge = document.createElement("div");
-        badge.classList.add("new-badge");
-        badge.textContent = "جديد";
-        service.appendChild(badge);
-      }
-    });
-  });
+  if (newBadgeServices.includes(title)) {
+    const badge = document.createElement("div");
+    badge.classList.add("new-badge");
+    badge.textContent = "جديد";
+    service.appendChild(badge);
+  }
+});
+
+
+});
 
   function openOptions(serviceType) {
     if (!registrationStatus[serviceType]) {
@@ -1427,7 +1446,7 @@ if (preliminaryService) {
 
 function openPreliminaryResultsMain() {
   Swal.fire({
-    title: 'النتائج الأولية للسلف الاجتماعية',
+    title: 'النتائج الأولية للسلف الاجتماعية:',
     html: `
       <div class="icon-container">
 
@@ -1456,27 +1475,35 @@ function openLoanTypeResults(type) {
 
   const resultsLinks = {
     housing: {
-      توقرت: 'LINK_TOUGGOURT_HOUSING',
-      الطيبات: 'LINK_TAYEBAT_HOUSING',
-      الحجيرة: 'LINK_HAJIRA_HOUSING',
-      تماسين: 'LINK_TAMACINE_HOUSING',
-      المقارين: 'LINK_MEGARINE_HOUSING'
+      توقرت: '#',
+      الطيبات: '#',
+      الحجيرة: '#',
+      تماسين: '#',
+      المقارين: '#'
     },
     exceptional: {
-      توقرت: 'LINK_TOUGGOURT_EXCEPTION',
-      الطيبات: 'LINK_TAYEBAT_EXCEPTION',
-      الحجيرة: 'LINK_HAJIRA_EXCEPTION',
-      تماسين: 'LINK_TAMACINE_EXCEPTION',
-      المقارين: 'LINK_MEGARINE_EXCEPTION'
+      توقرت: '#',
+      الطيبات: '#',
+      الحجيرة: '#',
+      تماسين: '#',
+      المقارين: '#'
     }
   };
 
   let html = `<div class="icon-container">`;
 
   Object.entries(resultsLinks[type]).forEach(([city, link]) => {
+
+    const isAvailable = link && link !== '#';
+
     html += `
-      <div class="icon-btn employee" onclick="window.open('${link}', '_blank')">
-        <i class="fa-solid fa-file-lines"></i>
+      <div class="icon-btn employee ${!isAvailable ? 'disabled' : ''}"
+           onclick="${
+             isAvailable
+               ? `window.open('${link}', '_blank')`
+               : `showComingSoon('${city}')`
+           }">
+        <i class="fa-solid ${isAvailable ? 'fa-file-lines' : 'fa-hourglass-half'}"></i>
         <span>${city}</span>
       </div>
     `;
@@ -1485,19 +1512,37 @@ function openLoanTypeResults(type) {
   html += `</div>`;
 
   Swal.fire({
-  title: 'اختر الدائرة المناسبة:',
-  html,
-
-  showConfirmButton: true,
-  confirmButtonText: 'إغلاق',
-  confirmButtonColor: '#9e9e9e', // رمادي
-  customClass: {
-    confirmButton: 'btn-close-gray'
-  }
-});
+    title: 'اختر الدائرة المناسبة:',
+    html,
+    showConfirmButton: true,
+    confirmButtonText: 'إغلاق',
+    confirmButtonColor: '#9e9e9e',
+    customClass: {
+      confirmButton: 'btn-close-gray'
+    }
+  });
 }
 
-
+function showComingSoon(city) {
+  Swal.fire({
+    icon: 'info',
+    title: 'قريبًا...',
+    html: `
+      سيتم الإعلان عن النتائج الأولية
+      <br>
+      <strong style="color:#6a1b9a;">لدائرة ${city}</strong>
+      <br>
+      <span style="color:#c62828; font-weight:700;">
+        يرجى منكم تفقد الأيقونة بصفة دورية للإطلاع على آخر المستجدات.
+      </span>
+    `,
+    confirmButtonText: 'حسنًا',
+    confirmButtonColor: '#7b1fa2',
+    customClass: {
+      confirmButton: 'btn-back-purple'
+    }
+  });
+}
 
 </script>
 
@@ -1516,9 +1561,14 @@ function openLoanTypeResults(type) {
     box-shadow: 0 8px 20px rgba(25, 118, 210, 0.3);
   }
 
+
+
+
+
 </style>
 
 </body>
 </html>
+
 
 
