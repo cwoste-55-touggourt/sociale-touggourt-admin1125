@@ -603,6 +603,16 @@
   color: white;
 }
 
+
+  .swal2-confirm.btn-close-gray,
+  .swal2-confirm.btn-back-purple {
+    font-family: 'Cairo', sans-serif !important;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 10px 28px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
     
     
   </style>
@@ -693,6 +703,13 @@
     <i class="fa-solid fa-scale-balanced"></i>
       <h3>الضوابط العامة</h3>
     </div>
+
+<div class="service" id="preliminaryResultsService" onclick="openPreliminaryResultsMain()">
+  <i class="fa-solid fa-clipboard-list"></i>
+  <h3>النتائج الأولية<br>للسلف الاجتماعية</h3>
+</div>
+
+
   </section>
 
   <footer>
@@ -728,6 +745,8 @@ function openBaseDonne() {
   const showSocialLoans = true;             // ✅ السلف الإجتماعية
   const showServiceForms = true;            // ✅ استمارات الخدمات
   const showGeneralRules = true;            // ✅ الضوابط العامة
+  const showPreliminaryResultsIcon = true;   // ✅ النتائج الأولية
+
 
   const ACCESS_CODE_HASH = "3850b99b66a3ff50cf83f5af3c3980e6b0614002c7d1000a415f1f09a3561955"; // SHA-256 للرمز الحقيقي
   const ACCESS_SESSION_KEY = "accessGatePassed";
@@ -812,6 +831,14 @@ function openBaseDonne() {
       'serviceFormsService': showServiceForms,
       'generalRulesService': showGeneralRules
     };
+
+
+const preliminaryService = document.getElementById('preliminaryResultsService');
+if (preliminaryService) {
+  preliminaryService.style.display = showPreliminaryResultsIcon ? 'block' : 'none';
+}
+
+
 
     Object.keys(servicesVisibility).forEach(serviceId => {
       const serviceElement = document.getElementById(serviceId);
@@ -1396,6 +1423,82 @@ function openBaseDonne() {
       window.location.href = link;
     }
   }
+
+
+function openPreliminaryResultsMain() {
+  Swal.fire({
+    title: 'النتائج الأولية للسلف الاجتماعية',
+    html: `
+      <div class="icon-container">
+
+        <div class="icon-btn employee" onclick="openLoanTypeResults('housing')">
+          <i class="fa-solid fa-house"></i>
+          <span>سلفة السكن</span>
+        </div>
+
+        <div class="icon-btn retired" onclick="openLoanTypeResults('exceptional')">
+          <i class="fa-solid fa-money-bills"></i>
+          <span>السلفة الاستثنائية</span>
+        </div>
+
+      </div>
+    `,
+     showConfirmButton: true,
+  confirmButtonText: 'إغلاق',
+  confirmButtonColor: '#9e9e9e', // رمادي
+  customClass: {
+    confirmButton: 'btn-close-gray'
+}
+  });
+}
+
+function openLoanTypeResults(type) {
+
+  const resultsLinks = {
+    housing: {
+      توقرت: 'LINK_TOUGGOURT_HOUSING',
+      الطيبات: 'LINK_TAYEBAT_HOUSING',
+      الحجيرة: 'LINK_HAJIRA_HOUSING',
+      تماسين: 'LINK_TAMACINE_HOUSING',
+      المقارين: 'LINK_MEGARINE_HOUSING'
+    },
+    exceptional: {
+      توقرت: 'LINK_TOUGGOURT_EXCEPTION',
+      الطيبات: 'LINK_TAYEBAT_EXCEPTION',
+      الحجيرة: 'LINK_HAJIRA_EXCEPTION',
+      تماسين: 'LINK_TAMACINE_EXCEPTION',
+      المقارين: 'LINK_MEGARINE_EXCEPTION'
+    }
+  };
+
+  let html = `<div class="icon-container">`;
+
+  Object.entries(resultsLinks[type]).forEach(([city, link]) => {
+    html += `
+      <div class="icon-btn employee" onclick="window.open('${link}', '_blank')">
+        <i class="fa-solid fa-file-lines"></i>
+        <span>${city}</span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  Swal.fire({
+  title: 'اختر الدائرة',
+  html,
+
+  showConfirmButton: true,
+  confirmButtonText: 'إغلاق',
+  confirmButtonColor: '#9e9e9e', // رمادي
+  customClass: {
+    confirmButton: 'btn-close-gray'
+  }
+});
+}
+
+
+
 </script>
 
 <style>
@@ -1412,9 +1515,9 @@ function openBaseDonne() {
     text-transform: none;
     box-shadow: 0 8px 20px rgba(25, 118, 210, 0.3);
   }
+
 </style>
 
 </body>
 </html>
-
 
