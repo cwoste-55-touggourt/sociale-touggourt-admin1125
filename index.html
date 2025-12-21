@@ -705,6 +705,11 @@
   <h3>قاعدة البيانات</h3>
  </div>
 
+    <div class="service" onclick="addEmployeeFromIndex()">
+  <i class="fa-solid fa-user-plus"></i>
+  <h3>إضافة موظف</h3>
+</div>
+
     <div class="service" id="serviceFormsService" onclick="openOptions('استمارات الخدمات')">
       <i class="fa-solid fa-file-pen"></i>
       <h3>استمارات الخدمات</h3>
@@ -748,6 +753,8 @@ function openBaseDonne() {
   "العمرة",
   "المخيمات",
   "أبناء القطاع",
+   "إضافة موظف",
+   "قاعدة البيانات",
   "النتائج الأوليةللسلف الإجتماعية"
 ];
 
@@ -1546,6 +1553,61 @@ function showComingSoon(city) {
 
 </script>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAkQz9pB2ZNlYIvdlTRvi4try3D8LLXS4g",
+  authDomain: "databaseemploye.firebaseapp.com",
+  projectId: "databaseemploye",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.addEmployeeFromIndex = function () {
+  Swal.fire({
+    title: "إضافة موظف جديد",
+    showCancelButton: true,
+    confirmButtonText: "حفظ",
+    cancelButtonText: "إلغاء",
+    html: `
+      <input id="fid" class="swal2-input" placeholder="الرقم التعريفي (16 رقم)">
+      <input id="fname" class="swal2-input" placeholder="الاسم الكامل">
+      <input id="fdiz" type="date" class="swal2-input">
+      <input id="fdtw" type="date" class="swal2-input">
+      <input id="fgrade" class="swal2-input" placeholder="الرتبة">
+      <input id="fplace" class="swal2-input" placeholder="مكان العمل">
+    `,
+    preConfirm: async () => {
+      const id = document.getElementById("fid").value.trim();
+      const data = {
+        id,
+        name: document.getElementById("fname").value,
+        diz: document.getElementById("fdiz").value,
+        dtw: document.getElementById("fdtw").value,
+        grade: document.getElementById("fgrade").value,
+        place: document.getElementById("fplace").value
+      };
+
+      if (!/^\d{16}$/.test(id)) {
+        Swal.showValidationMessage("الرقم التعريفي يجب أن يكون 16 رقمًا");
+        return false;
+      }
+
+      try {
+        await setDoc(doc(db, "employeescom", id), data);
+        Swal.fire("تم الحفظ", "تمت إضافة الموظف بنجاح", "success");
+      } catch (e) {
+        Swal.showValidationMessage("خطأ أثناء الحفظ");
+      }
+    }
+  });
+};
+</script>
+  
 <style>
   .swal2-confirm.cairo-btn {
     font-family: 'Cairo', sans-serif !important;
@@ -1569,6 +1631,7 @@ function showComingSoon(city) {
 
 </body>
 </html>
+
 
 
 
