@@ -519,26 +519,34 @@ const removeRowDom = id => {
 };
 
 /* نموذج إضافة/تعديل */
-window.openForm = (id=null) => {
+window.openForm = (id = null) => {
+  // جلب البيانات في حال التعديل
   const d = id ? CACHE.get(id) : {};
+
   Swal.fire({
     title: id ? "تعديل بيانات الموظف" : "إضافة موظف جديد",
     showCancelButton: true,
     cancelButtonText: "إغلاق",
+    confirmButtonText: "حفظ",
     showCloseButton: true,
     html: `
       <label class="swal2-label" for="fid">الرقم التعريفي (16 رقم)</label>
-      <input id="fid" class="swal2-input" placeholder="الرقم التعريفي" value="${id||""}" ${id?"disabled":""}>
+      <input id="fid" class="swal2-input" placeholder="الرقم التعريفي" value="${id || ""}" ${id ? "disabled" : ""}>
+      
       <label class="swal2-label" for="fname">الاسم الكامل</label>
-      <input id="fname" class="swal2-input" placeholder="الاسم الكامل" value="${d?.name||""}">
+      <input id="fname" class="swal2-input" placeholder="الاسم الكامل" value="${d?.name || ""}">
+      
       <label class="swal2-label" for="fdiz">تاريخ الازدياد</label>
       <input id="fdiz" type="date" class="swal2-input" value="${fmt(d?.diz)}">
+      
       <label class="swal2-label" for="fdtw">تاريخ التوظيف</label>
       <input id="fdtw" type="date" class="swal2-input" value="${fmt(d?.dtw)}">
+      
       <label class="swal2-label" for="fgrade">الرتبة</label>
-      <input id="fgrade" class="swal2-input" placeholder="الرتبة" value="${d?.grade||""}">
+      <input id="fgrade" class="swal2-input" placeholder="الرتبة" value="${d?.grade || ""}">
+      
       <label class="swal2-label" for="fplace">مكان العمل</label>
-      <input id="fplace" class="swal2-input" placeholder="مكان العمل" value="${d?.place||""}">
+      <input id="fplace" class="swal2-input" placeholder="مكان العمل" value="${d?.place || ""}">
     `,
     preConfirm: async () => {
       const fid = document.getElementById("fid").value;
@@ -548,8 +556,18 @@ window.openForm = (id=null) => {
       const fgradeEl = document.getElementById("fgrade");
       const fplaceEl = document.getElementById("fplace");
 
-      if (!/^\\d{16}$/.test(fid)) return Swal.showValidationMessage("الرقم التعريفي يجب أن يتكون من 16 رقماً");
-      if (!id && CACHE.has(fid)) return Swal.showValidationMessage("هذا الرقم مسجّل مسبقاً");
+      // === التصحيح هنا ===
+      // تم تعديل الشرط ليصبح /^\d{16}$/ (شرطة مائلة واحدة) ليتعرف على الأرقام بشكل صحيح
+      if (!/^\d{16}$/.test(fid)) {
+        Swal.showValidationMessage("الرقم التعريفي يجب أن يتكون من 16 رقماً");
+        return false;
+      }
+
+      // التحقق من أن الرقم غير مكرر (فقط في حالة الإضافة الجديدة وليس التعديل)
+      if (!id && CACHE.has(fid)) {
+        Swal.showValidationMessage("هذا الرقم مسجّل مسبقاً");
+        return false;
+      }
 
       const data = {
         id: fid,
@@ -563,16 +581,19 @@ window.openForm = (id=null) => {
       showLoading();
       try {
         if (id) {
-          await updateDoc(doc(db,"employeescom",id),data);
+          // عملية التعديل
+          await updateDoc(doc(db, "employeescom", id), data);
         } else {
-          await setDoc(doc(db,"employeescom",fid),data);
+          // عملية الإضافة
+          await setDoc(doc(db, "employeescom", fid), data);
         }
-        CACHE.set(fid,data);
-        upsertRow(fid,data);
-        Swal.fire("تم الحفظ","تم حفظ بيانات الموظف بنجاح","success");
+        CACHE.set(fid, data);
+        upsertRow(fid, data);
+        Swal.fire("تم الحفظ", "تم حفظ بيانات الموظف بنجاح", "success");
       } catch (err) {
         console.error('Save error', err);
         Swal.showValidationMessage('حدث خطأ أثناء الحفظ: ' + (err.message || err));
+        return false;
       } finally {
         hideLoading();
       }
