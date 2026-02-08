@@ -655,6 +655,134 @@
 }
 
 
+/* ================================================== */
+/* توحيد حجم أزرار النافذة المنبثقة (إلغاء + تحقق) */
+/* ================================================== */
+
+/* ================================================== */
+/* توحيد تصميم الأزرار (نفس الشكل، اختلاف اللون فقط) */
+/* ================================================== */
+
+/* ================================================== */
+/* توحيد تصميم الأزرار (نفس الشكل، اختلاف اللون فقط) */
+/* ================================================== */
+
+/* 1. ضبط الحاوية لتوسيط الأزرار دائماً */
+.swal2-actions {
+  width: 100% !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important; /* تغيير من space-between إلى center لتوسيط الزر المنفرد */
+  gap: 15px !important;
+  padding: 0 30px 25px !important;
+  box-sizing: border-box !important;
+}
+
+/* 2. تنسيق موحد للزرين (الحجم، الخط، الأبعاد) */
+/* ملاحظة: هذا الكود يضمن أن الزرين يملآن المكان عند وجودهما معاً */
+.swal2-popup .cairo-btn {
+  flex: 1 1 0 !important;       /* عرض متساوي 50% لكل زر */
+  width: 100% !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 12px 0 !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  border-radius: 12px !important;
+  border: none !important;
+  color: white !important;
+  transition: all 0.2s ease !important;
+}
+
+/* باقي التنسيقات (الألوان) تبقى كما هي... */
+.swal2-confirm.cairo-btn {
+  background-color: #1976d2 !important;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+}
+
+.swal2-cancel.cairo-btn {
+  background-color: #ff5252 !important;
+  box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3) !important;
+}
+
+.swal2-popup .cairo-btn:hover {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.05);
+}
+
+/* ================================================== */
+/* تصحيح أزرار (متابعة / إغلاق / عودة) لتكون صغيرة ودائرية */
+/* ================================================== */
+
+/* هذا الكود يلغي التمدد العريض لهذه الأزرار تحديداً */
+.swal2-popup .cairo-btn.highlight-confirm,
+.swal2-popup .btn-close-gray,
+.swal2-popup .btn-back-purple {
+  flex: 0 0 auto !important;       /* إلغاء التمدد 50% */
+  width: auto !important;          /* العرض حسب النص */
+  min-width: 120px !important;     /* عرض أدنى مناسب */
+  border-radius: 999px !important; /* حواف دائرية (كبسولة) */
+  padding: 10px 30px !important;   /* حشوة داخلية */
+  margin: 0 5px !important;
+}
+
+/* تنسيق لون زر "متابعة" */
+.swal2-popup .cairo-btn.highlight-confirm {
+  background-color: #1976d2 !important;
+  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4) !important;
+}
+
+/* تنسيق لون زر "إغلاق" و "عودة" */
+.swal2-popup .btn-close-gray,
+.swal2-popup .btn-back-purple {
+  /* الألوان محددة مسبقاً في الجافاسكربت أو كلاسات أخرى، هنا نضمن الشكل فقط */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+}
+
+
+/* ================================================== */
+/* استثناء الزر البنفسجي (عودة/حسناً) وإعادته لشكله الأصلي */
+/* ================================================== */
+
+.swal2-popup .btn-back-purple {
+  background-color: #7b1fa2 !important; /* التأكيد على اللون البنفسجي */
+  color: white !important;
+  border-radius: 999px !important;      /* حواف دائرية بالكامل */
+  padding: 10px 32px !important;        /* حجم مدمج وأنيق */
+  width: auto !important;               /* منع التمدد للعرض الكامل */
+  flex: 0 0 auto !important;            /* منع أخذ نسبة 50% */
+  min-width: 110px !important;
+  font-family: 'Cairo', sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 10px rgba(123, 31, 162, 0.3) !important; /* ظل بنفسجي خفيف */
+  margin: 0 5px !important;
+}
+
+.swal2-popup .btn-back-purple:hover {
+  background-color: #6a1b9a !important; /* لون أغمق قليلاً عند التمرير */
+  transform: translateY(-2px);
+}
+
+
+
+/* ================================================== */
+/* تغيير خط النص التوضيحي (Placeholder) داخل الحقل */
+/* ================================================== */
+.swal2-input::placeholder {
+  font-family: 'Cairo', sans-serif !important;
+  font-weight: 400 !important;
+  color: #9e9e9e !important;  /* لون رمادي مناسب */
+  opacity: 1; /* لضمان ظهوره بشكل صحيح في كل المتصفحات */
+}
+
+/* تنسيق النص عند الكتابة داخل الحقل أيضاً */
+.swal2-input {
+  font-family: 'Cairo', sans-serif !important;
+  font-weight: 600 !important;
+}
     
   </style>
 </head>
@@ -1582,39 +1710,215 @@ function openPreliminaryResultsMain() {
   });
 }
 
-function openLoanTypeResults(type) {
 
-  const resultsLinks = {
-    housing: {
-      توقرت: '#',
-      الطيبات: '#',
-      الحجيرة: '#',
-      تماسين: '#',
-      المقارين: '#'
+// ==========================================
+// 1. إعدادات روابط النتائج (عدل الروابط هنا فقط)
+// ==========================================
+const LOAN_RESULTS_DATA = {
+  housing: {
+    'توقرت': 'https://drive.google.com/file/d/1DXMHE8XNNGKVkEpU33jZAy6huDzwBBis/view?usp=drive_link',
+    'الطيبات': 'https://drive.google.com/file/d/1FeIOYTW9YCHK3tfXahh-DOSn_1_vMtPU/view?usp=drive_link',
+    'الحجيرة': 'https://drive.google.com/file/d/17ikFrzsYruFqiDju_bk9VKO8XKzzsMqT/view?usp=drive_link',
+    'تماسين': 'https://drive.google.com/file/d/1BKfCk0SUWc5ee5yTT4Ja-KszXAvAHSJ2/view?usp=drive_link',
+    'المقارين': 'https://drive.google.com/file/d/1VuqIOBLJHYpFTf5lZaT5EWcFQrQLfEo3/view?usp=drive_link'
+  },
+  exceptional: {
+    'توقرت': {
+      teachers: 'https://drive.google.com/file/d/1-JRvM2_zd_7_xYk1nyAB2vUV9IG9qDXs/view?usp=drive_link', // رابط الأساتذة
+      workers: 'https://drive.google.com/file/d/1Y1WSo-l83_TqVvsFM7GTuQiv3HoVc4ER/view?usp=drive_link'   // رابط العمال
     },
-    exceptional: {
-      توقرت: '#',
-      الطيبات: '#',
-      الحجيرة: '#',
-      تماسين: '#',
-      المقارين: '#'
+    'الطيبات': {
+      teachers: 'https://drive.google.com/file/d/1CLp1d7sQ1-x6I-UIYjc8fznrpbCb03vR/view?usp=drive_link',
+      workers: 'https://drive.google.com/file/d/132TyKlCMNMrYH0xwA1kAezK6hI4Yp_Dz/view?usp=drive_link'
+    },
+    'الحجيرة': {
+      teachers: 'https://drive.google.com/file/d/1x1sEl3mrVSjkuQ7TVNzW8AutfQofi6_z/view?usp=drive_link',
+      workers: 'https://drive.google.com/file/d/1pSiewTQov_oG1PsWSlY41BLBb1S5x7Qu/view?usp=drive_link'
+    },
+    'تماسين': {
+      teachers: 'https://drive.google.com/file/d/1PERcPDnQq1JmphNB2BW69e1QhTHXMbG1/view?usp=drive_link',
+      workers: 'https://drive.google.com/file/d/1OamRHdzwT2iRm7o-pEQsuMIWba7DOpMZ/view?usp=drive_link'
+    },
+    'المقارين': {
+      teachers: 'https://drive.google.com/file/d/1Ziqwiqp5p8i85vXnCjJZ3WqXFLT1jwvF/view?usp=drive_link',
+      workers: 'https://drive.google.com/file/d/1WvpBPbHc0MMWKf6Um2ZyvsRhYDh-Xov0/view?usp=drive_link'
     }
-  };
+  }
+};
 
+// ==========================================
+// 2. دالة عرض التنبيه والشروط (نقطة الانطلاق)
+// ==========================================
+function openLoanTypeResults(type) {
+if (type === 'housing') {
+    // --- نافذة شروط سلفة السكن ---
+    Swal.fire({
+      icon: 'warning',
+      title: 'تنبيه مهم - سلفة السكن',
+      html: `
+        <div class="housing-alert">
+          <div class="alert-header">
+            <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div><h4>تنبيه خاص بسلفة السكن</h4><p>يرجى قراءة الشروط التالية بعناية قبل المتابعة</p></div>
+          </div>
+          <ul class="alert-points">
+            <li><i class="fa-solid fa-circle-check"></i>سلفة السكن تُمنح مرة واحدة فقط خلال المسار المهني للموظف.</li>
+            <li><i class="fa-solid fa-user-slash"></i>يستبعد تلقائياً كل مترشح سبق له الاستفادة من هذه السلفة.</li>
+            <li><i class="fa-solid fa-circle-exclamation"></i>أي تصريح غير صحيح للمعلومات يعتبر إدلاءً بمعلومات مغلوطة ويترتب عنه الإقصاء الفوري ودون إنذار.</li>
+          </ul>
+          
+           <div style="margin-top: 15px; padding: 12px; background: #fff3e0; border-right: 4px solid #ff9800; border-radius: 8px; text-align: right;">
+      <h5 style="margin: 0 0 8px 0; color: #e65100; font-size: 16px; font-weight: 700;">
+        <i class="fa-solid fa-hand-point-right" style="margin-left: 5px;"></i> توجيهات هامة للموظفين:
+      </h5>
+      <ul style="margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: #5d4037; line-height: 1.6;">
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> تُمنح الأولوية في الاستفادة للموظفين الذين لم يسبق لهم الاستفادة من نفس السلفة.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> يُدرج تلقائيًا ضمن المستفيدين من سلفة السكن كل الموظفين الذين قاموا بالتسجيل في السلفتين واستفادوا فعليًا من كلتاهما.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> ترتيب الموظفين تم وفقاً لمعايير الأولوية المنصوص عليها في الضوابط العامة للجنة الخدمات الإجتماعية.</li>
+       <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> يتم تقديم الطعون لدى مقر اللجنة في المدة المحددة <b>من 10 إلى 17 فيفري 2026 </b>ولا يقبل أي طعن بعد انقضاء المدة.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> هذه النتائج <b>أولية</b> وتخضع للمراجعة النهائية بعد دراسة الملفات.</li>
+
+      </ul>
+    </div>
+
+           <div class="alert-note" style="margin-top: 15px;">
+      <i class="fa-solid fa-shield"></i>
+      <span>الاطلاع على هذه الشروط والتوجيهات شرط أساسي للمرور.</span>
+    </div>
+
+    <label class="acknowledge-box">
+      <input type="checkbox" id="housingAcknowledgedResult">
+      <span>اطلعت على الشروط والتوجيهات وأوافق على ما جاء فيها.</span>
+    </label>
+  </div>`,
+
+      confirmButtonText: 'متابعة',
+      confirmButtonColor: '#1976d2',
+      customClass: { confirmButton: 'cairo-btn highlight-confirm' },
+      didOpen: () => {
+        const checkbox = Swal.getPopup().querySelector('#housingAcknowledgedResult');
+        const confirmButton = Swal.getConfirmButton();
+        confirmButton.disabled = true;
+        checkbox.addEventListener('change', () => { confirmButton.disabled = !checkbox.checked; });
+      },
+      preConfirm: () => {
+        if (!Swal.getPopup().querySelector('#housingAcknowledgedResult').checked) return false;
+        return true;
+      }
+    }).then(result => {
+      if (result.isConfirmed) showDistrictsList('housing');
+    });
+  
+
+  } else if (type === 'exceptional') {
+    // --- نافذة شروط السلفة الاستثنائية ---
+    Swal.fire({
+      icon: 'warning',
+      title: 'تنبيه مهم - السلفة الإستثنائية',
+     html: `
+  <div class="housing-alert">
+    <div class="alert-header">
+      <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div>
+        <h4>تنبيه خاص بالسلفة الإستثنائية</h4>
+        <p>يرجى قراءة الشروط والتعليمات بعناية</p>
+      </div>
+    </div>
+
+    <ul class="alert-points">
+      <li><i class="fa-solid fa-circle-check"></i>السلفة الإستثنائية تمنح مرة واحدة كل (5) سنوات وفق شروط صارمة.</li>
+      <li><i class="fa-solid fa-user-slash"></i>يستبعد تلقائياً كل مترشح عليه دين في الخدمات الإجتماعية.</li>
+      <li><i class="fa-solid fa-circle-exclamation"></i>أي تصريح غير صحيح يعتبر إدلاءً بمعلومات مغلوطة ويؤدي للإقصاء الفوري.</li>
+    </ul>
+
+    <div style="margin-top: 15px; padding: 12px; background: #fff3e0; border-right: 4px solid #ff9800; border-radius: 8px; text-align: right;">
+      <h5 style="margin: 0 0 8px 0; color: #e65100; font-size: 16px; font-weight: 700;">
+        <i class="fa-solid fa-hand-point-right" style="margin-left: 5px;"></i> توجيهات هامة للموظفين:
+      </h5>
+      <ul style="margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: #5d4037; line-height: 1.6;">
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> تُمنح الأولوية في الاستفادة للموظفين الذين لم يسبق لهم الاستفادة من نفس السلفة.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> ترتيب الموظفين تم وفقاً لمعايير الأولوية المنصوص عليها في الضوابط العامة للجنة الخدمات الإجتماعية.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> تم توزيع الحصة المخصصة للسلفة الإستثنائية<b> بنسبة 60٪ لفائدة العمال المهنيين و 40٪ لفائدة باقي الموظفين</b>.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> يُدرج تلقائيًا ضمن المستفيدين من سلفة السكن كل الموظفين الذين قاموا بالتسجيل في السلفتين واستفادوا فعليًا من كلتاهما.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> يتم تقديم الطعون لدى مقر اللجنة في المدة المحددة <b>من 10 إلى 17 فيفري 2026 </b>ولا يقبل أي طعن بعد انقضاء المدة.</li>
+        <li><i class="fa-solid fa-caret-left" style="color: #ff9800; margin-left: 5px;"></i> هذه النتائج <b>أولية</b> وتخضع للمراجعة النهائية بعد دراسة الملفات.</li>
+
+
+      </ul>
+    </div>
+
+    <div class="alert-note" style="margin-top: 15px;">
+      <i class="fa-solid fa-shield"></i>
+      <span>الاطلاع على هذه الشروط والتوجيهات شرط أساسي للمرور.</span>
+    </div>
+
+    <label class="acknowledge-box">
+      <input type="checkbox" id="exceptionAcknowledgedResult">
+      <span>اطلعت على الشروط والتوجيهات وأوافق على ما جاء فيها.</span>
+    </label>
+  </div>`,
+      confirmButtonText: 'متابعة',
+      confirmButtonColor: '#1976d2',
+      customClass: { confirmButton: 'cairo-btn highlight-confirm' },
+      didOpen: () => {
+        const checkbox = Swal.getPopup().querySelector('#exceptionAcknowledgedResult');
+        const confirmButton = Swal.getConfirmButton();
+        confirmButton.disabled = true;
+        checkbox.addEventListener('change', () => { confirmButton.disabled = !checkbox.checked; });
+      },
+      preConfirm: () => {
+        if (!Swal.getPopup().querySelector('#exceptionAcknowledgedResult').checked) return false;
+        return true;
+      }
+    }).then(result => {
+      if (result.isConfirmed) showDistrictsList('exceptional');
+    });
+  }
+}
+
+// ==========================================
+// 3. دالة عرض قائمة الدوائر (ديناميكية)
+// ==========================================
+function showDistrictsList(type) {
+  const districts = LOAN_RESULTS_DATA[type];
   let html = `<div class="icon-container">`;
 
-  Object.entries(resultsLinks[type]).forEach(([city, link]) => {
+  Object.keys(districts).forEach((city) => {
+    let isAvailable = false;
+    let onclickAction = '';
+    let iconClass = 'fa-hourglass-half'; // الافتراضي (قريبا)
 
-    const isAvailable = link && link !== '#';
+    if (type === 'exceptional') {
+      // للسلفة الاستثنائية: نفحص إذا كان هناك أي رابط (أساتذة أو عمال)
+      const links = districts[city];
+      isAvailable = (links.teachers !== '#' || links.workers !== '#');
+      
+      if (isAvailable) {
+        onclickAction = `openSubCategories('${city}')`;
+        iconClass = 'fa-folder-open'; // أيقونة المجلد (قائمة)
+      } else {
+        onclickAction = `showComingSoon('${city}')`;
+      }
+      
+    } else {
+      // لسلفة السكن: نفحص الرابط المباشر
+      const link = districts[city];
+      isAvailable = (link !== '#');
+      
+      if (isAvailable) {
+        onclickAction = `window.open('${link}', '_blank')`;
+        iconClass = 'fa-file-lines'; // أيقونة الملف
+      } else {
+        onclickAction = `showComingSoon('${city}')`;
+      }
+    }
+
+    // إضافة كلاس disabled للعناصر غير المفعلة لتغيير لونها
+    const btnClass = isAvailable ? 'employee' : 'disabled';
 
     html += `
-      <div class="icon-btn employee ${!isAvailable ? 'disabled' : ''}"
-           onclick="${
-             isAvailable
-               ? `window.open('${link}', '_blank')`
-               : `showComingSoon('${city}')`
-           }">
-        <i class="fa-solid ${isAvailable ? 'fa-file-lines' : 'fa-hourglass-half'}"></i>
+      <div class="icon-btn ${btnClass}" onclick="${onclickAction}">
+        <i class="fa-solid ${iconClass}"></i>
         <span>${city}</span>
       </div>
     `;
@@ -1623,37 +1927,141 @@ function openLoanTypeResults(type) {
   html += `</div>`;
 
   Swal.fire({
-    title: 'اختر الدائرة المناسبة:',
+    title: type === 'exceptional' ? 'نتائج السلفة الاستثنائية' : 'نتائج سلفة السكن',
     html,
     showConfirmButton: true,
     confirmButtonText: 'إغلاق',
     confirmButtonColor: '#9e9e9e',
-    customClass: {
-      confirmButton: 'btn-close-gray'
+    customClass: { confirmButton: 'btn-close-gray' }
+  });
+}
+
+// ==========================================
+// 4. دالة عرض الفئات الفرعية (للإستثنائية فقط)
+// ==========================================
+function openSubCategories(city) {
+  const links = LOAN_RESULTS_DATA.exceptional[city];
+
+  // التحقق من توفر كل فئة لتغيير الأيقونة
+  const teacherAvailable = links.teachers !== '#';
+  const workerAvailable = links.workers !== '#';
+
+  Swal.fire({
+    title: `نتائج دائرة ${city}`,
+    html: `
+      <p style="margin-bottom: 20px; font-size: 14px; color: #666;">يرجى اختيار الفئة المهنية:</p>
+      <div class="icon-container">
+        
+        <div class="icon-btn ${teacherAvailable ? 'employee' : 'disabled'}" 
+             onclick="handleFinalLink('${links.teachers}', 'الأساتذة والإداريين', '${city}')">
+          <i class="fa-solid ${teacherAvailable ? 'fa-chalkboard-user' : 'fa-hourglass-half'}"></i>
+          <span>الأساتذة والإداريين</span>
+        </div>
+
+        <div class="icon-btn ${workerAvailable ? 'retired' : 'disabled'}" 
+             onclick="handleFinalLink('${links.workers}', 'العمال المهنيين', '${city}')">
+          <i class="fa-solid ${workerAvailable ? 'fa-users-gear' : 'fa-hourglass-half'}"></i>
+          <span>العمال المهنيين</span>
+        </div>
+
+      </div>
+    `,
+    showConfirmButton: true,
+    confirmButtonText: 'رجوع',
+    confirmButtonColor: '#9e9e9e',
+    customClass: { confirmButton: 'btn-close-gray' },
+    willClose: () => {
+       // إعادة فتح قائمة الدوائر عند الرجوع
+       setTimeout(() => showDistrictsList('exceptional'), 300);
     }
   });
 }
 
-function showComingSoon(city) {
+// ==========================================
+// 5. دوال مساعدة (الفتح والرسائل)
+// ==========================================
+
+// التعامل مع الرابط النهائي
+function handleFinalLink(link, categoryName, city) {
+  if (link && link !== '#') {
+    window.open(link, '_blank');
+  } else {
+    Swal.fire({
+      icon: 'info',
+      title: '<span style="color: #0d47a1; font-weight: 700; font-size: 22px;">قريبًا...</span>',
+      html: `
+        <div style="text-align: center; line-height: 2; font-family: 'Cairo', sans-serif;">
+          <div style="margin-bottom: 15px;">
+            نحيطكم علماً بأن نتائج فئة:
+            <br>
+            <span style="color: #e65100; font-weight: 700; font-size: 19px; border-bottom: 2px solid #ffb74d;">
+               ${categoryName}
+            </span>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            التابعة لدائرة: 
+            <span style="color: #1976d2; font-weight: 700; font-size: 19px;">
+              ${city}
+            </span>
+          </div>
+
+          <div style="background: #f1f8ff; padding: 10px; border-radius: 12px; border: 1px dashed #90caf9; color: #0d47a1; font-weight: 600;">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-left: 8px;"></i>
+            الملفات حالياً <span style="color: #d32f2f;">قيد المعالجة الرقمية</span>
+            <br>
+            وسيتم نشرها فور صدورها.
+          </div>
+        </div>
+      `,
+      confirmButtonText: 'عودة',
+      confirmButtonColor: '#7b1fa2', // اللون البنفسجي لزر الرجوع
+      customClass: {
+        confirmButton: 'btn-back-purple'
+      }
+    }).then(() => {
+      // العودة التلقائية للقائمة الفرعية كما طلبت سابقاً
+      openSubCategories(city);
+    });
+  }
+}
+
+// رسالة الانتظار للدوائر
+function showComingSoon(city, type) {
   Swal.fire({
     icon: 'info',
-    title: 'قريبًا...',
+    title: '<span style="color: #4a148c; font-weight: 700; font-size: 22px;">إشعار قريبًا...</span>',
     html: `
-      سيتم الإعلان عن النتائج الأولية
-      <br>
-      <strong style="color:#6a1b9a;">لدائرة ${city}</strong>
-      <br>
-      <span style="color:#c62828; font-weight:700;">
-        يرجى منكم تفقد الأيقونة بصفة دورية للإطلاع على آخر المستجدات.
-      </span>
+      <div style="text-align: center; line-height: 2; font-family: 'Cairo', sans-serif;">
+        <div style="margin-bottom: 15px; font-size: 16px; color: #333;">
+          نحيطكم علماً بأن النتائج الأولية الخاصة بـ:
+          <br>
+          <span style="color: #1976d2; font-weight: 700; font-size: 20px; border-bottom: 2px dashed #90caf9; padding-bottom: 2px;">
+            دائرة ${city}
+          </span>
+        </div>
+
+        <div style="background: #fff8e1; padding: 15px; border-radius: 14px; border: 1px solid #ffe082; color: #7f0000; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+          <i class="fa-solid fa-bell fa-shake" style="margin-left: 8px; color: #f57f17; font-size: 18px;"></i>
+          النتائج حالياً <span style="color: #d84315;">قيد التدقيق النهائي</span>
+          <br>
+          <span style="font-size: 13px; color: #5d4037; display: block; margin-top: 5px;">
+            يرجى تفقد البوابة بصفة دورية للإطلاع على آخر المستجدات فور صدورها.
+          </span>
+        </div>
+      </div>
     `,
-    confirmButtonText: 'حسنًا',
-    confirmButtonColor: '#7b1fa2',
+    confirmButtonText: 'عودة',
+    confirmButtonColor: '#7b1fa2', // اللون البنفسجي المعتمد لزر الرجوع
     customClass: {
       confirmButton: 'btn-back-purple'
     }
+  }).then(() => {
+    // العودة التلقائية لقائمة الدوائر للحفاظ على انسيابية التنقل
+    showDistrictsList(type);
   });
 }
+
 
 </script>
 
