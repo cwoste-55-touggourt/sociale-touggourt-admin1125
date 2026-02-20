@@ -159,8 +159,8 @@ function showEditForm(phoneDigits, existingData, mode = "edit") {
           <div class="col"><label>رقم الهاتف</label><input type="tel" id="phoneField" value="${formattedPhone}" readonly dir="ltr"></div>
         </div>
         <div class="row">
-          <div class="col"><label>اللقب</label><input type="text" id="lastNameField" value="${escapeHtml(existingData.lastName || '')}" required oninput="validateArabicOnly(this)"></div>
-          <div class="col"><label>الاسم</label><input type="text" id="nameField" value="${escapeHtml(existingData.name || '')}" required oninput="validateArabicOnly(this)"></div>
+         <div class="col"><label>اللقب</label><input type="text" id="lastNameField" value="${escapeHtml(existingData.lastName || '')}" placeholder="أدخل اللقب بالعربية" required oninput="validateArabicOnly(this)"></div>
+<div class="col"><label>الاسم</label><input type="text" id="nameField" value="${escapeHtml(existingData.name || '')}" placeholder="أدخل الاسم بالعربية" required oninput="validateArabicOnly(this)"></div>
         </div>
         <div class="row">
           <div class="col">
@@ -187,7 +187,7 @@ function showEditForm(phoneDigits, existingData, mode = "edit") {
 
       <div class="section-box child-box">
         <div class="section-title"><i class="fa-solid fa-child"></i> معلومات المشارك (الإبن / الإبنة)</div>
-        <div><label>الاسم الكامل للإبن</label><input type="text" id="childFullNameField" value="${escapeHtml(existingData.childFullName || '')}" oninput="validateArabicOnly(this)"></div>
+        <div><label>الاسم الكامل للإبن</label><input type="text" id="childFullNameField" value="${escapeHtml(existingData.childFullName || '')}" placeholder="أدخل الاسم الكلمل بالعربية" required oninput="validateArabicOnly(this)"></div>
         <div>
           <label>تاريخ ميلاد الإبن</label>
           <div class="pro-date-picker">
@@ -712,4 +712,5 @@ async function submitNewForm() {
 }
 </script>
 </body>
+
 </html>
