@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مسابقة أبناء القطاع للقرآن الكريم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script>
+      if (sessionStorage.getItem("fromIndex") !== "yes") {
+          // window.location.href = "index.html"; 
+      }
+  </script>
+
+<style>
+    /* =========================================
+       التصميم
+       ========================================= */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 15px; overflow-x: hidden;
+    }
+
+    .container {
+      position: relative; background: white;
+      padding: 35px 40px 10px;
+      border-radius: 18px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      text-align: center; width: 100%; max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .page-header { text-align: center; margin-bottom: 25px; }
+    .page-header .header-logo {
+      width: 120px; height: auto; display: block; margin: 0 auto 10px auto;
+    }
+
+    .gradient-title {
+      font-size: 20px; font-weight: 700;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px; display: inline-block;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+
+    /* عناصر الإدخال */
+    input, select {
+      width: 100%; padding: 12px 14px; margin-bottom: 12px;
+      border-radius: 8px; border: 2px solid #e0e0e0;
+      font-size: 14px; text-align: center;
+      font-family: 'Cairo', sans-serif; font-weight: 500;
+    }
+    
+    input:focus, select:focus { outline: none; border-color: #2575fc; }
+    input[readonly] { background: #f5f5f5; color: #555; cursor: default; }
+
+    /* --- تنسيق عجلة التاريخ الاحترافية --- */
+    .pro-date-picker {
+      display: flex;
+      flex-direction: row;
+      gap: 5px;
+      background-color: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 2px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+    .pro-date-picker:focus-within {
+      border-color: #2575fc;
+      box-shadow: 0 0 8px rgba(37, 117, 252, 0.2);
+    }
+    .pro-date-picker select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      margin-bottom: 0;
+      padding: 10px 2px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: left 5px center;
+      background-size: 10px;
+    }
+    .pro-date-picker select:not(:last-child) { border-left: 1px solid #eee; }
+
+    /* الأزرار */
+    button {
+      background: linear-gradient(45deg, #6a11cb, #2575fc);
+      color: white; border: none; padding: 14px 0; border-radius: 10px;
+      font-size: 16px; cursor: pointer; font-weight: 700; width: 100%;
+      font-family: 'Cairo', sans-serif; margin-top: 10px;
+      box-shadow: 0 4px 15px rgba(37, 117, 252, 0.2);
+    }
+    button:hover { opacity: 0.95; }
+
+    .row { display: flex; gap: 10px; }
+    .col { flex: 1; }
+    @media (max-width: 600px) { .row { flex-direction: column; gap: 0; } }
+
+    /* تنسيق الحاويات */
+    .section-box {
+        background: #fff; border-radius: 12px; padding: 15px;
+        margin-bottom: 20px; text-align: right;
+    }
+    .employee-box { background-color: #f9f9f9; border: 1px solid #eee; }
+    .employee-box .section-title { color: #555; border-bottom: 1px solid #ddd; }
+    .child-box { border: 2px solid #2575fc; box-shadow: 0 4px 12px rgba(37, 117, 252, 0.08); }
+    .child-box .section-title { color: #2575fc; border-bottom: 1px solid #2575fc; }
+
+    .section-title {
+        font-size: 16px; font-weight: 700; margin-bottom: 15px;
+        padding-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    }
+
+    .small-note { font-size: 12px; color: #666; margin-top: 5px; text-align: center; }
+
+    /* لودر */
+    #imageLoaderOverlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); display: none;
+        justify-content: center; align-items: center; z-index: 9999;
+    }
+    .loader-circle {
+        border: 5px solid #f3f3f3; border-top: 5px solid #2575fc;
+        border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+
+<body>
+  <div class="container" id="mainContainer">
+    <div class="page-header">
+      <div class="header-text">
+        الجمهورية الجزائرية الديمقراطية الشعبية<br>
+        اللجنة الولائية للخدمات الإجتماعية لعمال التربية - توقرت
+      </div>
+      <img src="https://lh3.googleusercontent.com/d/1AOSzlvuRb-fAO0bqvo412HcHTfpRAX15" alt="شعار اللجنة" class="header-logo">
+      
+      <h2 class="gradient-title">بوابة تسجيل أبناء القطاع الموظفين - مسابقة القرآن الكريم</h2>
+      
+      <input type="text" id="empId" placeholder="أدخل رقم التعريف الوظيفي" oninput="validateNumber(this)">
+      <button onclick="checkEmployee()">تسجيل الدخول</button>
+
+      <button type="button" onclick="startBarcodeScanner()" style="background:#007bff; margin-top:8px; font-size:14px;">
+        <i class="fa-solid fa-camera"></i> مسح الباركود
+      </button>
+      <div id="reader" style="width:100%; margin:10px auto; display:none;"></div>
+      <input type="file" id="barcodeImage" accept="image/*" style="display:none;">
+    </div>
+  </div>
+
+<div id="imageLoaderOverlay"><div class="loader-circle"></div></div>
+
+<script>
+/* ==========================================
+   1. الإعدادات والبيانات
+   ========================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAkQz9pB2ZNlYIvdlTRvi4try3D8LLXS4g",
+  authDomain: "databaseemploye.firebaseapp.com",
+  projectId: "databaseemploye",
+  storageBucket: "databaseemploye.firebasestorage.app",
+  messagingSenderId: "408231477466",
+  appId: "1:408231477466:web:e3bf5bd3eaca7cdcd3a5e3"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const scriptURL = "https://script.google.com/macros/s/AKfycbxL_qV4DL-w5TnVCkV97kQbkEuMaNKjudjwujBT9XUbgNubiyE2q7vnL8BEljzgcmtppg/exec";
+
+/* --- بيانات الخرائط والمدارس --- */
+const baladiyaMap = { 
+  "توقرت": ["توقرت", "النزلة", "تبسبست", "الزاوية العابدية"], 
+  "تماسين": ["تماسين", "بلدة عمر"], 
+  "المقارين": ["المقارين", "سيدي سليمان"], 
+  "الحجيرة": ["الحجيرة", "العالية"], 
+  "الطيبات": ["الطيبات", "المنقر", "ابن ناصر"] 
+};
+window.primarySchoolsByBaladiya = { "ابن ناصر": [{ name: "إبتدائية عبد الحميد بن باديس - إبن ناصر" }, { name: "إبتدائية العربي التبسي - إبن ناصر" }, { name: "إبتدائية البشير الابراهيمي - إبن ناصر" }, { name: "إبتدائية هواري بومدين - إبن ناصر" }, { name: "إبتدائية المجاهد الصادق خلفاوي - إبن ناصر" }, { name: "إبتدائية المجاهد سراي مسعود ( المر) - إبن ناصر" }, { name: "إبتدائية المجاهد اليمان الطيب - إبن ناصر" }, { name: "إبتدائية المجاهد العقون خليفة - إبن ناصر" }, { name: "إبتدائية المجاهد قحمص محمد بن العيد - إبن ناصر" }, { name: "إبتدائية 13 مارس 1962 - إبن ناصر" }, { name: "إبتدائية اللأمير عبد القادر - إبن ناصر" }, { name: "إبتدائية العقبي الطيب - إبن ناصر" }], "الحجيرة": [{ name: "إبتدائية ابن باديس - الحجيرة" }, { name: "إبتدائية ديدوش مراد - الحجيرة" }, { name: "إبتدائية نعام سليمان - الحجيرة" }, { name: "إبتدائية محمد العيد آل خليفة - الحجيرة" }, { name: "إبتدائية العيد بن الشيخ - الحجيرة" }, { name: "إبتدائية البشير الابراهيمي - الحجيرة" }, { name: "إبتدائية مصطفى بن بولعيد - الحجيرة" }, { name: "إبتدائية الشهيد الكاس - الحجيرة" }, { name: "إبتدائية صلاح الدين الأيوبي - الحجيرة" }, { name: "إبتدائية ابن خلدون - الحجيرة" }, { name: "إبتدائية علي عمار - الحجيرة" }, { name: "إبتدائية دومة أحمد - الحجيرة" }, { name: "إبتدائية عمار ياسف - الحجيرة" }, { name: "إبتدائية المجاهد كحول احمد - الحجيرة" }, { name: "إبتدائية كريبع مسعود - الحجيرة - - الحجيرة" }, { name: "إبتدائية المجاهد بالأعور العلمي ( لقراف الجديدة 2) - الحجيرة" }, { name: "إبتدائية مجمع مدرسي حي المير - الحجيرة" }, { name: "إبتدائية خنفر محمد لحسن - الحجيرة" }, { name: "إبتدائية حي بوضياف محمد لقراف - الحجيرة" }, { name: "إبتدائية محدادي العيد - الحجيرة" }], "الزاوية العابدية": [{ name: "إبتدائية البحري بن المنور القديمة - الزاوية العابدية" }, { name: "إبتدائية مصطفى بن بولعيد - الزاوية العابدية" }, { name: "إبتدائية بوليفة محمد عمران - الزاوية العابدية" }, { name: "إبتدائية صولي عبد الرحمان ( 5 جويلية) - الزاوية العابدية" }, { name: "إبتدائية بشير كدة - الزاوية العابدية" }, { name: "إبتدائية عبد الرحمان بن نونة - الزاوية العابدية" }, { name: "إبتدائية عقبة بن نافع - الزاوية العابدية" }, { name: "إبتدائية المجاهد محمد الاخضر بن لمنور - الزاوية العابدية" }, { name: "إبتدائية غول محمد الصالح (حي السلام) - الزاوية العابدية" }, { name: "إبتدائية محمد مقداد - الزاوية العابدية" }, { name: "إبتدائية احمد بن لمنور - الزاوية العابدية" }], "الطيبات": [{ name: "إبتدائية الاستاذ عمر بن عزة - الطيبات" }, { name: "إبتدائية المجاهد عماري معمر - الطيبات" }, { name: "إبتدائية الشهيد قحمص محمد - الطيبات" }, { name: "إبتدائية العلامة حمداوي محمد بن سليمان(القواشيش) - الطيبات" }, { name: "إبتدائية ميلود تريش(بكار القديمة) - الطيبات" }, { name: "إبتدائية المجاهد زقوني بشير - الطيبات" }, { name: "إبتدائية المجاهد مراد معمر( برحمون) - الطيبات" }, { name: "إبتدائية الشهيد محمد الشين - الطيبات" }, { name: "إبتدائية قعبي علي (بئر العسل) - الطيبات" }, { name: "إبتدائية الشهيد بالطاهر الطيب - الطيبات" }, { name: "إبتدائية المجاهد منصوري مبروك - الطيبات" }, { name: "إبتدائية الشهيد بن قلية عمر - الطيبات" }, { name: "إبتدائية المجاهد رواص أحمد - الطيبات" }, { name: "إبتدائية المجاهد دحدي مسعود - الطيبات" }, { name: "إبتدائية المجاهد خليفة خليفة - الطيبات" }, { name: "إبتدائية المجاهد براهمي براهيم - الطيبات" }, { name: "إبتدائية المجاهد بلخير السعيد - الطيبات" }, { name: "إبتدائية المجاهد لـيـتيم محمد (عثمان بن عفان) - الطيبات" }, { name: "إبتدائية المجاهد بالعجال معمر - الطيبات" }, { name: "إبتدائية المجاهد عماري التجاني الدليعي - الطيبات" }], "العالية": [{ name: "إبتدائية الشهيد قوادري لخضر - العالية" }, { name: "إبتدائية قادري أحمد - العالية" }, { name: "إبتدائية الامام الغزالي بالعالية - العالية" }, { name: "إبتدائية الشهيد عبيدلي أحمد - العالية" }, { name: "إبتدائية سيدي عبد المالك - العالية" }, { name: "إبتدائية بن احمد احمد - العالية" }, { name: "إبتدائية طفحي مسعود ( العالية الجديدة ) - العالية" }, { name: "إبتدائية غبائشي بشير - العالية" }, { name: "إبتدائية المجاهد بساسي الطاهر - العالية" }, { name: "إبتدائية حمايمي ميلود - العالية" }, { name: "إبتدائية المجاهد حبي عمار - العالية" }, { name: "إبتدائية المجاهد ربروب محمد - العالية" }], "المقارين": [{ name: "إبتدائية أسامة بن زيد - المقارين" }, { name: "إبتدائية بن موسى الطيب - المقارين" }, { name: "إبتدائية العقيد سي الحواس - المقارين" }, { name: "إبتدائية ابو عبيدة بن الجراح - المقارين" }, { name: "إبتدائية بشير خذران - المقارين" }, { name: "إبتدائية محمد شافو - المقارين" }, { name: "إبتدائية بركبية حسين - المقارين" }, { name: "إبتدائية الشهيد الشريف محمد بن عبد الله - المقارين" }, { name: "إبتدائية بابا سعيد حشاني ( المجمع المدرسي الجديد ) - المقارين" }, { name: "إبتدائية المجاهد بن الزاوي السعيد - المقارين" }, { name: "إبتدائية المجاهد جاوي محمد - المقارين" }], "المنقر": [{ name: "إبتدائية محمد بوعسرية - المنقر" }, { name: "إبتدائية الشهيد مسماري الاخضر اللويبد - المنقر" }, { name: "إبتدائية الشهيد قبي بلقاسم - المنقر" }, { name: "إبتدائية العلامة بن الصديق علي - المنقر" }, { name: "إبتدائية الشهيد خورارة بشير - المنقر" }, { name: "إبتدائية شوية علي - المنقر" }, { name: "إبتدائية الشهيدبكاري السايح الشابي - المنقر" }, { name: "إبتدائية الشهيد محمد خيراني - المنقر" }, { name: "إبتدائية المجاهد احمد بن الصغير قويدري (البحري) - المنقر" }, { name: "إبتدائية الشلالقة( خورارة محمد) - المنقر" }, { name: "إبتدائية نواري محمد الزروق - المنقر" }, { name: "إبتدائية الشهيد دقعة محمد - المنقر" }, { name: "إبتدائية الشهيد محمد نواري( حي النخيل) - المنقر" }, { name: "إبتدائية محمد مايو - المنقر" }, { name: "إبتدائية غندير العايش - المنقر" }, { name: "إبتدائية الشهيد بله محمد الصغير - المنقر" }], "النزلة": [{ name: "إبتدائية بن دلالي علي - النزلة" }, { name: "إبتدائية قادري أحمد سيدي ماضي - النزلة" }, { name: "إبتدائية بن عمر النوي - النزلة" }, { name: "إبتدائية بن طرية لمنور - النزلة" }, { name: "إبتدائية بوليفة محمد عمران - النزلة" }, { name: "إبتدائية تماسيني عبد الرحمن - النزلة" }, { name: "إبتدائية كدة بشير - النزلة" }, { name: "إبتدائية حركات العايش - النزلة" }, { name: "إبتدائية المجاهد طرية مخلوف - النزلة" }, { name: "إبتدائية المجاهد قمو محمد - النزلة" }, { name: "إبتدائية تمرني موسى - النزلة" }, { name: "إبتدائية المجاهد سلامي محمد - النزلة" }, { name: "إبتدائية نقودي محمد - النزلة" }, { name: "إبتدائية المجاهد العيفاوي التجاني - النزلة" }, { name: "إبتدائية المجاهد عقال عبد الحميد - النزلة" }, { name: "إبتدائية المجاهد عشاب محمد العيد - النزلة" }, { name: "إبتدائية المجاهد فرحي بحري - النزلة" }, { name: "إبتدائية الشيخ بوعمامة - النزلة" }, { name: "إبتدائية رحماني محمد بن محمد - النزلة" }, { name: "إبتدائية المجاهد كراش الأخضر - النزلة" }, { name: "إبتدائية المجاهد بن حميدة علي - النزلة" }, { name: "إبتدائية بن هدية جاب الله ( المستقبل2) - النزلة" }, { name: "إبتدائية المجاهد مشري غزال - النزلة" }, { name: "إبتدائية بن عاشور السبتي - النزلة" }, { name: "إبتدائية علوي حمزة - النزلة" }, { name: "إبتدائية المجاهد قمو محمود - النزلة" }], "بلدة عمر": [{ name: "إبتدائية محمد البشير الإبراهيمي - بلدة اعمر" }, { name: "إبتدائية دحماني عبد الرحمان قوق - بلدة اعمر" }, { name: "إبتدائية بديار محمد - بلدة اعمر" }, { name: "إبتدائية المجاهد قادري موسى - بلدة اعمر" }, { name: "إبتدائية المجاهد الاخضري احمد - بلدة اعمر" }, { name: "إبتدائية المجاهد تمرني عمار(حي النهضة) - بلدة اعمر" }, { name: "إبتدائية المجاهد زروقي علي - بلدة اعمر" }, { name: "إبتدائية المجاهد حاجي عمر - بلدة اعمر" }, { name: "إبتدائية الشهيد مصطفى بن بولعيد قوق - بلدة اعمر" }, { name: "إبتدائية المجاهد شاشة محمد الصغير - بلدة اعمر" }], "تبسبست": [{ name: "إبتدائية محمد عشبي - تبسبست" }, { name: "إبتدائية زنو عبد الحفيظ - تبسبست" }, { name: "إبتدائية جواد عمر (تبسبست الجنوبية ) - تبسبست" }, { name: "إبتدائية بن علي الاخضر (بني يسود القديمة) - تبسبست" }, { name: "إبتدائية جيلاني كينة - تبسبست" }, { name: "إبتدائية التجاني نصيري - تبسبست" }, { name: "إبتدائية بن دومة محمد الطاهر - تبسبست" }, { name: "إبتدائية جلابية عبد القادر - تبسبست" }, { name: "إبتدائية المجاهد أحمد شاوش - تبسبست" }, { name: "إبتدائية حي الصومام - تبسبست" }, { name: "إبتدائية المجاهد بوغرارة محمد الصالح - تبسبست" }, { name: "إبتدائية الفتح الجديدة (جرو بحري) - تبسبست" }, { name: "إبتدائية المجاهد العياط سعد - تبسبست" }, { name: "إبتدائية أول نوفمبر 1954 - تبسبست" }, { name: "إبتدائية المجاهد رمون جلول حي فرجمون - تبسبست" }], "توقرت": [{ name: "إبتدائية بن خلدون - تقرت" }, { name: "إبتدائية الخنساء - تقرت" }, { name: "إبتدائية الشيخ الطاهر العبيدي - تقرت" }, { name: "إبتدائية عظامو محمد البحري - تقرت" }, { name: "إبتدائية الطالب بابا - تقرت" }, { name: "إبتدائية الإمام الشافعي - تقرت" }, { name: "إبتدائية الامام مالك - تقرت" }, { name: "إبتدائية عبيدلي أحمد - تقرت" }, { name: "إبتدائية عيادي علي - تقرت" }, { name: "إبتدائية ناصر بشير - تقرت" }, { name: "إبتدائية المجاهد موهوبي سليمان - تقرت" }, { name: "إبتدائية المجاهد احمد بورنان - تقرت" }, { name: "إبتدائية بن الصديق عبد الهادي (الرمال 1) - تقرت" }, { name: "إبتدائية الشهيد زابي عبد العالي - تقرت" }, { name: "إبتدائية الأمير عبد القادر الجديدة - تقرت" }, { name: "إبتدائية ميعادي محمد فخر الدين - تقرت" }, { name: "إبتدائية تاتاي محمد الصادق (الرمال 02) - تقرت" }, { name: "إبتدائية المجاهد كافي عبد الرحيم - تقرت" }, { name: "إبتدائية المجاهد عظامو محمد - تقرت" }, { name: "إبتدائية بولعراس ابراهيم - تقرت" }, { name: "إبتدائية حي النضال مجمع مدرسي حي 1190 مسكن - تقرت" }, { name: "إبتدائية عمان يوسف - تقرت" }, { name: "إبتدائية دباخ أحمد المستقبل الجنوبي 7 - تقرت" }, { name: "إبتدائية بالعيد مشري المستقبل الشمالي - تقرت" }, { name: "إبتدائية دباغ عمر المستقبل الجنوبي 09 - تقرت" }, { name: "إبتدائية تاتاي عبد القادر - تقرت" }, { name: "إبتدائية الشهيد بالطاهر علي المستقبل الشمالي - تقرت" }, { name: "إبتدائية المجاهد قادري علال حي 700 مسكن - تقرت" }], "سيدي سليمان": [{ name: "إبتدائية بوسعادة بن دلالي - سيدي سليمان" }, { name: "إبتدائية العربي التبسي - سيدي سليمان" }, { name: "إبتدائية الطيب بوريالة - سيدي سليمان" }, { name: "إبتدائية بركبية محمد بكار - سيدي سليمان" }, { name: "إبتدائية الشهيد بن قطان السايح - سيدي سليمان" }, { name: "إبتدائية باسو السعيد - سيدي سليمان" }], "تماسين": [{ name: "إبتدائية مولود فرعون - نماسين" }, { name: "إبتدائية الطالب السعدي بوخندق - نماسين" }, { name: "إبتدائية الشيخ الصغير التجاني - نماسين" }, { name: "إبتدائية الشيخ الصادق التجاني - نماسين" }, { name: "إبتدائية البشيرتاتي - نماسين" }, { name: "إبتدائية المجاهد بكوش محمد العيد - نماسين" }, { name: "إبتدائية المجاهد رزقان احمد - نماسين" }, { name: "إبتدائية المجاهد لبسيس إبراهيم - نماسين" }, { name: "إبتدائية بوبكري بشير - نماسين" }, { name: "إبتدائية بن قانة براهيم (البحور 2) - نماسين" }, { name: "إبتدائية المجاهد تجاني عبد الحق (حي الكودية ) - نماسين" }] };
+window.institutionsByDaaira = { "توقرت": { "متوسط": [{ name: "متوسطة سعد بن أبي وقاص – توقرت" }, { name: "متوسطة الإمام علي – توقرت" }, { name: "متوسطة محمد الأمين العمودي – توقرت" }, { name: "متوسطة الشيخ المقراني – تبسبست" }, { name: "متوسطة بن هدية المدني – النزلة" }, { name: "متوسطة عبد الحميد بن باديس – توقرت" }, { name: "متوسطة حمزة بن عبد المطلب – الزاوية العابدية" }, { name: "متوسطة نصرات حشاني – تبسبست" }, { name: "متوسطة عيسات ايدير – البهجة تبسبست" }, { name: "متوسطة تجيني محمد – عين الصحراء النزلة" }, { name: "متوسطة ابن رشد – حي العرقوب توقرت" }, { name: "متوسطة رضا حوحو – الزاوية العابدية" }, { name: "متوسطة ميعادي فخر الدين – النزلة" }, { name: "متوسطة عطالي محمد الصغير – سيدي مهدي النزلة" }, { name: "متوسطة محمد عمران بوليفة – حي الرمال توقرت" }, { name: "متوسطة عبد المؤمن بن علي – النزلة" }, { name: "متوسطة بن الزاوي علي – تبسبست" }, { name: "متوسطة البشير الإبراهيمي – توقرت" }, { name: "متوسطة حي 5 جويلية – الزاوية العابدية" }, { name: "متوسطة بن حيزية عبد الله – عين الصحراء النزلة" }, { name: "متوسطة بن قلية محمد – الزاوية العابدية" }, { name: "متوسطة تمرني محمد – توقرت" }, { name: "متوسطة شاوش محمد – تبسبست" }, { name: "متوسطة المجاهد التجاني الصادق – النزلة" }, { name: "متوسطة خروبي محمد لخضر – النزلة" }, { name: "متوسطة المجاهد سبقاق العيد – توقرت" }, { name: "متوسطة دقعة الطاهر – تبسبست" }, { name: "متوسطة بدودة معمر بن علي – النزلة" }, { name: "متوسطة داشر الحاج – حي المستقبل توقرت" }, { name: "متوسطة المجاهد رواص محمد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد بوليفة محمد العيد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد عماري السايح – حي المستقبل توقرت" }], "ثانوي": [{ name: "ثانوية الأمير عبد القادر – توقرت" }, { name: "ثانوية عبد الرحمان الكواكبي – تبسبست" }, { name: "ثانوية الحسن بن الهيثم – النزلة" }, { name: "ثانوية البشير الإبراهيمي – تبسبست" }, { name: "ثانوية هواري بومدين – الزاوية العابدية" }, { name: "ثانوية أبو بكر بلقايد – النزلة" }, { name: "ثانوية لزهاري تونسي – الزاوية العابدية" }, { name: "ثانوية بوخاري عبد المالك – النزلة" }, { name: "ثانوية عبودة علي – حي المستقبل توقرت" }, { name: "ثانوية مسغوني محمد الصالح – حي المستقبل" }] }, "الحجيرة": { "متوسط": [{ name: "متوسطة ابن سينا – الحجيرة" }, { name: "متوسطة لخضاري لخضر – العالية" }, { name: "متوسطة زوابري مسعود – لقراف الحجيرة" }, { name: "متوسطة السايح بن عيسى محمد السايح – العالية" }, { name: "متوسطة بن شويحة حمزة – الحجيرة" }, { name: "متوسطة شلغوم بشير – الشقة العالية" }, { name: "متوسطة المجاهد شعيب الأخضر – الحجيرة" }], "ثانوي": [{ name: "ثانوية طارق بن زياد – الحجيرة" }, { name: "ثانوية بساسي محمد الصغير – العالية" }, { name: "ثانوية لحسيني محمد – الحجيرة" }, { name: "ثانوية بالضياف محمد – لقراف الحجيرة" }] }, "الطيبات": { "متوسط": [{ name: "متوسطة أحمد زبانة – الطيبات" }, { name: "متوسطة موسى بن نصير – المنقر" }, { name: "متوسطة طارق بن زياد – بن ناصر" }, { name: "متوسطة نتاري محمد الدليلعي – الطيبات" }, { name: "متوسطة العقون محمد الكبير – الطيبات" }, { name: "متوسطة معمري محمد – بن ناصر" }, { name: "متوسطة العيد زقرير – المنقر" }, { name: "متوسطة بلعجال أحمد – الخبنة الطيبات" }, { name: "متوسطة المجاهد الخذير أحمد – المنقر" }, { name: "متوسطة المجاهد رابحي العيد – المنقر" }, { name: "متوسطة المجاهد بكاري عبد القادر – الدليليعي الطيبات" }], "ثانوي": [{ name: "ثانوية ابن رشيق القيرواني – الطيبات" }, { name: "ثانوية المنقر – دقعة علي المنقر" }, { name: "ثانوية عبيد أحمد – بن ناصر" }, { name: "ثانوية زقوني الصغير – الدليليعي الطيبات" }] }, "المقارين": { "متوسط": [{ name: "متوسطة الفرابي – المقارين" }, { name: "متوسطة طفحي مسعود – سيدي سليمان" }, { name: "متوسطة بلحارث محمد السايح – سيدي سليمان" }, { name: "متوسطة سوفي الهاشمي – الطيبات" }, { name: "متوسطة الشهيد عبد الرحمان قوتال – القصور المقارين" }, { name: "متوسطة الشهيد أحميدة بوحفص – المقارين" }, { name: "متوسطة بركبية عبد الرزاق – المقارين" }, { name: "متوسطة الشهيد تماسيني عبد الرحمان – لهريهيرة المقارين" }], "ثانوي": [{ name: "ثانوية خالد بن الوليد – المقارين" }, { name: "ثانوية بن عمر النوي – سيدي سليمان" }, { name: "ثانوية عميش سعدون – المقارين" }] }, "تماسين": { "متوسط": [{ name: "متوسطة عمر بن الخطاب – تماسين" }, { name: "متوسطة مولاتي محمد السايح – بلدة عمر" }, { name: "متوسطة أبو بكر الرازي – البحور تماسين" }, { name: "متوسطة قوني محمد الطيب – سيدي عامر تماسين" }, { name: "متوسطة معركة قرداش – بلدة عمر" }, { name: "متوسطة محمد الصديق بن يحي – حي الكدية تماسين" }, { name: "متوسطة بركة عبد الرزاق – قوق بلدة عمر" }, { name: "متوسطة بدودة السايح – تملاحت تماسين" }, { name: "متوسطة علي بن باديس – قوق بلدة عمر" }], "ثانوي": [{ name: "ثانوية مفدي زكريا – تماسين" }, { name: "ثانوية العيد بن الصحراوي – بلدة عمر" }, { name: "ثانوية قويدري محمد العيد – تماسين" }, { name: "ثانوية تجيني محمد لخضر – بلدة عمر" }, { name: "ثانوية مالك بن نبي – قوق" }] } };
+
+// متغيرات عامة
+let isEditMode = false;
+let currentOriginalChildName = ""; // لحفظ الاسم لتحديث السجل المناسب
+
+// دالة العودة للواجهة الرئيسية (تسجيل خروج)
+function logout() {
+    location.reload();
+}
+
+/* ==========================================
+   2. بناء الاستمارة ولـوحة التحكم (Templates)
+   ========================================== */
+function buildLoanFormTemplate({ title, personData, buttonText }) {
+  const competitionTitle = "تسجيل أبناء القطاع - مسابقة القرآن الكريم";
+
+  let daairaOptions = '<option value="">-- اختر الدائرة --</option>';
+  Object.keys(baladiyaMap).forEach(d => {
+      const selected = personData.daira === d ? 'selected' : '';
+      daairaOptions += `<option value="${d}" ${selected}>${d}</option>`;
+  });
+
+  return `
+    <h2 class="gradient-title">${competitionTitle}</h2>
+
+    <div class="section-box employee-box">
+      <div class="section-title"><i class="fa-solid fa-user-tie"></i> معلومات الموظف (ولي الأمر)</div>
+      
+      <div class="row">
+        <div class="col">
+          <label>رقم التعريف</label>
+          <input type="text" id="empIdField" value="${escapeHtml(personData.empId || '')}" readonly>
+        </div>
+        <div class="col">
+           <label>الاسم الكامل</label>
+           <input type="text" id="nameField" value="${escapeHtml(personData.name || '')}" readonly>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+           <label>الرتبة</label>
+           <input type="text" id="gradeField" value="${escapeHtml(personData.grade || '')}" readonly>
+        </div>
+        <div class="col">
+           <label>مكان العمل</label>
+           <input type="text" id="placeField" value="${escapeHtml(personData.place || '')}" readonly>
+        </div>
+      </div>
+      
+      <div class="row"> 
+         <div class="col">
+            <label>دائرة الإقامة</label>
+            <select id="empDaaira" onchange="updateEmpBaladiya()">
+               ${daairaOptions}
+            </select>
+         </div>
+         <div class="col">
+            <label>بلدية الإقامة</label>
+            <select id="empBaladiya">
+               <option value="">-- اختر البلدية --</option>
+               </select>
+         </div>
+      </div>
+
+       <div>
+          <label>رقم الهاتف</label>
+          <input type="text" id="personalPhoneField" value="${escapeHtml(personData.personalPhone || '')}" placeholder="00 00 00 00 00" oninput="formatPhoneSimple(this)" dir="ltr">
+       </div>
+    </div>
+
+    <div class="section-box child-box">
+       <div class="section-title"><i class="fa-solid fa-child"></i> معلومات المشارك (الإبن / الإبنة)</div>
+
+       <div>
+          <label>الاسم الكامل (باللغة العربية فقط)</label>
+          <input type="text" id="childFullNameField" value="${escapeHtml(personData.childFullName || '')}" placeholder="أدخل الاسم واللقب بالعربية" oninput="validateArabicOnly(this)">
+       </div>
+
+       <div>
+         <label>تاريخ ميلاد الإبن</label>
+         <div class="pro-date-picker">
+           <select id="childDay" onchange="updateHiddenDate('child')"><option value="">اليوم</option></select>
+           <select id="childMonth" onchange="updateDays('child')"><option value="">الشهر</option></select>
+           <select id="childYear" onchange="updateDays('child')"><option value="">السنة</option></select>
+         </div>
+         <input type="hidden" id="childBirthDateField" value="${escapeHtml(personData.childBirthDate || '')}">
+       </div>
+
+       <div>
+         <label>السن</label>
+         <input type="text" id="childAgeField" value="${escapeHtml(personData.childAge || '')}" readonly placeholder="تلقائي">
+       </div>
+
+       <div>
+         <label>الطور الدراسي</label>
+         <select id="childLevelField" onchange="onChildLevelChange()">
+            <option value="">-- اختر الطور --</option>
+            <option value="ابتدائي">ابتدائي</option>
+            <option value="متوسط">متوسط</option>
+            <option value="ثانوي">ثانوي</option>
+         </select>
+       </div>
+
+       <div class="row">
+          <div class="col">
+            <label>دائرة التمدرس</label>
+            <select id="childDaairaField" onchange="onChildDaairaChange()">
+                <option value="">-- اختر الدائرة --</option>
+                ${ Object.keys(baladiyaMap).map(d => `<option value="${d}">${d}</option>`).join('') }
+            </select>
+          </div>
+          <div class="col">
+             <label>بلدية التمدرس</label>
+             <select id="childBaladiyaField" onchange="onChildBaladiyaChange()">
+                <option value="">-- اختر البلدية --</option>
+             </select>
+          </div>
+       </div>
+
+       <div>
+          <label>المؤسسة التعليمية</label>
+          <select id="childSchoolField">
+             <option value="">-- اختر المؤسسة --</option>
+          </select>
+       </div>
+
+       <div>
+          <label>فئة المشاركة</label>
+          <select id="categoryField">
+            <option value="">-- اختر الفئة --</option>
+             <option value="الفئة الأولى (10 أحزاب على الأقل)">الفئة الأولى (10 أحزاب على الأقل)</option>
+            <option value="الفئة الثانية (20 حزب على الأقل)">الفئة الثانية (20 حزب على الأقل)</option>
+            <option value="الفئة الثالثة (30 حزب على الأقل)">الفئة الثالثة (30 حزب على الأقل)</option>  
+          </select>
+       </div>
+    </div>
+
+    <div class="small-note">يرجى التأكد من صحة المعلومات قبل التسجيل</div>
+    <button id="submitBtn" onclick="submitForm()">${buttonText}</button>
+    <button type="button" onclick="logout()" style="background: #6c757d; margin-top: 10px;">
+      <i class="fa-solid fa-sign-out-alt"></i> خروج / إلغاء
+    </button>
+  `;
+}
+
+// دالة عرض لوحة التحكم (Dashboard) لجميع الأبناء
+function showDashboard(empId, firebaseData, childrenArray) {
+  const container = document.getElementById("mainContainer");
+  
+  let childrenCards = childrenArray.map(child => `
+    <div class="child-box section-box" style="margin-bottom: 15px; border-right: 5px solid #2575fc; padding: 15px; text-align: right;">
+      <h3 style="color: #2575fc; margin-bottom: 10px;">${escapeHtml(child.childFullName)}</h3>
+      <p><strong>الطور:</strong> ${escapeHtml(child.childLevel)} | <strong>الفئة:</strong> ${escapeHtml(child.trip)}</p>
+      <div class="row" style="margin-top: 15px;">
+        <button onclick='editSpecificChild("${empId}", ${JSON.stringify(firebaseData)}, ${JSON.stringify(child)})' style="background: #28a745; margin-top: 0;">تعديل البيانات</button>
+        <button onclick='deleteChild("${empId}", "${escapeHtml(child.childFullName)}")' style="background: #dc3545; margin-top: 0;">حذف التسجيل</button>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <h2 class="gradient-title">الأبناء المسجلين في المسابقة</h2>
+    <div class="section-box employee-box">
+      <div class="section-title"><i class="fa-solid fa-user-tie"></i> ولي الأمر: ${escapeHtml(firebaseData.name)}</div>
+    </div>
+    
+    <div id="childrenList">
+      ${childrenCards}
+    </div>
+    
+    <button onclick='addNewChildToExisting("${empId}", ${JSON.stringify(firebaseData)}, ${JSON.stringify(childrenArray[0])})' style="background: #17a2b8; margin-top: 20px;">
+      <i class="fa-solid fa-plus"></i> إضافة مشارك آخر (ابن جديد)
+    </button>
+    <button onclick='logout()' style="background: #6c757d; margin-top: 10px;">
+      <i class="fa-solid fa-sign-out-alt"></i> تسجيل الخروج
+    </button>
+  `;
+}
+
+/* ==========================================
+   3. دوال المنطق والتحقق (Logic)
+   ========================================== */
+function validateNumber(input) { input.value = input.value.replace(/\D/g, '').slice(0, 16); }
+function validateArabicOnly(input) { input.value = input.value.replace(/[^\u0600-\u06FF\s]/g, ''); }
+function formatPhoneSimple(input) {
+  let value = input.value.replace(/\D/g, '').slice(0, 10);
+  if (value.length > 0) {
+    let formatted = '';
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0 && i % 2 === 0) formatted += ' ';
+      formatted += value[i];
+    }
+    input.value = formatted;
+  } else { input.value = ''; }
+}
+
+function calculateChildAge() {
+  const birthDateField = document.getElementById("childBirthDateField");
+  const ageField = document.getElementById("childAgeField");
+  if (!birthDateField || !ageField) return;
+  const birthDateStr = birthDateField.value;
+  if (!birthDateStr) { ageField.value = ""; return; }
+  try {
+    const birthDate = new Date(birthDateStr);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) { age--; }
+    ageField.value = age >= 0 ? age : "";
+  } catch (error) { ageField.value = ""; }
+}
+
+
+
+function updateCategoryBasedOnLevel() {
+    const level = document.getElementById("childLevelField").value;
+    const categoryField = document.getElementById("categoryField");
+    if (!categoryField) return;
+
+    // تفعيل جميع الخيارات كحالة افتراضية
+    for (let i = 1; i < categoryField.options.length; i++) {
+        categoryField.options[i].disabled = false;
+    }
+
+    if (level === "متوسط") {
+        // تجميد "الفئة الأولى" (الخيار رقم 1)
+        categoryField.options[1].disabled = true;
+        // إفراغ الحقل إذا كان المستخدم قد اختار الخيار المجمد مسبقاً
+        if (categoryField.value === "الفئة الأولى (10 أحزاب على الأقل)") {
+            categoryField.value = "";
+        }
+
+    } else if (level === "ثانوي") {
+        // تجميد "الفئة الأولى" و "الفئة الثانية" (الخيارات 1 و 2)
+        categoryField.options[1].disabled = true;
+        categoryField.options[2].disabled = true;
+        // إفراغ الحقل إذا كان الخيار المختار أصبح مجمداً
+        if (categoryField.value === "الفئة الأولى (10 أحزاب على الأقل)" || 
+            categoryField.value === "الفئة الثانية (20 حزب على الأقل)") {
+            categoryField.value = "";
+        }
+    }
+}
+
+
+
+function updateEmpBaladiya() {
+    const daaira = document.getElementById("empDaaira").value;
+    const baladiyaSelect = document.getElementById("empBaladiya");
+    baladiyaSelect.innerHTML = '<option value="">-- اختر البلدية --</option>';
+    if(daaira && baladiyaMap[daaira]) {
+        baladiyaMap[daaira].forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b; opt.text = b;
+            baladiyaSelect.add(opt);
+        });
+    }
+}
+
+
+// 1. عند تغيير الطور: إرجاع الدائرة للفراغ، وتفريغ البلدية والمؤسسة، وتفريغ الفئة وتحديثها
+function onChildLevelChange() {
+    // إرجاع قيمة الدائرة للفراغ (دون حذف الخيارات)
+    document.getElementById("childDaairaField").value = "";
+    
+    // تفريغ البلدية تماماً
+    document.getElementById("childBaladiyaField").innerHTML = '<option value="">-- اختر البلدية --</option>';
+    
+    // تفريغ المؤسسة تماماً
+    document.getElementById("childSchoolField").innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+
+    // ---> الإضافة الجديدة: تفريغ حقل الفئة وإعادته للحالة الافتراضية <---
+    const categoryField = document.getElementById("categoryField");
+    if (categoryField) {
+        categoryField.value = ""; 
+    }
+
+    // تحديث الفئات المتاحة (تجميد ما يجب تجميده) للقرآن الكريم حسب الطور
+    if (typeof updateCategoryBasedOnLevel === "function") {
+        updateCategoryBasedOnLevel();
+    }
+}
+
+function onChildDaairaChange() {
+    const daaira = document.getElementById("childDaairaField").value;
+    const level = document.getElementById("childLevelField").value;
+    const baladiyaSelect = document.getElementById("childBaladiyaField");
+    const schoolSelect = document.getElementById("childSchoolField");
+
+    baladiyaSelect.innerHTML = '<option value="">-- اختر البلدية --</option>';
+    if (daaira && baladiyaMap[daaira]) {
+        baladiyaMap[daaira].forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b; opt.text = b;
+            baladiyaSelect.add(opt);
+        });
+    }
+
+    schoolSelect.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+    if ((level === "متوسط" || level === "ثانوي") && daaira) {
+        if (window.institutionsByDaaira[daaira] && window.institutionsByDaaira[daaira][level]) {
+            window.institutionsByDaaira[daaira][level].forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.name; opt.text = s.name;
+                schoolSelect.add(opt);
+            });
+        }
+    }
+}
+
+function onChildBaladiyaChange() {
+    const baladiya = document.getElementById("childBaladiyaField").value;
+    const level = document.getElementById("childLevelField").value;
+    const schoolSelect = document.getElementById("childSchoolField");
+
+    if (level === "ابتدائي") {
+        schoolSelect.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+        if (baladiya && window.primarySchoolsByBaladiya[baladiya]) {
+            window.primarySchoolsByBaladiya[baladiya].forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.name; opt.text = s.name;
+                schoolSelect.add(opt);
+            });
+        }
+    }
+}
+function escapeHtml(str){ return String(str || '').replace(/[&<>"'`=\/]/g, s => `&#${s.charCodeAt(0)};`); }
+
+/* ==========================================
+   4. التحقق والتعامل مع البيانات (Firebase / Apps Script)
+   ========================================== */
+
+async function checkEmployee(providedEmpId) {
+  const empIdElement = document.getElementById("empId");
+  const empId = providedEmpId || (empIdElement ? empIdElement.value.trim() : "");
+  
+  if (empId.length < 16) {
+    Swal.fire({ icon: 'warning', title: 'خطأ', text: 'رقم التعريف الوظيفي يجب أن يتكون من 16 رقمًا', allowOutsideClick: false });
+    return;
+  }
+  
+  Swal.fire({ title: 'جاري التحقق...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    const docRef = db.collection("employeescom").doc(empId);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      Swal.close();
+      Swal.fire({ icon: "error", title: "❌ غير موجود", text: "رقم الموظف غير موجود في قاعدة البيانات.", allowOutsideClick: false });
+      return;
+    }
+
+    const data = docSnap.data();
+
+    const params = new URLSearchParams();
+    params.append("action", "check_existing");
+    params.append("empId", empId);
+    params.append("loanType", "exceptional"); 
+
+    const res = await fetch(scriptURL, { method: "POST", body: params });
+    const result = await res.json();
+    Swal.close();
+
+    if (result.result === "exists" && result.data && result.data.length > 0) {
+       showDashboard(empId, data, result.data);
+    } else {
+       showForm(empId, data);
+    }
+  } catch (err) {
+    Swal.close();
+    console.error(err);
+    Swal.fire({ title: "خطأ", text: "حدث خطأ في الاتصال", icon: "error", allowOutsideClick: false });
+  }
+}
+
+function showForm(empId, data) {
+  isEditMode = false;
+  const container = document.getElementById("mainContainer");
+  container.innerHTML = buildLoanFormTemplate({
+    title: "",
+    personData: {
+        empId, name: data.name, grade: data.grade, place: data.place,
+        daira: data.daira, baladiya: data.baladiya, 
+        personalPhone: '', childFullName: '', childBirthDate: '', childAge: ''
+    },
+    buttonText: "تسجيل"
+  });
+
+  populateDateSelects();
+  if(data.daira) {
+      document.getElementById("empDaaira").value = data.daira;
+      updateEmpBaladiya();
+      document.getElementById("empBaladiya").value = data.baladiya;
+  }
+}
+
+function showEditForm(empId, firebaseData, existingData, mode = "edit") {
+  isEditMode = (mode === "edit");
+  const container = document.getElementById("mainContainer");
+  
+  container.innerHTML = buildLoanFormTemplate({
+    title: "",
+    personData: {
+      empId, name: firebaseData.name, grade: firebaseData.grade, place: firebaseData.place,
+      daira: existingData.daira || firebaseData.daira,
+      baladiya: existingData.baladiya || firebaseData.baladiya,
+      personalPhone: existingData.personalPhone || '',
+      childFullName: existingData.childFullName || '',
+      childBirthDate: existingData.childBirthDate || '',
+      childAge: existingData.childAge || ''
+    },
+    buttonText: isEditMode ? "حفظ التعديلات" : "تسجيل المشارك الجديد"
+  });
+
+  populateDateSelects();
+
+  setTimeout(() => {
+     if(existingData.childBirthDate) setDateSelects(existingData.childBirthDate, 'child');
+
+     const empDaairaVal = document.getElementById("empDaaira").value;
+     if(empDaairaVal) {
+         updateEmpBaladiya();
+         const savedEmpBaladiya = existingData.baladiya || firebaseData.baladiya;
+         if(savedEmpBaladiya) document.getElementById("empBaladiya").value = savedEmpBaladiya;
+     }
+
+     if(existingData.childLevel) {
+         document.getElementById("childLevelField").value = existingData.childLevel;
+         updateCategoryBasedOnLevel();
+
+         if(existingData.childDaaira) {
+             document.getElementById("childDaairaField").value = existingData.childDaaira;
+             onChildDaairaChange(); 
+             if(existingData.childBaladiya) {
+                 document.getElementById("childBaladiyaField").value = existingData.childBaladiya;
+                 if(existingData.childLevel === "ابتدائي") onChildBaladiyaChange();
+             }
+             if(existingData.schoolName) document.getElementById("childSchoolField").value = existingData.schoolName;
+         }
+     }
+     if(existingData.trip) document.getElementById("categoryField").value = existingData.trip;
+  }, 300);
+}
+
+// دالة حذف ابن
+function deleteChild(empId, childFullName) {
+  Swal.fire({
+    title: 'هل أنت متأكد؟',
+    text: `سيتم حذف تسجيل الابن "${childFullName}" نهائياً.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، احذف',
+    cancelButtonText: 'إلغاء',
+    allowOutsideClick: false
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      Swal.fire({ title: 'جاري الحذف...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const params = new URLSearchParams();
+      params.append("action", "delete");
+      params.append("empId", empId);
+      params.append("childFullName", childFullName);
+      
+      try {
+        const res = await fetch(scriptURL, { method: "POST", body: params });
+        const data = await res.json();
+        
+        if (data.result === "success") {
+          Swal.fire({ title: 'تم الحذف!', icon: 'success', allowOutsideClick: false }).then(() => {
+            checkEmployee(empId); 
+          });
+        } else {
+          Swal.fire({ title: 'خطأ', text: data.message, icon: 'error', allowOutsideClick: false });
+        }
+      } catch (e) {
+        Swal.fire({ title: "خطأ", text: "فشل الاتصال بالخادم", icon: "error", allowOutsideClick: false });
+      }
+    }
+  });
+}
+
+// دالة التعديل لابن محدد
+function editSpecificChild(empId, firebaseData, childData) {
+  currentOriginalChildName = childData.childFullName;
+  showEditForm(empId, firebaseData, childData, "edit");
+}
+
+// دالة إضافة ابن جديد لولي مسجل مسبقاً
+function addNewChildToExisting(empId, firebaseData, existingDataTemplate) {
+  const newData = { ...existingDataTemplate }; 
+  newData.childFullName = '';
+  newData.childBirthDate = '';
+  newData.childAge = '';
+  newData.childLevel = '';
+  newData.childDaaira = '';
+  newData.childBaladiya = '';
+  newData.schoolName = '';
+  newData.trip = '';
+  
+  showEditForm(empId, firebaseData, newData, "register");
+}
+
+/* ==========================================
+   5. الإرسال (Submit) 
+   ========================================== */
+async function submitForm() {
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+
+  const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
+  
+  const empId = getVal("empIdField");
+  const name = getVal("nameField");
+  const grade = getVal("gradeField");
+  const place = getVal("placeField");
+  const empDaaira = getVal("empDaaira");
+  const empBaladiya = getVal("empBaladiya");
+  const personalPhone = getVal("personalPhoneField");
+  
+  const childName = getVal("childFullNameField");
+  const childDate = getVal("childBirthDateField"); 
+  const childAge = getVal("childAgeField");
+  const childLevel = getVal("childLevelField");
+  const childDaaira = getVal("childDaairaField");
+  const childBaladiya = getVal("childBaladiyaField");
+  const schoolName = getVal("childSchoolField");
+  const category = getVal("categoryField");
+
+  if(!empDaaira || !empBaladiya || !childName || !childDate || !childLevel || !childDaaira || !childBaladiya || !schoolName || !category || !personalPhone) {
+      Swal.fire({
+          icon: 'warning',
+          title: 'تنبيه',
+          text: 'جميع الحقول إجبارية.',
+          allowOutsideClick: false
+      });
+      submitBtn.disabled = false;
+      return;
+  }
+
+  Swal.fire({
+      title: isEditMode ? 'جاري تعديل البيانات...' : 'جاري التسجيل...',
+      allowOutsideClick: false,
+      didOpen: () => {
+          Swal.showLoading();
+      }
+  });
+
+  let formattedChildDate = childDate;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(childDate)) {
+      const [y, m, d] = childDate.split('-');
+      formattedChildDate = `${d}-${m}-${y}`;
+  }
+
+  const params = new URLSearchParams();
+  params.append("action", isEditMode ? "update" : "register");
+  params.append("empId", empId);
+  params.append("loanType", "exceptional");
+  params.append("name", name);
+  params.append("grade", grade);
+  params.append("place", place);
+  params.append("daira", empDaaira);     
+  params.append("baladiya", empBaladiya); 
+  params.append("personalPhone", personalPhone);
+  params.append("childFullName", childName);
+  params.append("childBirthDate", formattedChildDate);
+  params.append("childAge", childAge);
+  params.append("trip", category);         
+  params.append("schoolName", schoolName); 
+  params.append("childLevel", childLevel); 
+  params.append("childDaaira", childDaaira); 
+  params.append("childBaladiya", childBaladiya);
+
+  if(isEditMode) {
+      const now = new Date().toISOString();
+      params.append("modificationDate", now);
+      params.append("originalChildFullName", currentOriginalChildName);
+  }
+
+  try {
+      const res = await fetch(scriptURL, { method: "POST", body: params });
+      const data = await res.json();
+
+      if (data.result === "success") {
+          Swal.fire({
+             title: "تم بنجاح",
+             text: isEditMode ? "تم تعديل البيانات بنجاح" : "تم تسجيل المشارك بنجاح",
+             icon: "success",
+             allowOutsideClick: false,
+             showCancelButton: true,
+             confirmButtonColor: '#28a745',
+             cancelButtonColor: '#17a2b8',
+             confirmButtonText: "حسناً (العودة للرئيسية)",
+             cancelButtonText: "إضافة مشارك جديد"
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  // العودة للوحة التحكم الرئيسية
+                  checkEmployee(empId); 
+              } else {
+                  // فتح استمارة فارغة لتسجيل ابن آخر بنفس بيانات الولي
+                  const tempParentData = {
+                      empId: empId, name: name, grade: grade, place: place,
+                      daira: empDaaira, baladiya: empBaladiya, personalPhone: personalPhone
+                  };
+                  addNewChildToExisting(empId, tempParentData, tempParentData);
+              }
+          });
+      } else {
+          Swal.fire({ title: "خطأ", text: data.message || "حدث خطأ ما", icon: "error", allowOutsideClick: false });
+          submitBtn.disabled = false;
+      }
+  } catch(e) {
+      console.error(e);
+      Swal.fire({ title: "خطأ", text: "فشل الاتصال بالخادم", icon: "error", allowOutsideClick: false });
+      submitBtn.disabled = false;
+  }
+}
+
+/* ==========================================
+   6. ماسح الباركود و التواريخ
+   ========================================== */
+let scanner = null;
+function startBarcodeScanner() {
+    const readerDiv = document.getElementById("reader");
+    const imageInput = document.getElementById("barcodeImage");
+    imageInput.style.display = "block";
+    readerDiv.innerHTML = ""; readerDiv.style.display = "block";
+
+    if (scanner) return;
+    scanner = new Html5Qrcode("reader");
+
+    const config = { fps: 10, qrbox: 250 };
+    const success = (txt) => {
+        if (navigator.vibrate) navigator.vibrate(200);
+        document.getElementById("empId").value = txt;
+        stopScanner();
+        checkEmployee();
+    };
+
+    scanner.start({ facingMode: "environment" }, config, success)
+    .catch(() => {
+        Html5Qrcode.getCameras().then(cams => {
+            if(cams.length) scanner.start(cams[0].id, config, success);
+            else Swal.fire({title: "خطأ", text: "لا توجد كاميرا", icon: "error", allowOutsideClick: false});
+        });
+    });
+
+    imageInput.onchange = (e) => {
+        if(!e.target.files[0]) return;
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.scanFile(e.target.files[0], true)
+        .then(txt => {
+            document.getElementById("empId").value = txt;
+            stopScanner();
+            checkEmployee();
+        }).catch(err => Swal.fire({title: "خطأ", text: "لم يتم التعرف على الكود", icon: "warning", allowOutsideClick: false}));
+    };
+}
+
+function stopScanner() {
+    if(scanner) scanner.stop().then(() => {
+        scanner = null; 
+        document.getElementById("reader").style.display = "none";
+        document.getElementById("barcodeImage").style.display = "none";
+    });
+}
+
+function populateDateSelects() {
+    const monthsNames = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    let monthsHtml = '<option value="">الشهر</option>';
+    monthsNames.forEach((m, i) => { monthsHtml += `<option value="${(i+1).toString().padStart(2,'0')}">${m}</option>`; });
+    
+    let yearsHtml = '<option value="">السنة</option>';
+    for(let i = 2026; i >= 1900; i--) { yearsHtml += `<option value="${i}">${i}</option>`; }
+
+    if(document.getElementById('childMonth')) {
+        document.getElementById('childMonth').innerHTML = monthsHtml;
+        document.getElementById('childYear').innerHTML = yearsHtml;
+        updateDays('child');
+    }
+}
+
+function updateDays(type) {
+    const yearSelect = document.getElementById(type + 'Year');
+    const monthSelect = document.getElementById(type + 'Month');
+    const daySelect = document.getElementById(type + 'Day');
+    
+    const selectedYear = parseInt(yearSelect.value) || 2024;
+    const selectedMonth = parseInt(monthSelect.value) || 1;
+    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+    const currentDay = daySelect.value;
+    daySelect.innerHTML = '<option value="">اليوم</option>';
+    for (let d = 1; d <= daysInMonth; d++) {
+        let val = d.toString().padStart(2, '0');
+        daySelect.innerHTML += `<option value="${val}">${val}</option>`;
+    }
+    if (currentDay && currentDay <= daysInMonth) daySelect.value = currentDay;
+    updateHiddenDate(type);
+}
+
+function updateHiddenDate(type) {
+    const y = document.getElementById(type + 'Year').value;
+    const m = document.getElementById(type + 'Month').value;
+    const d = document.getElementById(type + 'Day').value;
+    let hiddenField = document.getElementById('childBirthDateField');
+    
+    if (y && m && d) {
+        hiddenField.value = `${y}-${m}-${d}`;
+        calculateChildAge();
+    } else {
+        hiddenField.value = "";
+        document.getElementById('childAgeField').value = "";
+    }
+}
+
+function setDateSelects(dateStr, type) {
+    if(!dateStr) return;
+    let parts = dateStr.split('-');
+    if(parts.length === 3) {
+        if(parts[0].length === 4) { // YYYY-MM-DD
+            document.getElementById(type + 'Year').value = parts[0];
+            document.getElementById(type + 'Month').value = parts[1];
+            updateDays(type);
+            document.getElementById(type + 'Day').value = parts[2];
+        } else if(parts[2].length === 4) { // DD-MM-YYYY
+            document.getElementById(type + 'Day').value = parts[0];
+            document.getElementById(type + 'Month').value = parts[1];
+            document.getElementById(type + 'Year').value = parts[2];
+            updateDays(type);
+            document.getElementById(type + 'Day').value = parts[0];
+        }
+        updateHiddenDate(type);
+    }
+}
+</script>
+</body>
+</html>
