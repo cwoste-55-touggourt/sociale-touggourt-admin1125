@@ -861,6 +861,11 @@
       <h3>أبناء القطاع</h3>
     </div>
 
+    <div class="service" id="sectorChildrenQuran" onclick="openOptions('مسابقة القرآن الكريم')" style="display: none;">
+      <i class="fa-solid fa-book-open-reader"></i>
+      <h3>مسابقة القرآن الكريم</h3>
+    </div>
+
     <div class="service" id="campsService" onclick="openOptions('المخيمات')">
       <i class="fa-solid fa-building"></i>
       <h3>المخيمات</h3>
@@ -957,7 +962,8 @@ function openBaseDonne() {
     "السلف الإجتماعية": true,
     "استمارات الخدمات": true,
     "الضوابط العامة": true,
-    "أبناء القطاع": true
+    "أبناء القطاع": true,
+    "مسابقة القرآن الكريم": true
   };
 
    // الخدمات التي تظهر عليها الشارة "جديد"
@@ -967,6 +973,7 @@ function openBaseDonne() {
   "العمرة",
   "المخيمات",
   "أبناء القطاع",
+  "مسابقة القرآن الكريم",
    "إضافة موظف",
    "قاعدة البيانات",
   "النتائج الأوليةللسلف الإجتماعية"
@@ -978,6 +985,7 @@ function openBaseDonne() {
   const showUmrah = true;                    // ✅ العمرة
   const showTrips = true;                   // ✅ الرحلات
   const showSectorChildrenTrips = true;     // ✅ رحلات أبناء القطاع
+  const showSectorChildrenQuran = true;      // ✅ مسابقة القرآن الكريم
   const showCamps = true;                   // ✅ المخيمات
   const showSocialLoans = true;             // ✅ السلف الإجتماعية
   const showServiceForms = true;            // ✅ استمارات الخدمات
@@ -1081,6 +1089,7 @@ if (sessionStorage.getItem("accessGatePassed") === "true") {
       'umrahService': showUmrah,
       'tripsService': showTrips,
       'sectorChildrenTrips': showSectorChildrenTrips,
+       'sectorChildrenQuran': showSectorChildrenQuran,
       'campsService': showCamps,
       'socialLoansService': showSocialLoans,
       'serviceFormsService': showServiceForms,
@@ -1191,6 +1200,24 @@ if (preliminaryService) {
               <span>الموظفون</span>
             </div>
             <div class="icon-btn retired" onclick="showCampsWarning('${serviceType}', 'retired')">
+              <i class="fa-solid fa-user-group"></i>
+              <span>المتقاعدون والأرامل</span>
+            </div>
+          </div>
+        `,
+        showConfirmButton: false
+      });
+    }
+      else if (serviceType === "مسابقة القرآن الكريم") {
+      Swal.fire({
+        title: `اختر الفئة المناسبة للتسجيل في ${serviceType}`,
+        html: `
+          <div class="icon-container">
+            <div class="icon-btn employee" onclick="showSectorChildrenQuranWarning('${serviceType}', 'employees')">
+              <i class="fa-solid fa-user-tie"></i>
+              <span>الموظفون</span>
+            </div>
+            <div class="icon-btn retired" onclick="showSectorChildrenQuranWarning('${serviceType}', 'retired')">
               <i class="fa-solid fa-user-group"></i>
               <span>المتقاعدون والأرامل</span>
             </div>
@@ -1447,6 +1474,78 @@ if (preliminaryService) {
     });
   }
 
+   function showSectorChildrenQuranWarning(serviceType, category) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'تنبيه مهم - مسابقة القرآن الكريم',
+      html: `
+        <div class="housing-alert">
+          <div class="alert-header">
+            <div class="alert-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <h4>تنبيه خاص بمسابقة القرآن الكريم لفائدة أبناء القطاع</h4>
+              <p>يرجى قراءة الشروط التالية بعناية قبل المتابعة</p>
+            </div>
+          </div>
+          <ul class="alert-points">
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              تُبرمج مسابقة القرآن الكريم الرمضانية لفائدة أبناء القطاع ضمن إطارٍ تنظيميٍّ مُحكم، مؤسَّس على ضوابط دقيقة ومعايير موضوعية واضحة، بما يضمن أعلى درجات الشفافية والانضباط وحسن سير المنافسة.
+            </li>
+            <li>
+              <i class="fa-solid fa-user-slash"></i>
+             يُستبعَد تلقائيًا من المسابقة كلُّ مشارك يتغيب عن مرحلة التصفيات دون عذرٍ مقبول، وذلك حفاظًا على حسن سير المنافسة وضمانًا لمبدأ تكافؤ الفرص بين جميع المشاركين.
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-exclamation"></i>
+              أي تصريح غير صحيح للمعلومات يعتبر إدلاءً بمعلومات مغلوطة ويترتب عنه الإقصاء الفوري ودون إنذار.
+            </li>
+          </ul>
+          <div class="alert-note">
+            <i class="fa-solid fa-shield"></i>
+            <span>الاطلاع على هذه الشروط شرط أساسي قبل المرور إلى استمارة التسجيل.</span>
+          </div>
+          <label class="acknowledge-box">
+            <input type="checkbox" id="sectorChildrenQuranAcknowledged">
+            <span>اطلعت عليه وأتحمل مسؤولية صحة المعلومات التي أصرح بها.</span>
+          </label>
+        </div>
+      `,
+      confirmButtonText: 'متابعة',
+      confirmButtonColor: '#1976d2',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      focusConfirm: false,
+      customClass: {
+        confirmButton: 'cairo-btn highlight-confirm'
+      },
+      didOpen: () => {
+        
+        const checkbox = Swal.getPopup().querySelector('#sectorChildrenQuranAcknowledged');
+        const confirmButton = Swal.getConfirmButton();
+        confirmButton.disabled = true;
+        checkbox.addEventListener('change', () => {
+          confirmButton.disabled = !checkbox.checked;
+        });
+      },
+      preConfirm: () => {
+        const checkbox = Swal.getPopup().querySelector('#sectorChildrenQuranAcknowledged');
+        if (!checkbox || !checkbox.checked) {
+          Swal.showValidationMessage('يجب تأكيد الاطلاع قبل المتابعة');
+          return false;
+        }
+        return true;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        goToPage(serviceType, category);
+      }
+    });
+  }
+
+
   function showCampsWarning(serviceType, category) {
     Swal.fire({
       icon: 'warning',
@@ -1535,6 +1634,10 @@ if (preliminaryService) {
       link = category === 'employees'
         ? 'employe_child_ins_voyage.html'
         : 'retraite_child_ins_voyage.html';
+     } else if (serviceType === 'مسابقة القرآن الكريم') {
+      link = category === 'employees'
+        ? 'employe_child_ins_quran.html'
+        : 'retraite_child_ins_quran.html';
     } else if (serviceType === 'السلف الإجتماعية') {
       if (category === 'housing') {
         Swal.fire({
@@ -2150,6 +2253,7 @@ window.addEmployeeFromIndex = function () {
 
 </body>
 </html>
+
 
 
 
