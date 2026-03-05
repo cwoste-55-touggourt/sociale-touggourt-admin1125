@@ -358,6 +358,17 @@ button {
       </div>
     </div>
 
+    <div class="row">
+      <div class="col">
+        <label for="categoryField">الفئة</label>
+        <select id="categoryField" name="category" required>
+          <option value="">اختر الفئة</option>
+          <option value="ابتدائي">ابتدائي</option>
+          <option value="رابعة متوسط">رابعة متوسط</option>
+          <option value="ثالثة ثانوي">ثالثة ثانوي</option>
+        </select>
+      </div>
+
     <!-- الصف 5: الرحلة -->
     <div class="row">
       <div class="col">
@@ -392,7 +403,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbwAt1FfFVKgH6RXp0H4H90z1v6vebPRYZ7pO2qQb6ETuETbH9xye9kmez2sT0rHv_kgUg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbwCrTHAV5pZbc1q5mlw63yd2u2cn0hs6jnzf2gljhr486u3dkgm2ym0QR6IA4RhRXrguw8J1Vzlg/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -990,6 +1001,17 @@ function showNewForm(phoneDigits) {
         </div>
       </div>
 
+      <div class="row">
+        <div class="col">
+          <label for="categoryField">الفئة</label>
+          <select id="categoryField" name="category" required>
+            <option value="">اختر الفئة</option>
+            <option value="ابتدائي">ابتدائي</option>
+            <option value="رابعة متوسط">رابعة متوسط</option>
+            <option value="ثالثة ثانوي">ثالثة ثانوي</option>
+          </select>
+        </div>
+
       <!-- الصف 7: الرحلة -->
       <div class="row">
         <div class="col">
@@ -1203,6 +1225,17 @@ function showEditForm(phoneDigits, existingData) {
         </div>
       </div>
 
+      <div class="row">
+        <div class="col">
+          <label for="categoryField">الفئة</label>
+          <select id="categoryField" name="category" required>
+            <option value="">اختر الفئة</option>
+            <option value="ابتدائي">ابتدائي</option>
+            <option value="رابعة متوسط">رابعة متوسط</option>
+            <option value="ثالثة ثانوي">ثالثة ثانوي</option>
+          </select>
+        </div>
+
       <!-- الصف 7: الرحلة -->
       <div class="row">
         <div class="col">
@@ -1236,6 +1269,11 @@ function showEditForm(phoneDigits, existingData) {
     setTimeout(() => {
       baladiyaField.value = existingData.baladiya || "";
     }, 100);
+  }
+
+  const categoryField = document.getElementById("categoryField");
+  if (categoryField) {
+    categoryField.value = existingData.category || "";
   }
   
   if (tripField) {
@@ -1821,6 +1859,7 @@ function prepareReceiptData(raw = {}, options = {}) {
     childFullName: normalize(raw.childFullName || raw.childFullNameField),
     childBirthDate: normalize(raw.childBirthDate || raw.childBirthDateField),
     childAge: normalize(raw.childAge || raw.childAgeField),
+    category: normalize(raw.category || raw.categoryField),
     trip: normalize(raw.trip || raw.tripField)
   };
 
@@ -2103,6 +2142,10 @@ function renderReceiptTemplate(data = {}) {
           <td>${safe(data.childAge)}</td>
         </tr>
         <tr>
+          <td class="label">الفئة</td>
+          <td>${safe(data.category)}</td>
+        </tr>
+        <tr>
           <td class="label">الرحلة</td>
           <td>${safe(data.trip)}</td>
         </tr>
@@ -2182,6 +2225,7 @@ async function submitNewForm() {
   const childFullNameField = document.getElementById("childFullNameField");
   const childBirthDateField = document.getElementById("childBirthDateField");
   const childAgeField = document.getElementById("childAgeField");
+  const categoryField = document.getElementById("categoryField");
   const tripField = document.getElementById("tripField");
   
   // حذف المسافات من بداية ونهاية حقل اللقب والاسم
@@ -2197,10 +2241,11 @@ async function submitNewForm() {
   const childFullName = childFullNameField.value.trim();
   const childBirthDate = childBirthDateField.value;
   const childAge = childAgeField.value.trim();
+  const category = categoryField.value.trim();
   const trip = tripField.value.trim();
   
   // التحقق من الحقول المطلوبة
-  if (!lastName || !name || !birthDate || !daira || !baladiya || !childFullName || !childBirthDate || !trip) {
+ if (!lastName || !name || !birthDate || !daira || !baladiya || !childFullName || !childBirthDate || !category || !trip) {
     Swal.fire({
       icon: "warning",
       title: "تنبيه",
@@ -2429,6 +2474,7 @@ async function submitNewForm() {
     const formattedChildBirthDate = childBirthParts ? `${childBirthParts[3]}-${childBirthParts[2]}-${childBirthParts[1]}` : childBirthDate;
     params.append("childBirthDate", formattedChildBirthDate);
     params.append("childAge", childAge);
+    params.append("category", category);
     params.append("trip", trip);
     params.append("loanType", "retirees");
     
@@ -2463,6 +2509,7 @@ async function submitNewForm() {
         childFullName: childFullNameField.value.trim(),
         childBirthDate: childBirthDateField.value,
         childAge: childAgeField.value.trim(),
+        category: categoryField.value.trim(),
         trip: tripField.value.trim()
       };
       

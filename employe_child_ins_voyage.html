@@ -507,7 +507,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbwAt1FfFVKgH6RXp0H4H90z1v6vebPRYZ7pO2qQb6ETuETbH9xye9kmez2sT0rHv_kgUg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbwCrTHAV5pZbc1q5mlw63yd2u2cn0hs6jnzf2gljhr486u3dkgm2ym0QR6IA4RhRXrguw8J1Vzlg/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -686,6 +686,7 @@ Swal.fire({
               <b>الاسم الكامل للإبن:</b> ${d.childFullName || ''}<br>
               <b>تاريخ ميلاد الإبن:</b> ${formatToDayMonthYear(d.childBirthDate || '')}<br>
               <b>السن:</b> ${d.childAge || ''}<br>
+              <b>الفئة:</b> ${d.category || ''}<br>
               <b>الرحلة:</b> ${d.trip || ''}<br>
               <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
             </div>
@@ -1039,6 +1040,16 @@ function buildLoanFormTemplate({ title, personData, buttonText }) {
     </div>
 
     <div>
+      <label for="categoryField">الفئة</label>
+      <select id="categoryField">
+        <option value="">اختر الفئة</option>
+        <option value="ابتدائي">ابتدائي</option>
+        <option value="رابعة متوسط">رابعة متوسط</option>
+        <option value="ثالثة ثانوي">ثالثة ثانوي</option>
+      </select>
+    </div>
+
+    <div>
       <label for="tripField">الرحلة</label>
       <select id="tripField">
         <option value="">اختر الرحلة</option>
@@ -1129,6 +1140,11 @@ function showEditForm(empId, firebaseData, existingData) {
     if (baladiyaField) {
       baladiyaField.value = existingData.baladiya || "";
     }
+
+    const categoryField = document.getElementById("categoryField");
+    if (categoryField) {
+      categoryField.value = existingData.category || "";
+    }     
 
     const tripField = document.getElementById("tripField");
     if (tripField) {
@@ -1661,7 +1677,8 @@ function snapshotFormValues() {
     personalPhone: val("personalPhoneField"),
     childFullName: val("childFullNameField"),
     childBirthDate: val("childBirthDateField"),
-    childAge: val("childAgeField")
+    childAge: val("childAgeField"),
+    category: val("categoryField")
   };
 }
 
@@ -1682,7 +1699,8 @@ function prepareReceiptData(raw = {}, options = {}) {
     personalPhone: normalize(raw.personalPhone || raw.phone || raw.managerPhone),
     childFullName: normalize(raw.childFullName || raw.childFullNameField),
     childBirthDate: normalize(raw.childBirthDate || raw.childBirthDateField),
-    childAge: normalize(raw.childAge || raw.childAgeField)
+    childAge: normalize(raw.childAge || raw.childAgeField),
+    category: normalize(raw.category || raw.categoryField)
   };
 
   data.personalPhone = data.personalPhone ? formatPhoneNumber(data.personalPhone) : "";
@@ -1953,6 +1971,10 @@ function renderReceiptTemplate(data = {}) {
           <td>${safe(data.childAge)}</td>
         </tr>
         <tr>
+          <td class="label">الفئة</td>
+          <td>${safe(data.category)}</td>
+        </tr>
+        <tr>
           <td class="label">الرحلة</td>
           <td>${safe(data.trip)}</td>
         </tr>
@@ -2046,11 +2068,13 @@ async function submitForm() {
   const childFullName = document.getElementById("childFullNameField").value.trim();
   const childBirthDate = document.getElementById("childBirthDateField").value.trim();
   const childAge = document.getElementById("childAgeField").value.trim();
+  const category = document.getElementById("categoryField").value.trim();
 
   const requiredFields = [
     { id: "daairaField", value: daaira },
     { id: "baladiyaField", value: baladiya },
     { id: "tripField", value: trip },
+    { id: "categoryField", value: category },
     { id: "personalPhoneField", value: personalPhone },
     { id: "childFullNameField", value: childFullName },
     { id: "childBirthDateField", value: childBirthDate },
@@ -2091,12 +2115,12 @@ async function submitForm() {
 
   // ✅ التحقق من سن الإبن (يجب أن يكون بين 12 و 18 سنة)
   const childAgeValue = parseInt(childAge);
-  if (isNaN(childAgeValue) || childAgeValue < 12 || childAgeValue > 18) {
+  if (isNaN(childAgeValue) || childAgeValue < 7 || childAgeValue > 18) {
     Swal.close();
     Swal.fire({
       icon: "warning",
       title: "تنبيه",
-      text: "لا يمكن تسجيل الإبن إلا إذا كان سنه بين 12 و 18 سنة",
+      text: "لا يمكن تسجيل الإبن إلا إذا كان سنه بين 7 و 18 سنة",
     });
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
@@ -2170,6 +2194,7 @@ async function submitForm() {
   params.append("childFullName", childFullName);
   params.append("childBirthDate", childBirthDate);
   params.append("childAge", childAge);
+  params.append("category", category);
   
   // ✅ إضافة تاريخ التعديل فقط في وضع التعديل
   if (isEditMode) {
@@ -2248,6 +2273,7 @@ if (data.result === "success") {
         <b>الاسم الكامل للإبن:</b> ${d.childFullName || ''}<br>
         <b>تاريخ ميلاد الإبن:</b> ${formatToDayMonthYear(d.childBirthDate || '')}<br>
         <b>السن:</b> ${d.childAge || ''}<br>
+        <b>الفئة:</b> ${d.category || ''}<br>
         <b>الرحلة:</b> ${d.trip || ''}<br>
         <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
       </div>
