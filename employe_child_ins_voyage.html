@@ -13,11 +13,7 @@
    <script src="https://unpkg.com/html5-qrcode"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<script>
-        if (sessionStorage.getItem("fromIndex") !== "yes") {
-            window.location.href = "index.html";
-        }
-    </script>
+
 
 <style>
 
@@ -507,7 +503,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbwCrTHAV5pZbc1q5mlw63yd2u2cn0hs6jnzf2gljhr486u3dkgm2ym0QR6IA4RhRXrguw8J1Vzlg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycby97v7FqxWtduZI5lJe-DXDaQLhhSq2nRlAZaTmk8ErvRqZ6bsB5cpofKl2dQWMPFPqwg/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
