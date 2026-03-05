@@ -11,11 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-<script>
-        if (sessionStorage.getItem("fromIndex") !== "yes") {
-            window.location.href = "index.html";
-        }
-    </script>
+
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -321,11 +317,11 @@ button {
     <div class="row">
       <div class="col">
         <label for="lastNameField">اللقب</label>
-        <input type="text" id="lastNameField" name="lastName" required>
+        <input type="text" id="lastNameField" name="lastName" required placeholder="أدخل اللقب">
       </div>
       <div class="col">
         <label for="nameField">الاسم</label>
-        <input type="text" id="nameField" name="name" required>
+        <input type="text" id="nameField" name="name" required placeholder="أدخل الاسم">
       </div>
     </div>
 
@@ -358,7 +354,7 @@ button {
       </div>
     </div>
 
-    <div class="row">
+   <div class="row">
       <div class="col">
         <label for="categoryField">الفئة</label>
         <select id="categoryField" name="category" required>
@@ -368,9 +364,6 @@ button {
           <option value="ثالثة ثانوي">ثالثة ثانوي</option>
         </select>
       </div>
-
-    <!-- الصف 5: الرحلة -->
-    <div class="row">
       <div class="col">
         <label for="tripField">الرحلة</label>
         <select id="tripField" name="trip" required>
@@ -382,7 +375,7 @@ button {
         </select>
       </div>
     </div>
-
+ 
     <button type="button" onclick="submitNewForm()">تأكيد التسجيل</button>
   </form>
 </div>
@@ -403,7 +396,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbwCrTHAV5pZbc1q5mlw63yd2u2cn0hs6jnzf2gljhr486u3dkgm2ym0QR6IA4RhRXrguw8J1Vzlg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycby97v7FqxWtduZI5lJe-DXDaQLhhSq2nRlAZaTmk8ErvRqZ6bsB5cpofKl2dQWMPFPqwg/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -944,11 +937,11 @@ function showNewForm(phoneDigits) {
       <div class="row">
         <div class="col">
           <label for="lastNameField">اللقب</label>
-          <input type="text" id="lastNameField" name="lastName" required>
+          <input type="text" id="lastNameField" name="lastName" required placeholder="أدخل اللقب">
         </div>
         <div class="col">
           <label for="nameField">الاسم</label>
-          <input type="text" id="nameField" name="name" required>
+          <input type="text" id="nameField" name="name" required placeholder="أدخل الاسم">
         </div>
       </div>
 
@@ -1011,9 +1004,6 @@ function showNewForm(phoneDigits) {
             <option value="ثالثة ثانوي">ثالثة ثانوي</option>
           </select>
         </div>
-
-      <!-- الصف 7: الرحلة -->
-      <div class="row">
         <div class="col">
           <label for="tripField">الرحلة</label>
           <select id="tripField" name="trip" required>
@@ -1025,7 +1015,7 @@ function showNewForm(phoneDigits) {
           </select>
         </div>
       </div>
-
+ <div class="small-note">تأكد من صحة البيانات قبل الإرسال</div>
       <button type="button" onclick="submitNewForm()">تأكيد التسجيل</button>
     </form>
   `;
@@ -1235,9 +1225,6 @@ function showEditForm(phoneDigits, existingData) {
             <option value="ثالثة ثانوي">ثالثة ثانوي</option>
           </select>
         </div>
-
-      <!-- الصف 7: الرحلة -->
-      <div class="row">
         <div class="col">
           <label for="tripField">الرحلة</label>
           <select id="tripField" name="trip" required>
