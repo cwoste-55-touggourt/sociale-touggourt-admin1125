@@ -335,6 +335,21 @@ button {
   direction: ltr;
 }
 
+
+/* --- تنسيقات الصناديق --- */
+.section-box { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: right; }
+.employee-box { background-color: #f9f9f9; border: 1px solid #eee; }
+.employee-box .section-title { color: #555; border-bottom: 1px solid #ddd; }
+.child-box { border: 2px solid #2575fc; box-shadow: 0 4px 12px rgba(37, 117, 252, 0.08); }
+.child-box .section-title { color: #2575fc; border-bottom: 1px solid #2575fc; }
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+
+/* --- تنسيق عجلة التاريخ الاحترافية --- */
+.pro-date-picker { display: flex; flex-direction: row; gap: 5px; background-color: #fff; border: 2px solid #e0e0e0; border-radius: 8px; padding: 2px; margin-bottom: 12px; transition: all 0.3s ease; }
+.pro-date-picker:focus-within { border-color: #2575fc; box-shadow: 0 0 8px rgba(37, 117, 252, 0.2); }
+.pro-date-picker select { flex: 1; border: none; background: transparent; margin-bottom: 0; padding: 10px 2px; font-size: 14px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: left 5px center; background-size: 10px; }
+.pro-date-picker select:not(:last-child) { border-left: 1px solid #eee; }
+
   </style>
 </head>
 
@@ -503,7 +518,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const scriptURL = "https://script.google.com/macros/s/AKfycby97v7FqxWtduZI5lJe-DXDaQLhhSq2nRlAZaTmk8ErvRqZ6bsB5cpofKl2dQWMPFPqwg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbxFdRepSCndlXxJjf9Sq7ULSMZthVjPkjShTEEaPUjhsAySxw5vTAtQQ_iF4xsUeb5uxA/exec";
 
 // يمكن تعديل بيانات الشعار والوصل من هذا الكائن بحسب متطلبات اللجنة
 const receiptBranding = {
@@ -667,11 +682,10 @@ Swal.fire({
         const dualSectorLine = isFamilyStatusRequiringChildren
           ? `<b>ثنائي القطاع:</b> ${d.dualSector || ''}<br>`
           : "";
-
-        Swal.fire({
+Swal.fire({
           title: "⚠️ التسجيل موجود مسبقًا",
           html: `
-            <div style="text-align:right;direction:rtl;font-family:'Cairo',sans-serif;">
+            <div style="text-align:right;direction:rtl;font-family:'Cairo',sans-serif; line-height: 1.8;">
               <b>رقم التعريف:</b> ${d.empId || ''}<br>
               <b>الاسم واللقب:</b> ${d.name || ''}<br>
               <b>الرتبة:</b> ${d.grade || ''}<br>
@@ -679,11 +693,17 @@ Swal.fire({
               <b>دائرة العمل:</b> ${d.daira || ''}<br>
               <b>بلدية العمل:</b> ${d.baladiya || ''}<br>
               <b>رقم الهاتف:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatPhoneNumber(d.personalPhone || '')}</span><br>
+              <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
               <b>الاسم الكامل للإبن:</b> ${d.childFullName || ''}<br>
               <b>تاريخ ميلاد الإبن:</b> ${formatToDayMonthYear(d.childBirthDate || '')}<br>
-              <b>السن:</b> ${d.childAge || ''}<br>
-              <b>الفئة:</b> ${d.category || ''}<br>
+              <b>الحالة (يتيم):</b> ${d.isOrphan || ''}<br>
+              <b>دائرة التمدرس:</b> ${d.childDaaira || ''}<br>
+              <b>بلدية التمدرس:</b> ${d.childBaladiya || ''}<br>
+              <b>المستوى الدراسي:</b> ${d.category || ''}<br>
+              <b>مؤسسة الدراسة:</b> ${d.schoolName || ''}<br>
+              <b>معدل الفصل الأول:</b> ${d.childAge || ''}<br>
               <b>الرحلة:</b> ${d.trip || ''}<br>
+              <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
               <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
             </div>
             <button type="button" class="receipt-download-btn" id="existingReceiptBtn">تحميل وصل التسجيل</button>`,
@@ -975,85 +995,109 @@ function buildLoanFormTemplate({ title, personData, buttonText }) {
   return `
     <h2 style="margin-bottom:12px;">${title}</h2>
 
-    <div>
-      <label for="empIdField">رقم التعريف</label>
-      <input type="text" id="empIdField" value="${escapeHtml(personData.empId || '')}" readonly>
-    </div>
-
-    <div>
-      <label for="nameField">الاسم الكامل</label>
-      <input type="text" id="nameField" value="${escapeHtml(personData.name || '')}" readonly>
-    </div>
-
-    <div>
-      <label for="gradeField">الرتبة</label>
-      <input type="text" id="gradeField" value="${escapeHtml(personData.grade || '')}" readonly>
-    </div>
-
-    <div>
-      <label for="placeField">مكان العمل</label>
-      <input type="text" id="placeField" value="${escapeHtml(personData.place || '')}" readonly>
-    </div>
-
-    <div>
-      <label for="daairaField">دائرة العمل</label>
-      <select id="daairaField">
-        <option value="">اختر الدائرة</option>
-        <option value="توقرت">توقرت</option>
-        <option value="تماسين">تماسين</option>
-        <option value="المقارين">المقارين</option>
-        <option value="الحجيرة">الحجيرة</option>
-        <option value="الطيبات">الطيبات</option>
-      </select>
-    </div>
-
-    <div>
-      <label for="baladiyaField">بلدية العمل</label>
-      <select id="baladiyaField">
-        <option value="">اختر البلدية</option>
-      </select>
-    </div>
-
-    <div>
-      <label for="personalPhoneField">رقم الهاتف</label>
-      <input type="text" id="personalPhoneField" value="${escapeHtml(personData.personalPhone || '')}" placeholder="00 00 00 00 00" oninput="formatPhoneSimple(this)" dir="ltr">
-    </div>
-
-    <div>
-      <label for="childFullNameField">الاسم الكامل للإبن</label>
-      <input type="text" id="childFullNameField" value="${escapeHtml(personData.childFullName || '')}" placeholder="أدخل الاسم الكامل للإبن">
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label for="childBirthDateField">تاريخ ميلاد الإبن</label>
-        <input type="date" id="childBirthDateField" value="${escapeHtml(personData.childBirthDate || '')}" onchange="calculateChildAge()">
+    <div class="section-box employee-box">
+      <div class="section-title"><i class="fa-solid fa-user-tie"></i> معلومات الموظف</div>
+      <div class="row">
+        <div class="col"><label>رقم التعريف</label><input type="text" id="empIdField" value="${escapeHtml(personData.empId || '')}" readonly></div>
+        <div class="col"><label>الاسم الكامل</label><input type="text" id="nameField" value="${escapeHtml(personData.name || '')}" readonly></div>
       </div>
-      <div class="col">
-        <label for="childAgeField">السن</label>
-        <input type="text" id="childAgeField" value="${escapeHtml(personData.childAge || '')}" readonly placeholder="سيظهر تلقائياً">
+      <div class="row">
+        <div class="col"><label>الرتبة</label><input type="text" id="gradeField" value="${escapeHtml(personData.grade || '')}" readonly></div>
+        <div class="col"><label>مكان العمل</label><input type="text" id="placeField" value="${escapeHtml(personData.place || '')}" readonly></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>دائرة العمل</label>
+          <select id="daairaField">
+            <option value="">اختر الدائرة</option>
+            <option value="توقرت">توقرت</option><option value="تماسين">تماسين</option>
+            <option value="المقارين">المقارين</option><option value="الحجيرة">الحجيرة</option>
+            <option value="الطيبات">الطيبات</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>بلدية العمل</label>
+          <select id="baladiyaField"><option value="">اختر البلدية</option></select>
+        </div>
+      </div>
+      <div>
+        <label>رقم الهاتف</label>
+        <input type="text" id="personalPhoneField" value="${escapeHtml(personData.personalPhone || '')}" placeholder="00 00 00 00 00" oninput="formatPhoneSimple(this)" dir="ltr">
       </div>
     </div>
 
-    <div>
-      <label for="categoryField">الفئة</label>
-      <select id="categoryField">
-        <option value="">اختر الفئة</option>
-        <option value="ابتدائي">ابتدائي</option>
-        <option value="رابعة متوسط">رابعة متوسط</option>
-        <option value="ثالثة ثانوي">ثالثة ثانوي</option>
-      </select>
-    </div>
+   <div class="section-box child-box">
+      <div class="section-title"><i class="fa-solid fa-plane"></i> معلومات الإبن (المشارك في قرعة الرحلة)</div>
+      
+      <div>
+        <label>اسم ولقب الإبن(ة)</label>
+        <input type="text" id="childFullNameField" value="${escapeHtml(personData.childFullName || '')}" placeholder="أدخل الاسم واللقب بالعربية" oninput="validateArabicOnly(this)">
+      </div>
 
-    <div>
-      <label for="tripField">الرحلة</label>
-      <select id="tripField">
-        <option value="">اختر الرحلة</option>
-        <option value="تونس">تونس</option>
-        <option value="قالمة">قالمة</option>
-        <option value="سطيف">سطيف</option>
-        <option value="تمنراست">تمنراست</option>
-      </select>
+      <div>
+         <label>تاريخ ميلاد الإبن</label>
+         <div class="pro-date-picker">
+           <select id="childDay" onchange="updateHiddenDate('child')"><option value="">اليوم</option></select>
+           <select id="childMonth" onchange="updateDays('child')"><option value="">الشهر</option></select>
+           <select id="childYear" onchange="updateDays('child')"><option value="">السنة</option></select>
+         </div>
+         <input type="hidden" id="childBirthDateField" value="${escapeHtml(personData.childBirthDate || '')}">
+      </div>
+
+      <div>
+         <label>الحالة (يتيم)</label>
+         <select id="isOrphanField">
+            <option value="" disabled ${!personData.isOrphan ? 'selected' : ''}>-- اختر نعم أو لا --</option>
+            <option value="لا" ${personData.isOrphan === 'لا' ? 'selected' : ''}>لا</option>
+            <option value="نعم" ${personData.isOrphan === 'نعم' ? 'selected' : ''}>نعم</option>
+         </select>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>دائرة التمدرس</label>
+          <select id="childDaairaField" onchange="onChildDaairaChange()">
+              <option value="">اختر الدائرة</option>
+              <option value="توقرت">توقرت</option><option value="تماسين">تماسين</option>
+              <option value="المقارين">المقارين</option><option value="الحجيرة">الحجيرة</option>
+              <option value="الطيبات">الطيبات</option>
+          </select>
+        </div>
+        <div class="col">
+           <label>بلدية التمدرس</label>
+           <select id="childBaladiyaField"><option value="">اختر البلدية</option></select>
+        </div>
+      </div>
+
+      <div>
+        <label>المستوى الدراسي</label>
+        <select id="categoryField" onchange="onChildLevelChange()">
+          <option value="">-- اختر المستوى --</option>
+          <option value="رابعة متوسط" ${personData.category === 'رابعة متوسط' ? 'selected' : ''}>رابعة متوسط</option>
+          <option value="ثالثة ثانوي" ${personData.category === 'ثالثة ثانوي' ? 'selected' : ''}>ثالثة ثانوي</option>
+        </select>
+      </div>
+
+      <div>
+        <label>مؤسسة التمدرس</label>
+        <select id="childSchoolField"><option value="">يرجى اختيار الدائرة والمستوى</option></select>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>معدل الفصل الأول</label>
+          <input type="number" step="0.01" min="10" max="20" id="childAgeField" value="${escapeHtml(personData.childAge || '')}" placeholder="مثال: 15.50">
+        </div>
+        
+      <div class="col">
+          <label>الرحلة</label>
+          <select id="tripField">
+            <option value="" disabled ${!personData.trip ? 'selected' : ''}>-- اختر الرحلة --</option>
+            <option value="الجزائر العاصمة" ${personData.trip === 'الجزائر العاصمة' ? 'selected' : ''}>الجزائر العاصمة</option>
+          </select>
+        </div>
+
+      </div>
     </div>
 
     <div class="small-note">تأكد من صحة البيانات قبل الإرسال</div>
@@ -1070,21 +1114,16 @@ function showForm(empId, data) {
   const container = document.getElementById("mainContainer");
   container.innerHTML = buildLoanFormTemplate({
     title: "استمارة تسجيل أبناء القطاع (الموظفين) في الرحلات",
-      personData: {
-        empId,
-        name: data.name || '',
-        grade: data.grade || '',
-        place: data.place || '',
-        trip: '',
-        personalPhone: '',
-        childFullName: '',
-        childBirthDate: '',
-        childAge: ''
+    personData: {
+        empId, name: data.name || '', grade: data.grade || '', place: data.place || '',
+        trip: '', personalPhone: '', childFullName: '', childBirthDate: '',
+        childAge: '', isOrphan: '', category: ''
       },
     buttonText: "تسجيل"
   });
 
   initializeForm();
+  populateDateSelects();
 }
 
 // دالة لتهيئة الاستمارة
@@ -1101,6 +1140,7 @@ function initializeForm() {
 }
 
 // دالة لعرض الاستمارة في وضع التعديل
+// دالة لعرض الاستمارة في وضع التعديل
 function showEditForm(empId, firebaseData, existingData) {
   isEditMode = true;
   // حفظ تاريخ التسجيل الأصلي وتاريخ التعديل الأصلي
@@ -1110,69 +1150,68 @@ function showEditForm(empId, firebaseData, existingData) {
   container.innerHTML = buildLoanFormTemplate({
     title: "تعديل بيانات التسجيل في الرحلات",
     personData: {
-      empId,
-      name: firebaseData.name || '',
-      grade: firebaseData.grade || '',
-      place: firebaseData.place || '',
-      trip: existingData.trip || '',
-      personalPhone: existingData.personalPhone ? formatPhoneNumber(existingData.personalPhone) : '',
-      childFullName: existingData.childFullName || '',
-      childBirthDate: existingData.childBirthDate || '',
-      childAge: existingData.childAge || ''
+      empId, name: firebaseData.name || '', grade: firebaseData.grade || '', place: firebaseData.place || '',
+      trip: existingData.trip || '', personalPhone: existingData.personalPhone ? formatPhoneNumber(existingData.personalPhone) : '',
+      childFullName: existingData.childFullName || '', childBirthDate: existingData.childBirthDate || '',
+      childAge: existingData.childAge || '', isOrphan: existingData.isOrphan || '', category: existingData.category || ''
     },
     buttonText: "حفظ التعديلات"
   });
 
   initializeForm();
+  populateDateSelects();
 
-  setTimeout(() => {
+ setTimeout(() => {
+    // 1. ملء دائرة وبلدية العمل (الموظف)
     const daairaField = document.getElementById("daairaField");
     if (daairaField) {
-      daairaField.value = existingData.daira || "";
-      updateBaladiya(existingData.baladiya || "");
+      daairaField.value = existingData.daira ? String(existingData.daira).trim() : "";
+      daairaField.addEventListener("change", () => updateBaladiya());
+      updateBaladiya(existingData.baladiya ? String(existingData.baladiya).trim() : "");
     }
-
+    
     const baladiyaField = document.getElementById("baladiyaField");
-    if (baladiyaField) {
-      baladiyaField.value = existingData.baladiya || "";
-    }
+    if (baladiyaField) baladiyaField.value = existingData.baladiya ? String(existingData.baladiya).trim() : "";
 
+    // 2. ملء الفئة والرحلة ومعدل الفصل والحالة يتيم
     const categoryField = document.getElementById("categoryField");
-    if (categoryField) {
-      categoryField.value = existingData.category || "";
-    }     
-
+    if (categoryField) categoryField.value = existingData.category ? String(existingData.category).trim() : "";
+    
     const tripField = document.getElementById("tripField");
-    if (tripField) {
-      tripField.value = existingData.trip || "";
-    }
+    if (tripField) tripField.value = existingData.trip ? String(existingData.trip).trim() : "";
 
+    const childAgeField = document.getElementById("childAgeField");
+    if (childAgeField) childAgeField.value = existingData.childAge ? String(existingData.childAge).trim() : "";
+
+    const isOrphanField = document.getElementById("isOrphanField");
+    if (isOrphanField) isOrphanField.value = existingData.isOrphan ? String(existingData.isOrphan).trim() : "لا";
+
+    // 3. ملء اسم الإبن
     const childFullNameField = document.getElementById("childFullNameField");
     if (childFullNameField) {
       childFullNameField.value = existingData.childFullName || "";
     }
 
-    const childBirthDateField = document.getElementById("childBirthDateField");
-    if (childBirthDateField) {
-      // تحويل تاريخ الميلاد من صيغة dd-MM-yyyy إلى yyyy-MM-dd
-      const birthDate = existingData.childBirthDate || "";
-      if (birthDate) {
-        const parts = birthDate.split("-");
-        if (parts.length === 3) {
-          // إذا كان بصيغة dd-MM-yyyy
-          childBirthDateField.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        } else {
-          childBirthDateField.value = birthDate;
-        }
-      }
-      calculateChildAge();
-    }
+    // 4. استرجاع تاريخ ميلاد الإبن
+    const birthDate = existingData.childBirthDate || "";
+    if (birthDate) setDateSelects(birthDate, 'child');
 
-    const childAgeField = document.getElementById("childAgeField");
-    if (childAgeField) {
-      childAgeField.value = existingData.childAge || "";
+    // 5. استرجاع دائرة وبلدية ومؤسسة تمدرس الإبن
+    const childDaairaField = document.getElementById("childDaairaField");
+    if (childDaairaField && existingData.childDaaira) {
+        childDaairaField.value = String(existingData.childDaaira).trim();
+        onChildDaairaChange(); // يقوم بتحديث قائمة البلديات والمدارس بناءً على الدائرة
+        
+        const childBaladiyaField = document.getElementById("childBaladiyaField");
+        if (childBaladiyaField && existingData.childBaladiya) {
+            childBaladiyaField.value = String(existingData.childBaladiya).trim();
+        }
     }
-  }, 100);
+    
+   
+    updateChildSchools(existingData.schoolName ? String(existingData.schoolName).trim() : "");
+
+  }, 300); 
 }
 
 /* عند تغيير الطور أو الدائرة - تحديث سلوك اسم المؤسسة والقوائم */
@@ -1476,6 +1515,90 @@ function updateBaladiya(selectedBaladiya = "") {
   }
 }
 
+function validateArabicOnly(input) { input.value = input.value.replace(/[^\u0600-\u06FF\s]/g, ''); }
+
+function populateDateSelects() {
+    const monthsNames = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    let monthsHtml = '<option value="">الشهر</option>';
+    monthsNames.forEach((m, i) => { monthsHtml += `<option value="${(i+1).toString().padStart(2,'0')}">${m}</option>`; });
+    let yearsHtml = '<option value="">السنة</option>';
+    for(let i = 2026; i >= 2005; i--) { yearsHtml += `<option value="${i}">${i}</option>`; }
+    if(document.getElementById('childMonth')) {
+        document.getElementById('childMonth').innerHTML = monthsHtml;
+        document.getElementById('childYear').innerHTML = yearsHtml;
+        updateDays('child');
+    }
+}
+
+function updateDays(type) {
+    const yearSelect = document.getElementById(type + 'Year');
+    const monthSelect = document.getElementById(type + 'Month');
+    const daySelect = document.getElementById(type + 'Day');
+    const selectedYear = parseInt(yearSelect.value) || 2024;
+    const selectedMonth = parseInt(monthSelect.value) || 1;
+    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    const currentDay = daySelect.value;
+    daySelect.innerHTML = '<option value="">اليوم</option>';
+    for (let d = 1; d <= daysInMonth; d++) {
+        let val = d.toString().padStart(2, '0');
+        daySelect.innerHTML += `<option value="${val}">${val}</option>`;
+    }
+    if (currentDay && currentDay <= daysInMonth) daySelect.value = currentDay;
+    updateHiddenDate(type);
+}
+
+function updateHiddenDate(type) {
+    const y = document.getElementById(type + 'Year').value;
+    const m = document.getElementById(type + 'Month').value;
+    const d = document.getElementById(type + 'Day').value;
+    let hiddenField = document.getElementById('childBirthDateField');
+    if (y && m && d) { hiddenField.value = `${y}-${m}-${d}`; } else { hiddenField.value = ""; }
+}
+
+function setDateSelects(dateStr, type) {
+    if(!dateStr) return;
+    let parts = dateStr.split('-');
+    if(parts.length === 3) {
+        if(parts[0].length === 4) { 
+            document.getElementById(type + 'Year').value = parts[0]; document.getElementById(type + 'Month').value = parts[1]; updateDays(type); document.getElementById(type + 'Day').value = parts[2];
+        } else if(parts[2].length === 4) { 
+            document.getElementById(type + 'Day').value = parts[0]; document.getElementById(type + 'Month').value = parts[1]; document.getElementById(type + 'Year').value = parts[2]; updateDays(type); document.getElementById(type + 'Day').value = parts[0];
+        }
+        updateHiddenDate(type);
+    }
+}
+
+function onChildDaairaChange() {
+    const daaira = document.getElementById("childDaairaField").value;
+    const baladiyaSelect = document.getElementById("childBaladiyaField");
+    baladiyaSelect.innerHTML = '<option value="">اختر البلدية</option>';
+    if (daaira && window.baladiyaMap[daaira]) {
+        window.baladiyaMap[daaira].forEach(b => {
+            const opt = document.createElement("option"); opt.value = b; opt.text = b; baladiyaSelect.add(opt);
+        });
+    }
+    updateChildSchools();
+}
+
+function onChildLevelChange() { updateChildSchools(); }
+
+function updateChildSchools(savedSchool = "") {
+    const daaira = document.getElementById("childDaairaField") ? document.getElementById("childDaairaField").value : "";
+    const levelField = document.getElementById("categoryField") ? document.getElementById("categoryField").value : "";
+    const schoolSelect = document.getElementById("childSchoolField");
+    if(!schoolSelect) return;
+    schoolSelect.innerHTML = '<option value="">اختر المؤسسة</option>';
+    if (!levelField || !daaira) return;
+    let mappedLevel = levelField.includes("متوسط") ? "متوسط" : "ثانوي";
+    if (window.institutionsByDaaira && window.institutionsByDaaira[daaira] && window.institutionsByDaaira[daaira][mappedLevel]) {
+        window.institutionsByDaaira[daaira][mappedLevel].forEach(s => {
+            const opt = document.createElement("option"); opt.value = s.name; opt.text = s.name; schoolSelect.add(opt);
+        });
+    }
+    if(savedSchool) schoolSelect.value = savedSchool;
+}
+
+
 // دالة لحساب السن تلقائياً من تاريخ الميلاد
 function calculateChildAge() {
   const birthDateField = document.getElementById("childBirthDateField");
@@ -1674,6 +1797,10 @@ function snapshotFormValues() {
     childFullName: val("childFullNameField"),
     childBirthDate: val("childBirthDateField"),
     childAge: val("childAgeField"),
+    childDaaira: val("childDaairaField"),
+    childBaladiya: val("childBaladiyaField"),
+    schoolName: val("childSchoolField"),
+    isOrphan: val("isOrphanField"),
     category: val("categoryField")
   };
 }
@@ -1696,6 +1823,10 @@ function prepareReceiptData(raw = {}, options = {}) {
     childFullName: normalize(raw.childFullName || raw.childFullNameField),
     childBirthDate: normalize(raw.childBirthDate || raw.childBirthDateField),
     childAge: normalize(raw.childAge || raw.childAgeField),
+    childDaaira: normalize(raw.childDaaira || raw.childDaairaField),
+    childBaladiya: normalize(raw.childBaladiya || raw.childBaladiyaField),
+    schoolName: normalize(raw.schoolName || raw.childSchoolField),
+    isOrphan: normalize(raw.isOrphan || raw.isOrphanField),
     category: normalize(raw.category || raw.categoryField)
   };
 
@@ -1954,26 +2085,15 @@ function renderReceiptTemplate(data = {}) {
           <td class="label">رقم الهاتف</td>
           <td style="direction:ltr;unicode-bidi:bidi-override;text-align:right;">${safe(data.personalPhone)}</td>
         </tr>
-        <tr>
-          <td class="label">الاسم الكامل للإبن</td>
-          <td>${safe(data.childFullName)}</td>
-        </tr>
-        <tr>
-          <td class="label">تاريخ ميلاد الإبن</td>
-          <td>${safe(data.childBirthDate)}</td>
-        </tr>
-        <tr>
-          <td class="label">السن</td>
-          <td>${safe(data.childAge)}</td>
-        </tr>
-        <tr>
-          <td class="label">الفئة</td>
-          <td>${safe(data.category)}</td>
-        </tr>
-        <tr>
-          <td class="label">الرحلة</td>
-          <td>${safe(data.trip)}</td>
-        </tr>
+        <tr><td class="label">الاسم الكامل للإبن</td><td>${safe(data.childFullName)}</td></tr>
+        <tr><td class="label">تاريخ ميلاد الإبن</td><td>${safe(data.childBirthDate)}</td></tr>
+        <tr><td class="label">دائرة التمدرس</td><td>${safe(data.childDaaira)}</td></tr>
+        <tr><td class="label">بلدية التمدرس</td><td>${safe(data.childBaladiya)}</td></tr>
+        <tr><td class="label">مؤسسة الدراسة</td><td>${safe(data.schoolName)}</td></tr>
+        <tr><td class="label">المستوى الدراسي</td><td>${safe(data.category)}</td></tr>
+        <tr><td class="label">معدل الفصل الأول</td><td>${safe(data.childAge)}</td></tr>
+        <tr><td class="label">الحالة (يتيم)</td><td>${safe(data.isOrphan)}</td></tr>
+        <tr><td class="label">الرحلة</td><td>${safe(data.trip)}</td></tr>
       </tbody>
     </table>
     <div class="print-hint">
@@ -2064,16 +2184,23 @@ async function submitForm() {
   const childFullName = document.getElementById("childFullNameField").value.trim();
   const childBirthDate = document.getElementById("childBirthDateField").value.trim();
   const childAge = document.getElementById("childAgeField").value.trim();
+  const childDaaira = document.getElementById("childDaairaField") ? document.getElementById("childDaairaField").value.trim() : "";
+  const childBaladiya = document.getElementById("childBaladiyaField") ? document.getElementById("childBaladiyaField").value.trim() : "";
+  const schoolName = document.getElementById("childSchoolField") ? document.getElementById("childSchoolField").value.trim() : "";
+  const isOrphan = document.getElementById("isOrphanField") ? document.getElementById("isOrphanField").value.trim() : "لا";
   const category = document.getElementById("categoryField").value.trim();
 
   const requiredFields = [
     { id: "daairaField", value: daaira },
     { id: "baladiyaField", value: baladiya },
-    { id: "tripField", value: trip },
-    { id: "categoryField", value: category },
     { id: "personalPhoneField", value: personalPhone },
     { id: "childFullNameField", value: childFullName },
     { id: "childBirthDateField", value: childBirthDate },
+    { id: "childDaairaField", value: childDaaira },    
+    { id: "childBaladiyaField", value: childBaladiya },  
+    { id: "categoryField", value: category },
+    { id: "childSchoolField", value: schoolName },     
+    { id: "tripField", value: trip }
   ];
 
   let missing = false;
@@ -2109,21 +2236,16 @@ async function submitForm() {
     return;
   }
 
-  // ✅ التحقق من سن الإبن (يجب أن يكون بين 12 و 18 سنة)
-  const childAgeValue = parseInt(childAge);
-  if (isNaN(childAgeValue) || childAgeValue < 7 || childAgeValue > 18) {
-    Swal.close();
-    Swal.fire({
-      icon: "warning",
-      title: "تنبيه",
-      text: "لا يمكن تسجيل الإبن إلا إذا كان سنه بين 7 و 18 سنة",
+const averageValue = parseFloat(childAge);
+  if (isNaN(averageValue) || averageValue < 10 || averageValue > 20) {
+    Swal.close(); 
+    Swal.fire({ 
+      icon: "warning", 
+      title: "تنبيه", 
+      text: "يرجى إدخال معدل صحيح بين 10 و 20 (لا يقبل التسجيل بمعدل أقل من 10)", 
     });
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = 1;
-    const childBirthDateField = document.getElementById("childBirthDateField");
-    if (childBirthDateField) {
-      childBirthDateField.focus();
-    }
+    submitBtn.disabled = false; 
+    submitBtn.style.opacity = 1; 
     return;
   }
 
@@ -2190,6 +2312,10 @@ async function submitForm() {
   params.append("childFullName", childFullName);
   params.append("childBirthDate", childBirthDate);
   params.append("childAge", childAge);
+  params.append("childDaaira", childDaaira);
+  params.append("childBaladiya", childBaladiya);
+  params.append("schoolName", schoolName);
+  params.append("isOrphan", isOrphan);
   params.append("category", category);
   
   // ✅ إضافة تاريخ التعديل فقط في وضع التعديل
@@ -2255,10 +2381,13 @@ if (data.result === "success") {
 } else if (data.result === "exists") {
   const d = data.data || {};
 
+  } else if (data.result === "exists") {
+  const d = data.data || {};
+
   Swal.fire({
     title: "⚠️ التسجيل موجود مسبقًا",
     html: `
-      <div style="text-align:right;direction:rtl;font-family:'Cairo',sans-serif;">
+      <div style="text-align:right;direction:rtl;font-family:'Cairo',sans-serif; line-height: 1.8;">
         <b>رقم التعريف:</b> ${d.empId || ''}<br>
         <b>الاسم واللقب:</b> ${d.name || ''}<br>
         <b>الرتبة:</b> ${d.grade || ''}<br>
@@ -2266,16 +2395,23 @@ if (data.result === "success") {
         <b>رقم الهاتف:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatPhoneNumber(d.personalPhone || '')}</span><br>
         <b>دائرة العمل:</b> ${d.daira || ''}<br>
         <b>بلدية العمل:</b> ${d.baladiya || ''}<br>
+        <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
         <b>الاسم الكامل للإبن:</b> ${d.childFullName || ''}<br>
         <b>تاريخ ميلاد الإبن:</b> ${formatToDayMonthYear(d.childBirthDate || '')}<br>
-        <b>السن:</b> ${d.childAge || ''}<br>
-        <b>الفئة:</b> ${d.category || ''}<br>
+        <b>الحالة (يتيم):</b> ${d.isOrphan || ''}<br>
+        <b>دائرة التمدرس:</b> ${d.childDaaira || ''}<br>
+        <b>بلدية التمدرس:</b> ${d.childBaladiya || ''}<br>
+        <b>المستوى الدراسي:</b> ${d.category || ''}<br>
+        <b>مؤسسة الدراسة:</b> ${d.schoolName || ''}<br>
+        <b>معدل الفصل الأول:</b> ${d.childAge || ''}<br>
         <b>الرحلة:</b> ${d.trip || ''}<br>
+        <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
         <b>تاريخ التسجيل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.date || '')}</span>${d.modificationDate ? `<br><b>تاريخ التعديل:</b> <span style="direction:ltr;unicode-bidi:bidi-override;display:inline-block;text-align:left;">${formatDateFromISO(d.modificationDate || '')}</span>` : ''}
       </div>
       <button type="button" class="receipt-download-btn" id="receiptExistsSubmitBtn">تحميل وصل التسجيل</button>
     `,
     icon: "warning",
+
     confirmButtonText: "إغلاق",
     didOpen: () => {
       attachReceiptButton("receiptExistsSubmitBtn", d, {
